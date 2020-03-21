@@ -1,0 +1,8 @@
+django
+langdetect
+PyTelegramBotApi
+PyMySql
+GoogleTrans
+requests
+bs4
+
