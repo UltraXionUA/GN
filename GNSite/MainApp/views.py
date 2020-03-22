@@ -11,4 +11,6 @@ def webhook(request):
         repo = git.Repo('https://github.com/UltraXionUA/GN')
         origin = repo.remotes.origin
         origin.pull()
-        return 'Updatpip ed PythonAnywhere successfully', 200
+        return 'Updated PythonAnywhere successfully', 200
+    else:
+        return 'Wrong event type', 400
