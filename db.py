@@ -2,7 +2,7 @@
 import config
 import pymysql
 import logging
-
+# test
 
 def start_connection():  # Подключиться к базе данных.
     # try:
