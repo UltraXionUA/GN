@@ -84,7 +84,7 @@ def index():
 
 @app.route('/update_server', methods=['POST'])
 def webhook():
-    x_hub_signature = request.headers.get('X - Hub - Signature')
+    x_hub_signature = request.headers.get('X-Hub-Signature')
     if not is_valid_signature(x_hub_signature, request.data, SECRET_KEY):
         if request.method == 'POST':
             repo = git.Repo('/home/UltraXionUA/GN')
@@ -94,6 +94,8 @@ def webhook():
             return 'Updated PythonAnywhere successfully', 200
         else:
             return 'Wrong event type', 400
+    else:
+        return 'Wrong SECRET_KEY'
 
 
 def main():
