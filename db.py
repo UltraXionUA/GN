@@ -5,12 +5,12 @@ import logging
 
 
 def start_connection():  # Подключиться к базе данных.
-    try:
-        connection = pymysql.connect(**config.BD_CONNECT)
-        logging.info("Успешное подклчение к БД!")
-        return connection
-    except pymysql.err.OperationalError:
-        raise ConnectionError('Ошибка подключения к БД!')
+    # try:
+    connection = pymysql.connect(**config.BD_CONNECT)
+    logging.info("Успешное подклчение к БД!")
+    return connection
+    # except pymysql.err.OperationalError:
+    #     raise ConnectionError('Ошибка подключения к БД!')
 
 
 def get_joke() -> dict:  # Рандомная шутка
@@ -80,7 +80,7 @@ def random_sticker() -> str:  # Рандомный стикер
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute('SELECT `item_id` FROM Stickers ORDER BY RAND() LIMIT 1')  # Выполнить команду запроса.
-        result = cursor.fetchall()[0]['item_id']  # cursor.fetch()[0][0] for online database
+        result = cursor.fetchall()[0][0]  # cursor.fetch()[0][0] for online database
     connection.close()
     logging.info("Отключение от БД")
     return result
@@ -100,7 +100,7 @@ def get_simple_answer() -> str:  # Рандомный ответ
     with connection.cursor() as cursor:
         cursor.execute(
             f'SELECT `answer` FROM Answer ORDER BY RAND() LIMIT 1')
-        result = cursor.fetchall()[0]['answer']
+        result = cursor.fetchall()[0][0]
     connection.close()
     logging.info("Отключение от БД")
     return result
@@ -120,7 +120,7 @@ def get_answer(word) -> str:  # Получить ответ
     with connection.cursor() as cursor:
         cursor.execute(
             f'SELECT `answer` FROM Word_Answer WHERE word LIKE \'{word}\' ORDER BY RAND() LIMIT 1')
-        result = cursor.fetchall()[0]['answer']
+        result = cursor.fetchall()[0][0]
     connection.close()
     logging.info("Отключение от БД")
     return result
@@ -131,7 +131,7 @@ def get_all_word() -> list:  # Получить все ответы
     with connection.cursor() as cursor:
         cursor.execute(
             f'SELECT `word` FROM Word_Answer')
-        result = set(x['word'].lower() for x in cursor.fetchall())
+        result = set(x[0].lower() for x in cursor.fetchall())
     connection.close()
     logging.info("Отключение от БД")
     return list(result)
@@ -141,7 +141,7 @@ def random_meme() -> str:  # Рандомный мем
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute('SELECT `url` FROM Memes ORDER BY RAND() LIMIT 1')  # Выполнить команду запроса.
-        result = cursor.fetchall()[0]['url']  # cursor.fetch()[0][0] for online database
+        result = cursor.fetchall()[0][0]  # cursor.fetch()[0][0] for online database
     connection.close()
     logging.info("Отключение от БД")
     return result

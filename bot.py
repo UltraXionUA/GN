@@ -61,12 +61,12 @@ def joke_handler(message: Message):
     bot.send_chat_action(message.chat.id, 'typing')
     time.sleep(2)
     joke = db.get_joke()
-    if joke['panchline'] != 'False':
-        bot.send_message(message.chat.id, joke['setup'] + '🧐')
+    if joke[1] != 'False':
+        bot.send_message(message.chat.id, joke[0] + '🧐')
         time.sleep(4)
-        bot.send_message(message.chat.id, joke['panchline'] + '🌚')
+        bot.send_message(message.chat.id, joke[1] + '🌚')
     else:
-        bot.send_message(message.chat.id, joke['setup'] + '🌚')
+        bot.send_message(message.chat.id, joke[0] + '🌚')
 
 
 @bot.message_handler(commands=['ru_meme'])  # Рус мем
