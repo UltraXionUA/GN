@@ -96,7 +96,7 @@ def webhook():
 #             return 'Wrong event type', 400
 #     else:
 #         return 'Wrong SECRET_KEY'
-# test2
+# test3
 
 
 def main():
