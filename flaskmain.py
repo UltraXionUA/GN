@@ -21,7 +21,7 @@ def is_valid_signature(x_hub_signature, data, private_key):
 
 @app.route('/')
 def index():
-    return '<h1>Hello World Bitch'
+    return '<h1>Hello World</h1>'
 
 
 @app.route('/update_server', methods=['POST'])
