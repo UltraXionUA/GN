@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return '<h1>Hello World Bitch<h1>'
+    return '<h1>Hello World Bitch!!!<h1>'
 
 
 @app.route('/update_server', methods=['POST'])
