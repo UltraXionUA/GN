@@ -21,7 +21,7 @@ def is_valid_signature(x_hub_signature, data, private_key):
 
 @app.route('/')
 def index():
-    return '<h1>Hello World Bitch!!!<h1>'
+    return '<h1>Hello World Bitch'
 
 
 @app.route('/update_server', methods=['POST'])
@@ -81,22 +81,6 @@ def webhook():
         build_commit = f'build_commit = "{commit_hash}"'
         print(f'{build_commit}')
         return 'Updated PythonAnywhere server to commit {commit}'.format(commit=commit_hash)
-
-# @app.route('/update_server', methods=['POST'])
-# def webhook():
-#     x_hub_signature = request.headers.get('X-Hub-Signature')
-#     if not is_valid_signature(x_hub_signature, request.data, SECRET_KEY):
-#         if request.method == 'POST':
-#             repo = git.Repo('/home/UltraXionUA/GN')
-#             repo.commit()
-#             origin = repo.remotes.origin
-#             origin.pull()
-#             return 'Updated PythonAnywhere successfully', 200
-#         else:
-#             return 'Wrong event type', 400
-#     else:
-#         return 'Wrong SECRET_KEY'
-# test4
 
 
 def main():
