@@ -1,8 +1,8 @@
-django
 langdetect
 PyTelegramBotApi
 PyMySql
 GoogleTrans
 requests
 bs4
+flask
 
