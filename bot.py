@@ -15,13 +15,13 @@ import re
 
 '''GNBot'''
 bot = TeleBot(TOKEN)
-print("Бот запущен успешно!!!")
+print("Бот запущен успешно!")
 
 
 @bot.message_handler(commands=['start'])  # Начало
 def start_handler(message: Message):
     bot.send_chat_action(message.chat.id, 'typing')
-    bot.send_message(message.chat.id, 'Здравствуй, епта блэт меня зовут GNBot🖥\n'
+    bot.send_message(message.chat.id, 'Здравствуй, меня зовут GNBot🖥\n'
                                       'Я создан дабы служить верой и правдой сообществу 💎Голубой носок💎')
     logging.info(log(message))
 
