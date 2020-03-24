@@ -48,7 +48,7 @@ def add_user_to_db(user_id, is_bot, first_name, last_name, username, karma=0):  
                           f'AND username LIKE \'{username}\';') == 0:
             cursor.execute(f'INSERT INTO `Users`(`user_id`, `is_bote`, `first_name`, `last_name`, `username`) VALUES '
                            f'(\'{user_id}\', \'{str(is_bot)}\',\'{first_name}\',\'{last_name}\',\'{username}\', '
-                           f'\'{username}\'));')
+                           f'\'{karma}\'));')
             connection.commit()
     connection.close()
     logging.info("Отключение от БД")
