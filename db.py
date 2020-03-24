@@ -5,19 +5,19 @@ import logging
 
 
 def start_connection():  # Подключиться к базе данных.
-    # try:
-    connection = pymysql.connect(**config.BD_CONNECT)
-    logging.info("Успешное подклчение к БД!")
-    return connection
-    # except pymysql.err.OperationalError:
-    #     raise ConnectionError('Ошибка подключения к БД!')
+    try:
+        connection = pymysql.connect(**config.BD_CONNECT)
+        logging.info("Успешное подклчение к БД!")
+        return connection
+    except pymysql.err.OperationalError:
+        raise ConnectionError('Ошибка подключения к БД!')
 
 
 def get_joke() -> dict:  # Рандомная шутка
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute('SELECT `setup`, `panchline` FROM Joke ORDER BY RAND() LIMIT 1')  # Выполнить команду запроса.
-        result = cursor.fetchone()  # cursor.fetch()[0][0] for online database
+        cursor.execute('SELECT `setup`, `panchline` FROM Joke ORDER BY RAND() LIMIT 1')
+        result = cursor.fetchone()
     connection.close()
     logging.info("Отключение от БД")
     return result
@@ -55,8 +55,8 @@ def add_user_to_db(user_id, is_bote, first_name, last_name, username):  # Доб
 def random_gn_sticker() -> str:  # Рандомный стикер ГН
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute('SELECT `item_id` FROM Stickers_gn ORDER BY RAND() LIMIT 1')  # Выполнить команду запроса.
-        result = cursor.fetchone()['item_id']  # cursor.fetch()[0][0] for online database
+        cursor.execute('SELECT `item_id` FROM Stickers_gn ORDER BY RAND() LIMIT 1')
+        result = cursor.fetchone()['item_id']
     connection.close()
     logging.info("Отключение от БД")
     return result
@@ -79,8 +79,8 @@ def add_sticker(item_id, emoji, name):  # Добавить стикер
 def random_sticker() -> str:  # Рандомный стикер
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute('SELECT `item_id` FROM Stickers ORDER BY RAND() LIMIT 1')  # Выполнить команду запроса.
-        result = cursor.fetchone()['item_id']  # cursor.fetch()[0][0] for online database
+        cursor.execute('SELECT `item_id` FROM Stickers ORDER BY RAND() LIMIT 1')
+        result = cursor.fetchone()['item_id']
     connection.close()
     logging.info("Отключение от БД")
     return result
@@ -141,7 +141,7 @@ def random_meme() -> str:  # Рандомный мем
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute('SELECT `url` FROM Memes ORDER BY RAND() LIMIT 1')  # Выполнить команду запроса.
-        result = cursor.fetchone()['url']  # cursor.fetch()[0][0] for online database
+        result = cursor.fetchone()['url']
     connection.close()
     logging.info("Отключение от БД")
     return result
