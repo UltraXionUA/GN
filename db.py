@@ -26,7 +26,7 @@ def get_joke() -> dict:  # Рандомная шутка
 def change_karma(user, action):  # Изменение кармы
     connection = start_connection()
     with connection.cursor() as cursor:
-        if cursor.execute(f'SELECT * FROM Users WHERE username L IKE \'{user.username}\'') == 0:
+        if cursor.execute(f'SELECT * FROM Users WHERE username LIKE \'{user.username}\'') == 0:
             cursor.execute(f'INSERT INTO `Users`(`user_id`, `is_bote`, `first_name`, `last_name`, `username`) VALUES '
                            f'(\'{user.user_id}\', \'{str(user.is_bot)}\',\'{user.first_name}\','
                            f'\'{user.last_name}\',\'{user.username}\');')
