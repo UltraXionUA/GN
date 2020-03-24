@@ -10,8 +10,6 @@ app = Flask(__name__)
 
 
 def is_valid_signature(x_hub_signature, data, private_key):
-    # x_hub_signature and data are from the webhook payload
-    # private key is your webhook secret
     hash_algorithm, github_signature = x_hub_signature.split('=', 1)
     algorithm = hashlib.__dict__.get(hash_algorithm)
     encoded_key = bytes(private_key, 'latin-1')
@@ -52,8 +50,6 @@ def webhook():
             return json.dumps({'msg': "Wrong event type"})
 
         x_hub_signature = request.headers.get('X-Hub-Signature')
-        # webhook content type should be application/json for request.data to have the payload
-        # request.data is empty in case of x-www-form-urlencoded
         if not is_valid_signature(x_hub_signature, request.data, SECRET_KEY):
             print('Deploy signature failed: {sig}'.format(sig=x_hub_signature))
             abort(abort_code)
@@ -69,9 +65,7 @@ def webhook():
 
         repo = git.Repo('/home/UltraXionUA/GN')
         origin = repo.remotes.origin
-
         pull_info = origin.pull()
-
         if len(pull_info) == 0:
             return json.dumps({'msg': "Didn't pull any information from remote!"})
         if pull_info[0].flags > 128:

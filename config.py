@@ -20,12 +20,14 @@ URLS = {'memes': ['https://' + 'www.reddit.com/r/Pikabu/search?q=flair%3AМем&
 #               'password': 'root',
 #               'db': 'Bot_DB',
 #               'charset': 'utf8mb4',
-#               'cursorclass': pymysql.cursors.DictCursor}
+#               'cursorclass': pymysql.cursors.DictCursor
+#               }
 
 
 BD_CONNECT = {'user': 'UltraXionUA',  # Онлайн БД
               'password': 'DB25813123321',
               'host': 'UltraXionUA.mysql.pythonanywhere-services.com',
               'database': 'UltraXionUA$test',
+              'cursorclass': pymysql.cursors.DictCursor
               }
 
