@@ -108,7 +108,7 @@ def add_to_db(word, answer):  # Добавить слово ответ
     logging.info("Отключение от БД")
 
 
-def get_answer(word) -> str:  # Получить ответ
+def get_answer(word) -> str:  # Получить рандомный ответ
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(
