@@ -28,7 +28,7 @@ def change_karma(username, action):  # Изменение кармы
     with connection.cursor() as cursor:
         if cursor.execute(f'SELECT * FROM Users WHERE username LIKE \'{username}\'') != 0:
             cursor.execute(f'SELECT `karma` FROM `Users` WHERE `username` = \'{username}\';')
-            karma = cursor.fetchall()[0]['karma']
+            karma = cursor.fetchone()['karma']
             if action == '+':
                 karma += 10
             else:
