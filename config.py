@@ -10,7 +10,8 @@ API = {'API_Weather': 'http://' + 'api.openweathermap.org/data/2.5/weather?q={}&
                                'tag=weapons, cars, girls, funny, cats, sex, drugs, programming, anime, hentai, vikings,'\
                                'guns, gaming, science, memes'
                                '&rating=R',
-       'API_Meme': 'https://' + 'meme-api.herokuapp.com/gimme'}
+       'API_Meme': 'https://' + 'meme-api.herokuapp.com/gimme'
+       }
 
 URLS = {'memes': ['https://' + 'www.reddit.com/r/Pikabu/search?q=flair%3AМем&restrict_sr=1&sort=new']}
 
@@ -28,3 +29,7 @@ BD_CONNECT = {'user': 'UltraXionUA',  # Онлайн БД
 #               'charset': 'utf8mb4',
 #               'cursorclass': pymysql.cursors.DictCursor
 #               }
+
+# API_YouTube: AIzaSyCxKdtMjxsJrKqC5CIgVqAmX730canalUk
+# 708953753858-fmaopo1th535o5dlk9r5fa425dnuvp46.apps.googleusercontent.com
+# wkRqs-WapajPZf8yNF-DAoxB

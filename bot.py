@@ -173,14 +173,14 @@ def parser_handler(message: Message):
 @bot.message_handler(content_types=['text'], regexp=r'^\-$')
 def text_handler(message: Message):
     if message.reply_to_message:
-        reply_to = message.reply_to_message.from_user.username
+        reply_to = message.reply_to_message.from_user
         if message.text == '+':
             msg = bot.send_message(message.chat.id, f'{message.from_user.username.title()} подкинул 10 к карме '
-                                                    f'{reply_to.title()}\nИтого карма: '
+                                                    f'{reply_to.username.title()}\nИтого карма: '
                                                     f'{db.change_karma(reply_to, "+")}')
         else:
             msg = bot.send_message(message.chat.id, f'{message.from_user.username.title()} осуждает на -10 '
-                                                    f'{reply_to.title()}\nИтого карма: '
+                                                    f'{reply_to.username.title()}\nИтого карма: '
                                                     f'{db.change_karma(reply_to, "-")}')
         db.change_karma(reply_to, message.text)
         time.sleep(20)

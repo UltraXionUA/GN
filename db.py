@@ -23,30 +23,32 @@ def get_joke() -> dict:  # Рандомная шутка
     return result
 
 
-def change_karma(username, action):  # Изменение кармы
+def change_karma(user, action):  # Изменение кармы
     connection = start_connection()
     with connection.cursor() as cursor:
-        if cursor.execute(f'SELECT * FROM Users WHERE username LIKE \'{username}\'') != 0:
-            cursor.execute(f'SELECT `karma` FROM `Users` WHERE `username` = \'{username}\';')
-            karma = cursor.fetchone()['karma']
-            if action == '+':
-                karma += 10
-            else:
-                karma -= 10
-            cursor.execute(f'UPDATE `Users` SET `karma` = \'{karma}\' WHERE `username` = \'{username}\';')
-            connection.commit()
+        if cursor.execute(f'SELECT * FROM Users WHERE username LIKE \'{user.username}\'') == 0:
+            add_user_to_db(user.id, user.is_bot, user.first_name, user.last_name, user.username)
+        cursor.execute(f'SELECT `karma` FROM `Users` WHERE `username` = \'{user.username}\';')
+        karma = cursor.fetchone()['karma']
+        if action == '+':
+            karma += 10
+        else:
+            karma -= 10
+        cursor.execute(f'UPDATE `Users` SET `karma` = \'{karma}\' WHERE `username` = \'{user.username}\';')
+        connection.commit()
     connection.close()
     logging.info("Отключение от БД")
     return karma
 
 
-def add_user_to_db(user_id, is_bote, first_name, last_name, username):  # Добавить пользователя в бд
+def add_user_to_db(user_id, is_bot, first_name, last_name, username, karma=0):  # Добавить пользователя в бд
     connection = start_connection()
     with connection.cursor() as cursor:
         if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user_id}\''
                           f'AND username LIKE \'{username}\';') == 0:
             cursor.execute(f'INSERT INTO `Users`(`user_id`, `is_bote`, `first_name`, `last_name`, `username`) VALUES '
-                           f'(\'{user_id}\', \'{str(is_bote)}\',\'{first_name}\',\'{last_name}\',\'{username}\');')
+                           f'(\'{user_id}\', \'{str(is_bot)}\',\'{first_name}\',\'{last_name}\',\'{username}\', '
+                           f'\'{username}\'));')
             connection.commit()
     connection.close()
     logging.info("Отключение от БД")
