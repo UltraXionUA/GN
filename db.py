@@ -56,7 +56,7 @@ def random_gn_sticker() -> str:  # Рандомный стикер ГН
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute('SELECT `item_id` FROM Stickers_gn ORDER BY RAND() LIMIT 1')  # Выполнить команду запроса.
-        result = cursor.fetchall()[0]['item_id']  # cursor.fetch()[0][0] for online database
+        result = cursor.fetchone()['item_id']  # cursor.fetch()[0][0] for online database
     connection.close()
     logging.info("Отключение от БД")
     return result
@@ -80,7 +80,7 @@ def random_sticker() -> str:  # Рандомный стикер
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute('SELECT `item_id` FROM Stickers ORDER BY RAND() LIMIT 1')  # Выполнить команду запроса.
-        result = cursor.fetchall()[0]['item_id']  # cursor.fetch()[0][0] for online database
+        result = cursor.fetchone()['item_id']  # cursor.fetch()[0][0] for online database
     connection.close()
     logging.info("Отключение от БД")
     return result
@@ -100,7 +100,7 @@ def get_simple_answer() -> str:  # Рандомный ответ
     with connection.cursor() as cursor:
         cursor.execute(
             f'SELECT `answer` FROM Answer ORDER BY RAND() LIMIT 1')
-        result = cursor.fetchall()[0]['answer']
+        result = cursor.fetchone()['answer']
     connection.close()
     logging.info("Отключение от БД")
     return result
@@ -120,7 +120,7 @@ def get_answer(word) -> str:  # Получить ответ
     with connection.cursor() as cursor:
         cursor.execute(
             f'SELECT `answer` FROM Word_Answer WHERE word LIKE \'{word}\' ORDER BY RAND() LIMIT 1')
-        result = cursor.fetchall()[0]['answer']
+        result = cursor.fetchone()['answer']
     connection.close()
     logging.info("Отключение от БД")
     return result
@@ -141,7 +141,7 @@ def random_meme() -> str:  # Рандомный мем
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute('SELECT `url` FROM Memes ORDER BY RAND() LIMIT 1')  # Выполнить команду запроса.
-        result = cursor.fetchall()[0]['url']  # cursor.fetch()[0][0] for online database
+        result = cursor.fetchone()['url']  # cursor.fetch()[0][0] for online database
     connection.close()
     logging.info("Отключение от БД")
     return result
@@ -157,12 +157,14 @@ def add_memes(array):  # Добавить мемы
     connection.close()
     logging.info("Отключение от БД")
 
-# def add_gn_sticker(item_id, emoji, name):  # Добавить стикер в гн
-#     connection = start_connection()
-#     with connection.cursor() as cursor:
-#         if cursor.execute(f'SELECT * FROM Stickers_gn WHERE item_id LIKE \'{item_id}\'') != 1 :
-#             cursor.execute(f'INSERT INTO `Stickers_gn`(`item_id`, `emoji`, `set_name`) VALUES (\'{item_id}\','
-#                            f'\'{emoji}\',\'{name}\');')
-#             connection.commit()
-#     connection.close()
-#     logging.info("Отключение от БД")
+
+def add_gn_sticker(item_id, emoji, name):  # Добавить стикер в гн
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        if cursor.execute(f'SELECT * FROM Stickers_gn WHERE set_name LIKE \'{name}\''
+                          f'AND emoji LIKE \'{emoji}\'') != 1:
+            cursor.execute(f'INSERT INTO `Stickers_gn`(`item_id`, `emoji`, `set_name`) VALUES (\'{item_id}\','
+                           f'\'{emoji}\',\'{name}\');')
+            connection.commit()
+    connection.close()
+    logging.info("Отключение от БД")

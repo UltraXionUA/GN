@@ -123,7 +123,7 @@ def sticker_handler(message: Message):
 
 @bot.message_handler(content_types=['sticker'])  # Добавить новый стикер в БД
 def add_sticker_handler(message: Message):
-    db.add_sticker(message.sticker.file_id, message.sticker.emoji, message.sticker.set_name)
+    db.add_gn_sticker(message.sticker.file_id, message.sticker.emoji, message.sticker.set_name)
 
 
 @bot.message_handler(content_types=['voice'])  # Ответ на голосовое
