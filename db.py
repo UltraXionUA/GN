@@ -158,13 +158,13 @@ def add_memes(array):  # Добавить мемы
     logging.info("Отключение от БД")
 
 
-def add_gn_sticker(item_id, emoji, name):  # Добавить стикер в гн
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        if cursor.execute(f'SELECT * FROM Stickers_gn WHERE set_name LIKE \'{name}\''
-                          f'AND emoji LIKE \'{emoji}\'') != 1:
-            cursor.execute(f'INSERT INTO `Stickers_gn`(`item_id`, `emoji`, `set_name`) VALUES (\'{item_id}\','
-                           f'\'{emoji}\',\'{name}\');')
-            connection.commit()
-    connection.close()
-    logging.info("Отключение от БД")
+# def add_gn_sticker(item_id, emoji, name):  # Добавить стикер в гн
+#     connection = start_connection()
+#     with connection.cursor() as cursor:
+#         if cursor.execute(f'SELECT * FROM Stickers_gn WHERE set_name LIKE \'{name}\''
+#                           f'AND emoji LIKE \'{emoji}\'') != 1:
+#             cursor.execute(f'INSERT INTO `Stickers_gn`(`item_id`, `emoji`, `set_name`) VALUES (\'{item_id}\','
+#                            f'\'{emoji}\',\'{name}\');')
+#             connection.commit()
+#     connection.close()
+#     logging.info("Отключение от БД")
