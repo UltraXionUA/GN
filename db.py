@@ -26,10 +26,14 @@ def get_joke() -> dict:  # Рандомная шутка
 def change_karma(user, action):  # Изменение кармы
     connection = start_connection()
     with connection.cursor() as cursor:
-        if cursor.execute(f'SELECT * FROM Users WHERE username LIKE \'{user.username}\'') == 0:
-            add_user_to_db(user.id, user.is_bot, user.first_name, user.last_name, user.username)
+        if cursor.execute(f'SELECT * FROM Users WHERE username L IKE \'{user.username}\'') == 0:
+            cursor.execute(f'INSERT INTO `Users`(`user_id`, `is_bote`, `first_name`, `last_name`, `username`) VALUES '
+                           f'(\'{user.user_id}\', \'{str(user.is_bot)}\',\'{user.first_name}\','
+                           f'\'{user.last_name}\',\'{user.username}\');')
+            connection.commit()
         cursor.execute(f'SELECT `karma` FROM `Users` WHERE `username` = \'{user.username}\';')
         karma = cursor.fetchone()['karma']
+        print(karma)
         if action == '+':
             karma += 10
         else:
@@ -39,19 +43,6 @@ def change_karma(user, action):  # Изменение кармы
     connection.close()
     logging.info("Отключение от БД")
     return karma
-
-
-def add_user_to_db(user_id, is_bot, first_name, last_name, username, karma=0):  # Добавить пользователя в бд
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user_id}\''
-                          f'AND username LIKE \'{username}\';') == 0:
-            cursor.execute(f'INSERT INTO `Users`(`user_id`, `is_bote`, `first_name`, `last_name`, `username`) VALUES '
-                           f'(\'{user_id}\', \'{str(is_bot)}\',\'{first_name}\',\'{last_name}\',\'{username}\', '
-                           f'\'{karma}\'));')
-            connection.commit()
-    connection.close()
-    logging.info("Отключение от БД")
 
 
 def random_gn_sticker() -> str:  # Рандомный стикер ГН
