@@ -33,7 +33,6 @@ def change_karma(user, action):  # Изменение кармы
             connection.commit()
         cursor.execute(f'SELECT `karma` FROM `Users` WHERE `username` = \'{user.username}\';')
         karma = cursor.fetchone()['karma']
-        print(karma)
         if action == '+':
             karma += 10
         else:
