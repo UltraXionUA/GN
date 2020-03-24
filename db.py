@@ -17,7 +17,7 @@ def get_joke() -> dict:  # Рандомная шутка
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute('SELECT `setup`, `panchline` FROM Joke ORDER BY RAND() LIMIT 1')  # Выполнить команду запроса.
-        result = cursor.fetchall()[0]  # cursor.fetch()[0][0] for online database
+        result = cursor.fetchone()  # cursor.fetch()[0][0] for online database
     connection.close()
     logging.info("Отключение от БД")
     return result
