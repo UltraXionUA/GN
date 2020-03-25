@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
 from funcs import tr_w, rend_d, hi_r, log
-from config import TOKEN, API  # TEST_TOKEN
+from config import TOKEN, API, GN_CHAT_ID  # TEST_TOKEN
 from datetime import datetime as dt
 from parser import parser_memes
 from telebot import TeleBot
@@ -231,7 +231,8 @@ def text_handler(message: Message):
 
 def youtube_handler(request):
     data = request.get_json()
-    bot.send_message('1323213123', data.Title, data.Url)
+    bot.send_message(GN_CHAT_ID, f'Вышло новое видео на канале: {data.AuthorName}\n{data.Title}\n'
+                                 f'{data.Url}\n{data.Description}')
 
 
 @bot.callback_query_handler(func=lambda call: True)  # Ловим Callback

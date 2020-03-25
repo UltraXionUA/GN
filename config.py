@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import pymysql.cursors
 
+
+GN_CHAT_ID = '1001339129150'
+
 TOKEN = '1077848786:AAHfMrRKadc3Plo14rpE7dPJJC3bVbbVod0'  # Release bot TOKEN
 TEST_TOKEN = '839168325:AAGtBUzQoqdPSSHPWUeo4K9Onxxnclv96sA'  # Test bot TOKE
 
