@@ -184,7 +184,8 @@ def text_handler(message: Message):
                                                     f'{db.change_karma(reply_to, "-")}')
         db.change_karma(reply_to, message.text)
         time.sleep(20)
-        bot.delete_message(msg.chat.id, msg.message_id)
+        if msg.char.username is not None:
+            bot.delete_message(msg.chat.id, msg.message_id)
 
 
 @bot.message_handler(content_types=['text'], regexp=r'^-.+$')  # Добавить ответ в бд

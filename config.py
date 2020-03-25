@@ -29,7 +29,3 @@ BD_CONNECT = {'user': 'UltraXionUA',  # Онлайн БД
 #               'charset': 'utf8mb4',
 #               'cursorclass': pymysql.cursors.DictCursor
 #               }
-
-# API_YouTube: AIzaSyCxKdtMjxsJrKqC5CIgVqAmX730canalUk
-# 708953753858-fmaopo1th535o5dlk9r5fa425dnuvp46.apps.googleusercontent.com
-# wkRqs-WapajPZf8yNF-DAoxB
