@@ -206,6 +206,7 @@ def text_handler(message: Message):
 @bot.edited_message_handler(content_tys=['text'])
 def text_handler(message: Message):
     if dt.fromtimestamp(message.date).strftime("%Y-%m-%d-%H.%M.%S") >= dt.now().strftime("%Y-%m-%d-%H.%M.%S"):
+        print(message.chat.id)
         logging.info(log(message))
         text = message.text.lower()
         if text in ['стикер', 'стикерочек', 'sticker']:
@@ -226,6 +227,11 @@ def text_handler(message: Message):
                 bot.reply_to(message, db.get_answer(random.choice(result)))
             elif rend_d():
                 bot.reply_to(message, db.get_simple_answer())
+
+
+def youtube_handler(request):
+    data = request.get_json()
+    bot.send_message('1323213123', data.Title, data.Url)
 
 
 @bot.callback_query_handler(func=lambda call: True)  # Ловим Callback
