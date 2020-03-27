@@ -9,6 +9,7 @@ import json
 SECRET_KEY = os.getenv("SECRET_KEY")
 app = Flask(__name__)
 
+
 def is_valid_signature(x_hub_signature, data, private_key):
     hash_algorithm, github_signature = x_hub_signature.split('=', 1)
     algorithm = hashlib.__dict__.get(hash_algorithm)
@@ -29,7 +30,7 @@ def gstv_webhook():
         json.dump(data, f)
     with open('GSTV_dumps.json', 'a') as f:
         f.write(json.dump(data))
-    bot.youtube_handler(request)
+    # bot.youtube_handler(request)
 
 
 @app.route('/Dobryak', methods=['POST'])
@@ -39,7 +40,7 @@ def dobryak_webhook():
         json.dump(data, f)
     with open('Dobryak_dumps.json', 'a') as f:
         f.write(json.dump(data))
-    bot.youtube_handler(request)
+    # bot.youtube_handler(request)
 
 
 @app.route('/update_server', methods=['POST'])
