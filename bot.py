@@ -3,7 +3,7 @@ from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, R
 from funcs import tr_w, rend_d, hi_r, log
 from config import TOKEN, API, GN_CHAT_ID  # TEST_TOKEN
 from datetime import datetime as dt
-from parser import parser_memes
+from pars import parser_memes
 from telebot import TeleBot
 import requests
 import db
