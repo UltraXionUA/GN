@@ -6,4 +6,5 @@ requests
 bs4
 flask
 django
-
+python-dotenv
+GitPython
