@@ -4,7 +4,7 @@ import os
 import hmac
 import hashlib
 import json
-from telebot import TeleBot
+# from bot import youtube_handler
 
 
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -19,38 +19,28 @@ def is_valid_signature(x_hub_signature, data, private_key):
     return hmac.compare_digest(mac.hexdigest(), github_signature)
 
 
-bot = TeleBot('1077848786:AAHfMrRKadc3Plo14rpE7dPJJC3bVbbVod0')
-
-
-def youtube_handler(request):
-    data = request.get_json()
-    bot.send_message('1001339129150', f'Вышло новое видео на канале: {data.AuthorName}\n{data.Title}\n'
-                                 f'{data.Url}\n{data.Description}')
-
-
 @app.route('/')
 def index():
     return '<h1>Hello World</h1>'
 
-
-@app.route('/GSTV', methods=['POST'])
-def gstv_webhook():
-    data = request.get_json()
-    with open('GSTV_dump.json', 'a') as f:
-        json.dump(data, f)
-    with open('GSTV_dumps.json', 'a') as f:
-        f.write(json.dump(data, f))
-    youtube_handler(request)
-
-
-@app.route('/Dobryak', methods=['POST'])
-def dobryak_webhook():
-    data = request.get_json()
-    with open('Dobryak_dump.json', 'a') as f:
-        json.dump(data, f)
-    with open('Dobryak_dumps.json', 'a') as f:
-        f.write(json.dump(data))
-    youtube_handler(request)
+#
+# @app.route('/GSTV', methods=['POST'])
+# def gstv_webhook():
+#     data = request.get_json()
+#     with open('GSTV_dump.json', 'a') as f:
+#         json.dump(data, f)
+#     with open('GSTV_dumps.json', 'a') as f:
+#         f.write(json.dump(data))
+#
+#
+# @app.route('/Dobryak', methods=['POST'])
+# def dobryak_webhook():
+#     data = request.get_json()
+#     with open('Dobryak_dump.json', 'a') as f:
+#         json.dump(data, f)
+#     with open('Dobryak_dumps.json', 'a') as f:
+#         f.write(json.dump(data))
+#     youtube_handler(request)
 
 
 @app.route('/update_server', methods=['POST'])
