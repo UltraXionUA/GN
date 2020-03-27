@@ -15,6 +15,7 @@ import re
 
 '''GNBot'''
 bot = TeleBot(TOKEN)
+print('Бот успешно запущен!')
 
 
 @bot.message_handler(commands=['start'])  # Начало
