@@ -23,23 +23,23 @@ def is_valid_signature(x_hub_signature, data, private_key):
 def index():
     return '<h1>Hello World</h1>'
 
-
-@app.route('/GSTV', methods=['POST'])
-def gstv_webhook():
-    data = request.get_json()
-    with open('GSTV_dump.json', 'a') as f:
-        json.dump(data, f)
-    with open('GSTV_dumps.json', 'a') as f:
-        f.write(json.dump(data))
-
-
-@app.route('/Dobryak', methods=['POST'])
-def dobryak_webhook():
-    data = request.get_json()
-    with open(')Dobryak_dump.json', 'a') as f:
-        json.dump(data, f)
-    with open(')Dobryak_dumps.json', 'a') as f:
-        f.write(json.dump(data))
+#
+# @app.route('/GSTV', methods=['POST'])
+# def gstv_webhook():
+#     data = request.get_json()
+#     with open('GSTV_dump.json', 'a') as f:
+#         json.dump(data, f)
+#     with open('GSTV_dumps.json', 'a') as f:
+#         f.write(json.dump(data))
+#
+#
+# @app.route('/Dobryak', methods=['POST'])
+# def dobryak_webhook():
+#     data = request.get_json()
+#     with open('Dobryak_dump.json', 'a') as f:
+#         json.dump(data, f)
+#     with open('Dobryak_dumps.json', 'a') as f:
+#         f.write(json.dump(data))
     youtube_handler(request)
 
 

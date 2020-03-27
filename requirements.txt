@@ -5,4 +5,5 @@ GoogleTrans
 requests
 bs4
 flask
+django
 
