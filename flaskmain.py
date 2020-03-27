@@ -4,7 +4,7 @@ import os
 import hmac
 import hashlib
 import json
-from bot import youtube_handler
+
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 app = Flask(__name__)
@@ -29,7 +29,8 @@ def gstv_webhook():
     with open('GSTV_dump.json', 'a') as f:
         json.dump(data, f)
     with open('GSTV_dumps.json', 'a') as f:
-        f.write(json.dump(data))
+        f.write(json.dumps(data))
+    from bot import youtube_handler
     youtube_handler(request)
 
 
@@ -39,7 +40,8 @@ def dobryak_webhook():
     with open('Dobryak_dump.json', 'a') as f:
         json.dump(data, f)
     with open('Dobryak_dumps.json', 'a') as f:
-        f.write(json.dump(data))
+        f.write(json.dumps(data))
+    from bot import youtube_handler
     youtube_handler(request)
 
 
