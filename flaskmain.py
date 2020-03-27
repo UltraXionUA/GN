@@ -4,12 +4,10 @@ import os
 import hmac
 import hashlib
 import json
-# from bot import youtube_handler
 
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 app = Flask(__name__)
-
 
 def is_valid_signature(x_hub_signature, data, private_key):
     hash_algorithm, github_signature = x_hub_signature.split('=', 1)
@@ -23,24 +21,25 @@ def is_valid_signature(x_hub_signature, data, private_key):
 def index():
     return '<h1>Hello World</h1>'
 
-#
-# @app.route('/GSTV', methods=['POST'])
-# def gstv_webhook():
-#     data = request.get_json()
-#     with open('GSTV_dump.json', 'a') as f:
-#         json.dump(data, f)
-#     with open('GSTV_dumps.json', 'a') as f:
-#         f.write(json.dump(data))
-#
-#
-# @app.route('/Dobryak', methods=['POST'])
-# def dobryak_webhook():
-#     data = request.get_json()
-#     with open('Dobryak_dump.json', 'a') as f:
-#         json.dump(data, f)
-#     with open('Dobryak_dumps.json', 'a') as f:
-#         f.write(json.dump(data))
-#     youtube_handler(request)
+
+@app.route('/GSTV', methods=['POST'])
+def gstv_webhook():
+    data = request.get_json()
+    with open('GSTV_dump.json', 'a') as f:
+        json.dump(data, f)
+    with open('GSTV_dumps.json', 'a') as f:
+        f.write(json.dump(data))
+    bot.youtube_handler(request)
+
+
+@app.route('/Dobryak', methods=['POST'])
+def dobryak_webhook():
+    data = request.get_json()
+    with open('Dobryak_dump.json', 'a') as f:
+        json.dump(data, f)
+    with open('Dobryak_dumps.json', 'a') as f:
+        f.write(json.dump(data))
+    bot.youtube_handler(request)
 
 
 @app.route('/update_server', methods=['POST'])
