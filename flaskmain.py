@@ -4,7 +4,7 @@ import os
 import hmac
 import hashlib
 import json
-# from .. import youtube_handler
+from .bot import youtube_handler
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 app = Flask(__name__)
