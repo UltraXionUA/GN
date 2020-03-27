@@ -4,7 +4,7 @@ import os
 import hmac
 import hashlib
 import json
-from bot import youtube_handler
+# from bot import youtube_handler
 
 
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -40,7 +40,7 @@ def index():
 #         json.dump(data, f)
 #     with open('Dobryak_dumps.json', 'a') as f:
 #         f.write(json.dump(data))
-    youtube_handler(request)
+#     youtube_handler(request)
 
 
 @app.route('/update_server', methods=['POST'])
