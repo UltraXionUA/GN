@@ -175,17 +175,15 @@ def text_handler(message: Message):
     if message.reply_to_message:
         reply_to = message.reply_to_message.from_user
         if message.text == '+':
-            msg = bot.send_message(message.chat.id, f'{message.from_user.username.title()} подкинул 10 к карме '
+            bot.send_message(message.chat.id, f'{message.from_user.username.title()} подкинул 10 к карме '
                                                     f'{reply_to.username.title()}\nИтого карма: '
                                                     f'{db.change_karma(reply_to, "+")}')
         else:
-            msg = bot.send_message(message.chat.id, f'{message.from_user.username.title()} осуждает на -10 '
+            bot.send_message(message.chat.id, f'{message.from_user.username.title()} осуждает на -10 '
                                                     f'{reply_to.username.title()}\nИтого карма: '
                                                     f'{db.change_karma(reply_to, "-")}')
         db.change_karma(reply_to, message.text)
         time.sleep(20)
-        if msg.char.username is not None:
-            bot.delete_message(msg.chat.id, msg.message_id)
 
 
 @bot.message_handler(content_types=['text'], regexp=r'^-.+$')  # Добавить ответ в бд
