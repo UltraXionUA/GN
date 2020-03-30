@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
 from funcs import tr_w, rend_d, hi_r, log
-from config import TOKEN, API, GN_CHAT_ID  # TEST_TOKEN
+from config import TOKEN, API  # TEST_TOKEN
 from datetime import datetime as dt
 from pars import parser_memes
 from telebot import TeleBot
 import requests
 import db
-import logging
 import time
 import random
 import re
@@ -15,7 +14,10 @@ import re
 
 '''GNBot'''
 bot = TeleBot(TOKEN)
-print('Бот успешно запущен!')
+log('Бот успешно запущен!')
+
+first_dice = {'username': None, 'dice': 0}
+second_dice = {'username': None, 'dice': 0}
 
 
 @bot.message_handler(commands=['start'])  # Начало
@@ -23,7 +25,7 @@ def start_handler(message: Message):
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Здравствуй, меня зовут GNBot🖥\n'
                                       'Я создан дабы служить верой и правдой сообществу 💎Голубой носок💎')
-    logging.info(log(message))
+    log(message, 'info')
 
 
 @bot.message_handler(commands=['help'])  # Помощь
@@ -41,7 +43,7 @@ def help_handler(message: Message):
                                       '- Любой текст (Добавить фразу в БД)\n'
                                       'Слово - Любой текст (Добавить фразу с ассоциацией к слову в БД)\n'
                                       '-parser (Отпарсить контент в БД)')
-    logging.info(log(message))
+    log(message, 'info')
 
 
 @bot.message_handler(commands=['gif'])  # Гифка
@@ -52,12 +54,12 @@ def gif_handler(message: Message):
         if hi_r(data['data']['rating']):
             bot.send_document(message.chat.id, data['data']['images']['downsized_large']['url'])
             break
-    logging.info(log(message))
+    log(message, 'info')
 
 
 @bot.message_handler(commands=['joke'])  # Шутка
 def joke_handler(message: Message):
-    logging.info(log(message))
+    log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
     time.sleep(2)
     joke = db.get_joke()
@@ -73,7 +75,7 @@ def joke_handler(message: Message):
 def meme_handler(message: Message):
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_photo(message.chat.id, db.random_meme())
-    logging.info(log(message))
+    log(message, 'info')
 
 
 @bot.message_handler(commands=['en_meme'])  # Англ мем
@@ -81,11 +83,12 @@ def meme_en_handler(message: Message):
     bot.send_chat_action(message.chat.id, 'upload_photo')
     meme = requests.get(API['API_Meme']).json()
     bot.send_photo(message.chat.id, meme['url'])
-    logging.info(log(message))
+    log(message, 'info')
 
 
 @bot.message_handler(commands=['weather'])  # Погода
 def weather_handler(message: Message):
+    log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(InlineKeyboardButton('Харьков', callback_data='Kharkov'),
@@ -100,10 +103,11 @@ def translate_handler(message):
     bot.send_chat_action(message.chat.id, 'typing')
     msg = bot.send_message(message.chat.id, 'Введите то что нужно перевести')
     bot.register_next_step_handler(msg, trans_word)
-    logging.info(log(message))
+    log(message, 'info')
 
 
 def trans_word(message: Message):
+    log(message, 'info')
     bot.send_message(message.chat.id, tr_w(message.text))
 
 
@@ -111,14 +115,14 @@ def trans_word(message: Message):
 def gn_sticker_handler(message: Message):
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_sticker(message.chat.id, db.random_gn_sticker())
-    logging.info(log(message))
+    log(message, 'info')
 
 
 @bot.message_handler(commands=['sticker'])  # Рандомный стикер
 def sticker_handler(message: Message):
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_sticker(message.chat.id, db.random_sticker())
-    logging.info(log(message))
+    log(message, 'info')
 
 
 @bot.message_handler(content_types=['sticker'])  # Добавить новый стикер в БД
@@ -200,12 +204,38 @@ def text_handler(message: Message):
     bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
 
 
+@bot.message_handler(commands=['dice'])  # Любой текст
+def dice_handler(message: Message):
+    def reset_users():
+        first_dice['username'] = None
+        first_dice['dice'] = 0
+        second_dice['username'] = None
+        second_dice['dice'] = 0
+    res = requests.post(f'https://api.telegram.org/bot{TOKEN}/sendDice?chat_id={message.chat.id}').json()
+    if first_dice['username'] is None:
+        first_dice['username'] = res['result']['chat']['username']
+        first_dice['dice'] = res['result']['dice']['value']
+    elif second_dice['username'] is None:
+        second_dice['username'] = res['result']['chat']['username']
+        second_dice['dice'] = res['result']['dice']['value']
+        bot.send_chat_action(message.chat.id, 'typing')
+        time.sleep(4)
+        if first_dice['dice'] > second_dice['dice']:
+            bot.send_message(message.chat.id, f'{first_dice["username"].title()}🥇 победил '
+                                              f'{second_dice["username"].title()}🥈')
+        elif first_dice['dice'] < second_dice['dice']:
+            bot.send_message(message.chat.id, f'{second_dice["username"].title()}🥇 победил '
+                                              f'{first_dice["username"].title()}🥈')
+        else:
+            bot.send_message(message.chat.id, 'Победила дружба🤝')
+        reset_users()
+
+
 @bot.message_handler(content_types=['text'])  # Любой текст
-@bot.edited_message_handler(content_tys=['text'])
+@bot.edited_message_handler(content_types=['text'])
 def text_handler(message: Message):
     if dt.fromtimestamp(message.date).strftime("%Y-%m-%d-%H.%M.%S") >= dt.now().strftime("%Y-%m-%d-%H.%M.%S"):
-        print(message.json)
-        logging.info(log(message))
+        log(message, 'info')
         text = message.text.lower()
         if text in ['стикер', 'стикерочек', 'sticker']:
             gn_sticker_handler(message)
@@ -215,8 +245,8 @@ def text_handler(message: Message):
             meme_handler(message)
         elif text in ['шутка', 'шутку', 'joke']:
             joke_handler(message)
-        elif text in ['рандом', 'ренд', 'random', 'кубик']:
-            requests.post(f'https://api.telegram.org/bot{TOKEN}/sendDice?chat_id={message.chat.id}')
+        elif text in ['кубик', 'зарик', 'кости', 'dice']:
+            dice_handler(message)
         if rend_d():
             for i in [',', '.', '!', '?', '\'', '\"', '-']:
                 text = text.replace(i, '')
@@ -227,12 +257,6 @@ def text_handler(message: Message):
                 bot.reply_to(message, db.get_answer(random.choice(result)))
             elif rend_d():
                 bot.reply_to(message, db.get_simple_answer())
-
-
-def youtube_handler(request):
-    data = request.get_json()
-    bot.send_message(GN_CHAT_ID, f'Вышло новое видео на канале: {data.AuthorName}\n{data.Title}\n'
-                                 f'{data.Url}\n{data.Description}')
 
 
 @bot.callback_query_handler(func=lambda call: True)  # Ловим Callback

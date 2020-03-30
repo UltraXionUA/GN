@@ -3,13 +3,27 @@ from googletrans import Translator
 from random import randint
 from langdetect import detect
 from datetime import datetime
+import logging
+
+logging.basicConfig(filename="logger.log", level=logging.INFO, filemode='w')
 
 
-def log(message) -> None:  # Лог в консоль
-    print("<!-------!>", datetime.now(), "<!-------!>\n",
-          "Сообщение от {0} {1} (id = {2}) \n \'{3}\'".format(message.from_user.first_name,
-                                                              message.from_user.last_name,
-                                                              str(message.from_user.id), message.text))
+def log(message, type_l='None') -> None:  # Лог в консоль
+    if type(message) is not str:
+        def get_info():
+            return "<!-------!> " + str(datetime.now().strftime("%Y-%m-%d-%H.%M.%S")) + " <!-------!>\n " \
+                                               f"Сообщение от {message.from_user.first_name}" \
+                                               f"{message.from_user.last_name} " \
+                                               f"(id = {str(message.from_user.id)})\n" \
+                                               f"\'{message.text}\'"
+        print(get_info())
+        if type_l == 'info':
+            logging.info(get_info())
+        elif type_l == 'error':
+            logging.error(get_info())
+    else:
+        print("<!-------!>", datetime.now(), "<!-------!>\n", message)
+        logging.info(message + ' ' + str(datetime.now()))
 
 
 def tr_w(words) -> str:  # Перевод
