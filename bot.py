@@ -204,7 +204,7 @@ def text_handler(message: Message):
 @bot.edited_message_handler(content_tys=['text'])
 def text_handler(message: Message):
     if dt.fromtimestamp(message.date).strftime("%Y-%m-%d-%H.%M.%S") >= dt.now().strftime("%Y-%m-%d-%H.%M.%S"):
-        print(message.chat.id)
+        print(message.json)
         logging.info(log(message))
         text = message.text.lower()
         if text in ['стикер', 'стикерочек', 'sticker']:
@@ -215,6 +215,8 @@ def text_handler(message: Message):
             meme_handler(message)
         elif text in ['шутка', 'шутку', 'joke']:
             joke_handler(message)
+        elif text in ['рандом', 'ренд', 'random', 'кубик']:
+            requests.post(f'https://api.telegram.org/bot{TOKEN}/sendDice?chat_id={message.chat.id}')
         if rend_d():
             for i in [',', '.', '!', '?', '\'', '\"', '-']:
                 text = text.replace(i, '')
