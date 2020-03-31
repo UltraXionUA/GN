@@ -93,9 +93,21 @@ def weather_handler(message: Message) -> None:
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(InlineKeyboardButton('Харьков', callback_data='Kharkov'),
                  InlineKeyboardButton('Полтава', callback_data='Poltava'))
-    msg = bot.send_message(message.chat.id, 'Погода в каком из города вас интерсует?', reply_markup=keyboard)
+    msg = bot.send_message(message.chat.id, 'Погода в каком из города вас интерсует?🧐', reply_markup=keyboard)
     time.sleep(10)
     bot.delete_message(msg.chat.id, msg.message_id)
+
+
+@bot.message_handler(commands=['music'])  # /music
+def music_handler(message: Message) -> None:
+    log(message, 'info')
+    bot.send_chat_action(message.chat.id, 'typing')
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(InlineKeyboardButton('По исполнителю', callback_data='artist?q='),
+                 InlineKeyboardButton('По треку', callback_data='track?q='))
+    msg = bot.send_message(message.chat.id, 'Как будем искать музыку?🎧', reply_markup=keyboard)
+    # time.sleep(10)
+    # bot.delete_message(msg.chat.id, msg.message_id)
 
 
 @bot.message_handler(commands=['translate'])  # /translate
@@ -104,11 +116,6 @@ def translate_handler(message) -> None:
     msg = bot.send_message(message.chat.id, 'Введите то что нужно перевести')
     bot.register_next_step_handler(msg, trans_word)
     log(message, 'info')
-
-
-def trans_word(message: Message) -> None:
-    log(message, 'info')
-    bot.send_message(message.chat.id, tr_w(message.text))
 
 
 @bot.message_handler(commands=['sticker_gn'])  # /sticker_gn
@@ -215,10 +222,10 @@ def dice_handler(message: Message) -> None:
     log(message, 'info')
     t = Timer(120.0, reset_users)
     if first_dice['username'] is None:
-        first_dice['username'], first_dice['dice'] = res['result']['chat']['username'], res['result']['dice']['value']
+        first_dice['username'], first_dice['dice'] = message.from_user.username, res['result']['dice']['value']
         t.start()
     elif second_dice['username'] is None:
-        second_dice['username'], second_dice['dice'] = res['result']['chat']['username'], res['result']['dice']['value']
+        second_dice['username'], second_dice['dice'] = message.from_user.username, res['result']['dice']['value']
         t.cancel()
         if first_dice['username'] != second_dice['username']:
             bot.send_chat_action(message.chat.id, 'typing')
@@ -256,7 +263,7 @@ def text_handler(message: Message) -> None:
             meme_handler(message)
         elif text in ['шутка', 'шутку', 'joke']:
             joke_handler(message)
-        elif text in ['кубик', 'зарик', 'кости', 'dice']:
+        elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
             dice_handler(message)
         if rend_d():
             for i in [',', '.', '!', '?', '\'', '\"', '-']:
@@ -273,7 +280,14 @@ def text_handler(message: Message) -> None:
 @bot.callback_query_handler(func=lambda call: True)  # Catch callback's
 def callback_query(call) -> None:
     bot.edit_message_text(chat_id=call.from_user.id, message_id=call.message.message_id, text=call.message.text)
-    if call.data == 'Kharkov' or 'Poltava':
+    if call.data == 'artist?q=' or call.data == 'track?q=':
+        bot.send_chat_action(call.from_user.id, 'typing')
+        if call.data == 'artist?q=':
+            msg = bot.send_message(call.from_user.id, 'Введите имя/псевдоним/группу')
+        else:
+            msg = bot.send_message(call.from_user.id, 'Введите название трека')
+        bot.register_next_step_handler(msg, get_song, call.data)
+    elif call.data == 'Kharkov' or call.data == 'Poltava':
         res = requests.get(API['API_Weather'].format(call.data)).json()
         bot.answer_callback_query(call.id, 'Вы выбрали ' + tr_w(call.data))
         bot.send_message(call.from_user.id, f"Город: {tr_w(call.data).title()}🏢\n"
@@ -284,6 +298,23 @@ def callback_query(call) -> None:
                                             f"Влажность: {res['main']['humidity']} %💧\n"
                                             f"Ветер: {res['wind']['speed']} м\\с💨\n",
                          reply_markup=ReplyKeyboardRemove(selective=True))
+
+
+def get_song(message: Message, data: str) -> None:
+    log(message, 'info')
+    res = requests.get(API['API_Deezer'] + data + message.text.replace(' ', '+')).json()
+    if data == 'artist?q=':
+        bot.send_photo(message.chat.id, res['data'][0]['picture_xl'])
+        songs = requests.get(res['data'][0]['tracklist'].replace('50', '10')).json()
+        print(songs.json())
+        # for i, y in songs['data'][0].values():
+        #     print(i, ' ', y, '/n')
+    # print(res)preview
+
+
+def trans_word(message: Message) -> None:
+    log(message, 'info')
+    bot.send_message(message.chat.id, tr_w(message.text))
 
 
 bot.polling(none_stop=True)
