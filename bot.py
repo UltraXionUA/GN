@@ -1,4 +1,4 @@
-"""Main file for GNBot"""
+"""Mains file for GNBot"""
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
 from funcs import tr_w, rend_d, hi_r, log
 from config import TOKEN, API, PasteBin
