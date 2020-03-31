@@ -1,3 +1,4 @@
+"""Flask web app for GNBot"""
 from flask import Flask, request, abort
 import git
 import os
@@ -5,12 +6,11 @@ import hmac
 import hashlib
 import json
 
-
 SECRET_KEY = os.getenv("SECRET_KEY")
 app = Flask(__name__)
 
 
-def is_valid_signature(x_hub_signature, data, private_key):
+def is_valid_signature(x_hub_signature, data, private_key):  # Key decryption
     hash_algorithm, github_signature = x_hub_signature.split('=', 1)
     algorithm = hashlib.__dict__.get(hash_algorithm)
     encoded_key = bytes(private_key, 'latin-1')
@@ -18,46 +18,18 @@ def is_valid_signature(x_hub_signature, data, private_key):
     return hmac.compare_digest(mac.hexdigest(), github_signature)
 
 
-@app.route('/')
+@app.route('/')  # Test home page
 def index():
     return '<h1>Hello World</h1>'
 
 
-@app.route('/GSTV', methods=['POST'])
-def gstv_webhook():
-    data = request.get_json()
-    with open('GSTV_dump.json', 'a') as f:
-        json.dump(data, f)
-    with open('GSTV_dumps.json', 'a') as f:
-        f.write(json.dumps(data))
-    # youtube_handler(request)
-
-
-@app.route('/Dobryak', methods=['POST'])
-def dobryak_webhook():
-    data = request.get_json()
-    with open('Dobryak_dump.json', 'a') as f:
-        json.dump(data, f)
-    with open('Dobryak_dumps.json', 'a') as f:
-        f.write(json.dumps(data))
-    # youtube_handler(request)
-
-
-@app.route('/update_server', methods=['POST'])
-def webhook():
+@app.route('/update_server', methods=['POST'])  # Webhook for GitHun
+def webhook() -> str:
     if request.method != 'POST':
         return 'OK'
     else:
         abort_code = 418
-        if 'X-Github-Event' not in request.headers:
-            abort(abort_code)
-        if 'X-Github-Delivery' not in request.headers:
-            abort(abort_code)
-        if 'X-Hub-Signature' not in request.headers:
-            abort(abort_code)
-        if not request.is_json:
-            abort(abort_code)
-        if 'User-Agent' not in request.headers:
+        if 'X-Github-Event' or 'X-Github-Delivery' or 'X-Hub-Signature' or 'User-Agent' not in request.headers:
             abort(abort_code)
         ua = request.headers.get('User-Agent')
         if not ua.startswith('GitHub-Hookshot/'):

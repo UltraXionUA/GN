@@ -2,6 +2,7 @@
   <dictionary name="ultraxion">
     <words>
       <w>helloworld</w>
+      <w>webhook</w>
     </words>
   </dictionary>
 </component>

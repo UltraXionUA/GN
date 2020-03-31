@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
+"""Control DB file for GNBot"""
 from funcs import log
 import config
 import pymysql
 import logging
 
 
-def start_connection():  # Подключиться к базе данных.
+def start_connection():  # Connection to DB
     try:
         connection = pymysql.connect(**config.BD_CONNECT)
         return connection
@@ -13,7 +13,7 @@ def start_connection():  # Подключиться к базе данных.
         log('Ошибка подключения к БД!', 'error')
 
 
-def get_joke() -> dict:  # Рандомная шутка
+def get_joke() -> dict:  # Random Joke
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute('SELECT `setup`, `panchline` FROM Joke ORDER BY RAND() LIMIT 1')
@@ -22,7 +22,7 @@ def get_joke() -> dict:  # Рандомная шутка
     return result
 
 
-def change_karma(user, action):  # Изменение кармы
+def change_karma(user, action) -> dict:  # Change Karma
     connection = start_connection()
     with connection.cursor() as cursor:
         if cursor.execute(f'SELECT * FROM Users WHERE username LIKE \'{user.username}\'') == 0:
@@ -42,7 +42,7 @@ def change_karma(user, action):  # Изменение кармы
     return karma
 
 
-def random_gn_sticker() -> str:  # Рандомный стикер ГН
+def random_gn_sticker() -> str:  # Random sticker from GN
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute('SELECT `item_id` FROM Stickers_gn ORDER BY RAND() LIMIT 1')
@@ -52,7 +52,7 @@ def random_gn_sticker() -> str:  # Рандомный стикер ГН
     return result
 
 
-def add_sticker(item_id, emoji, name):  # Добавить стикер
+def add_sticker(item_id, emoji, name) -> None:  # Add sticker
     connection = start_connection()
     with connection.cursor() as cursor:
         if cursor.execute(f'SELECT * FROM Stickers WHERE emoji LIKE \'{emoji}\''
@@ -66,7 +66,7 @@ def add_sticker(item_id, emoji, name):  # Добавить стикер
     logging.info("Отключение от БД")
 
 
-def random_sticker() -> str:  # Рандомный стикер
+def random_sticker() -> str:  # Random sticker
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute('SELECT `item_id` FROM Stickers ORDER BY RAND() LIMIT 1')
@@ -76,7 +76,7 @@ def random_sticker() -> str:  # Рандомный стикер
     return result
 
 
-def add_answer(answer):  # Добавить ответ
+def add_answer(answer) -> None:  # Add answer
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'INSERT INTO `Answer`(`answer`) VALUES (\'{answer}\');')
@@ -85,7 +85,7 @@ def add_answer(answer):  # Добавить ответ
     logging.info("Отключение от БД")
 
 
-def get_simple_answer() -> str:  # Рандомный ответ
+def get_simple_answer() -> str:  # Get random answer
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(
@@ -96,7 +96,7 @@ def get_simple_answer() -> str:  # Рандомный ответ
     return result
 
 
-def add_to_db(word, answer):  # Добавить слово ответ
+def add_to_db(word, answer) -> None:  # Add word and answer
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'INSERT INTO `Word_Answer`(`word`, `answer`) VALUES (\'{word}\', \'{answer}\');')
@@ -105,7 +105,7 @@ def add_to_db(word, answer):  # Добавить слово ответ
     logging.info("Отключение от БД")
 
 
-def get_answer(word) -> str:  # Получить рандомный ответ
+def get_answer(word) -> str:  # Get random answer with word
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(
@@ -116,7 +116,7 @@ def get_answer(word) -> str:  # Получить рандомный ответ
     return result
 
 
-def get_all_word() -> list:  # Получить все ответы
+def get_all_word() -> list:  # Get all answers
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(
@@ -127,7 +127,7 @@ def get_all_word() -> list:  # Получить все ответы
     return list(result)
 
 
-def random_meme() -> str:  # Рандомный мем
+def random_meme() -> str:  # Random meme
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute('SELECT `url` FROM Memes ORDER BY RAND() LIMIT 1')  # Выполнить команду запроса.
@@ -137,7 +137,7 @@ def random_meme() -> str:  # Рандомный мем
     return result
 
 
-def add_memes(array):  # Добавить мемы
+def add_memes(array):  # Add memes
     connection = start_connection()
     with connection.cursor() as cursor:
         for i in array:
@@ -148,7 +148,7 @@ def add_memes(array):  # Добавить мемы
     logging.info("Отключение от БД")
 
 
-# def add_gn_sticker(item_id, emoji, name):  # Добавить стикер в гн
+# def add_gn_sticker(item_id, emoji, name):  # Add stickers from GN
 #     connection = start_connection()
 #     with connection.cursor() as cursor:
 #         if cursor.execute(f'SELECT * FROM Stickers_gn WHERE set_name LIKE \'{name}\''

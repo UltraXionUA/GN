@@ -1,3 +1,4 @@
+"""Parser file for GNBot"""
 from bs4 import BeautifulSoup
 from config import URLS
 from db import add_memes
@@ -7,7 +8,7 @@ import schedule
 import time
 
 
-def parser_memes() -> None:  # Типо парсер
+def parser_memes() -> None:  # Main parser
     user = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) ' \
            'Chrome/80.0.3987.116 Safari/537.36 OPR/67.0.3575.87'
     for i in URLS['memes']:
@@ -22,9 +23,8 @@ def parser_memes() -> None:  # Типо парсер
 
 
 def main():
-    parser_memes()
-    schedule.every().day.at("12:00").do(parser_memes)
-    schedule.every().day.at("00:00").do(parser_memes)
+    schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
+    schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
     while True:
         schedule.run_pending()
         time.sleep(1)
