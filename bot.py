@@ -98,7 +98,7 @@ def music_handler(message: Message) -> None:
                  InlineKeyboardButton('По треку🎼', callback_data='track?q='))
     msg = bot.send_message(message.chat.id, 'Как будем искать музыку?🎧', reply_markup=keyboard)
     time.sleep(10)
-    bot.delete_message(msg.chat.id, msg.message_id)
+    bot.delete_message(message.chat.id, msg.message_id)
 
 
 @bot.message_handler(commands=['translate'])  # /translate
@@ -293,7 +293,7 @@ def callback_query(call) -> None:
     time.sleep(1)
     bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
     if call.data == 'artist?q=' or call.data == 'track?q=':
-        bot.send_chat_action(call.from_user.id, 'typing')
+        bot.send_chat_action(call.message.chat.id, 'typing')
         time.sleep(1)
         if call.data == 'artist?q=':
             bot.answer_callback_query(call.id, 'Вы выбрали поиск по артисту')
@@ -305,13 +305,13 @@ def callback_query(call) -> None:
     elif call.data == 'Kharkov' or call.data == 'Poltava':
         res = requests.get(API['API_Weather'].format(call.data)).json()
         bot.answer_callback_query(call.id, 'Вы выбрали ' + tr_w(call.data))
-        bot.send_message(call.from_user.id, f"Город: {tr_w(call.data).title()}🏢\n"
-                                            f"Погода: {tr_w(res['weather'][0]['description']).title()}☀️\n"
-                                            f"Теспература: {(res['main']['temp'])}°C🌡\n"
-                                            f"По ощушению: {(res['main']['feels_like'])}°C🌡\n"
-                                            f"Атмосферное давление: {res['main']['pressure']} дин·см²⏲\n"
-                                            f"Влажность: {res['main']['humidity']} %💧\n"
-                                            f"Ветер: {res['wind']['speed']} м\\с💨\n",
+        bot.send_message(call.message.chat.id, f"Город: {tr_w(call.data).title()}🏢\n"
+                                                f"Погода: {tr_w(res['weather'][0]['description']).title()}☀️\n"
+                                                f"Теспература: {(res['main']['temp'])}°C🌡\n"
+                                                f"По ощушению: {(res['main']['feels_like'])}°C🌡\n"
+                                                f"Атмосферное давление: {res['main']['pressure']} дин·см²⏲\n"
+                                                f"Влажность: {res['main']['humidity']} %💧\n"
+                                                f"Ветер: {res['wind']['speed']} м\\с💨\n",
                          reply_markup=ReplyKeyboardRemove(selective=True))
     else:
         bot.answer_callback_query(call.id, call.data.title())
@@ -355,7 +355,7 @@ def get_song(message: Message, choice: str) -> None:
                 bot.send_chat_action(message.chat.id, 'upload_photo')
                 bot.send_photo(message.chat.id, res['data'][0]['picture_xl'])
                 for link, preview, title, name, duration in data:
-                    bot.send_chat_action(message.from_user.id, 'upload_audio')
+                    bot.send_chat_action(message.chat.id, 'upload_audio')
                     bot.send_audio(message.chat.id, audio=preview, caption=link, duration=duration,
                                    performer=name, title=title, disable_notification=True)
             else:
@@ -365,7 +365,7 @@ def get_song(message: Message, choice: str) -> None:
             if song[0]:
                 data = [song[0]['link'], song[0]['preview'], song[0]['title'],
                         song[0]['artist']['name'], song[0]['duration']]
-                bot.send_chat_action(message.from_user.id, 'upload_audio')
+                bot.send_chat_action(message.chat.id, 'upload_audio')
                 bot.send_audio(message.chat.id, audio=data[1], caption=data[0], duration=data[4],
                                performer=data[3], title=data[2])
             else:
