@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from funcs import log
 import config
 import pymysql
 import logging
@@ -7,10 +8,9 @@ import logging
 def start_connection():  # Подключиться к базе данных.
     try:
         connection = pymysql.connect(**config.BD_CONNECT)
-        logging.info("Успешное подклчение к БД!")
         return connection
     except pymysql.err.OperationalError:
-        raise ConnectionError('Ошибка подключения к БД!')
+        log('Ошибка подключения к БД!', 'error')
 
 
 def get_joke() -> dict:  # Рандомная шутка
@@ -19,7 +19,6 @@ def get_joke() -> dict:  # Рандомная шутка
         cursor.execute('SELECT `setup`, `panchline` FROM Joke ORDER BY RAND() LIMIT 1')
         result = cursor.fetchone()
     connection.close()
-    logging.info("Отключение от БД")
     return result
 
 
@@ -40,7 +39,6 @@ def change_karma(user, action):  # Изменение кармы
         cursor.execute(f'UPDATE `Users` SET `karma` = \'{karma}\' WHERE `username` = \'{user.username}\';')
         connection.commit()
     connection.close()
-    logging.info("Отключение от БД")
     return karma
 
 

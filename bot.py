@@ -35,7 +35,10 @@ def help_handler(message: Message):
                                       'ru_meme - Рандомный мем из нашей базы данных\n'
                                       'en_meme - Рандомный англоязычный мем\n'
                                       'gif - Рандомная гифка\n'
-                                      'sticker - Рандомный стикер ашей базы дданых\n'
+                                      'joke - Рандомная шутка\n'
+                                      'dice - Кинуть кубик\n'
+                                      'sticker - Рандомный стикер нашей базы дданых\n'
+                                      'sticker_gn - Рандомный стикер ГН\n'
                                       'weather - Погода на текущий день\n'
                                       'translate - Пеереводчик\n'
                                       '______Админ_команды______\n'
@@ -82,6 +85,7 @@ def meme_handler(message: Message):
 def meme_en_handler(message: Message):
     bot.send_chat_action(message.chat.id, 'upload_photo')
     meme = requests.get(API['API_Meme']).json()
+    print(meme)
     bot.send_photo(message.chat.id, meme['url'])
     log(message, 'info')
 
@@ -212,6 +216,7 @@ def dice_handler(message: Message):
         second_dice['username'] = None
         second_dice['dice'] = 0
     res = requests.post(f'https://api.telegram.org/bot{TOKEN}/sendDice?chat_id={message.chat.id}').json()
+    log(message, 'info')
     if first_dice['username'] is None:
         first_dice['username'] = res['result']['chat']['username']
         first_dice['dice'] = res['result']['dice']['value']

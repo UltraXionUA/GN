@@ -22,7 +22,7 @@ def log(message, type_l='None') -> None:  # Лог в консоль
         elif type_l == 'error':
             logging.error(get_info())
     else:
-        print("<!-------!>", datetime.now(), "<!-------!>\n", message)
+        print("<!-------!>", datetime.now().strftime("%Y-%m-%d-%H.%M.%S"), "<!-------!>\n", message)
         logging.info(message + ' ' + str(datetime.now()))
 
 

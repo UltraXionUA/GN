@@ -3,6 +3,8 @@ from config import URLS
 from db import add_memes
 import requests
 import re
+import schedule
+import time
 
 
 def parser_memes() -> None:  # Типо парсер
@@ -21,6 +23,11 @@ def parser_memes() -> None:  # Типо парсер
 
 def main():
     parser_memes()
+    schedule.every().day.at("12:00").do(parser_memes)
+    schedule.every().day.at("00:00").do(parser_memes)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 
 if __name__ == "__main__":
