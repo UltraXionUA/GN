@@ -15,6 +15,9 @@ import re
 
 bot = TeleBot(TOKEN)
 log('Bot is successful running!')
+# Dice local storage
+first_dice: dict = {'username': None, 'dice': 0}
+second_dice: dict = {'username': None, 'dice': 0}
 
 
 @bot.message_handler(commands=['start'])  # /start
@@ -103,8 +106,8 @@ def music_handler(message: Message) -> None:
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
     keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(InlineKeyboardButton('По исполнителю', callback_data='artist?q='),
-                 InlineKeyboardButton('По треку', callback_data='track?q='))
+    keyboard.add(InlineKeyboardButton('По исполнителю🎤', callback_data='artist?q='),
+                 InlineKeyboardButton('По треку🎼', callback_data='track?q='))
     msg = bot.send_message(message.chat.id, 'Как будем искать музыку?🎧', reply_markup=keyboard)
     # time.sleep(10)
     # bot.delete_message(msg.chat.id, msg.message_id)
@@ -211,11 +214,6 @@ def text_handler(message: Message) -> None:
     bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
 
 
-# Dice local storage
-first_dice: dict = {'username': None, 'dice': 0}
-second_dice: dict = {'username': None, 'dice': 0}
-
-
 @bot.message_handler(commands=['dice'])  # /dice
 def dice_handler(message: Message) -> None:
     res = requests.post(f'https://api.telegram.org/bot{TOKEN}/sendDice?chat_id={message.chat.id}').json()
@@ -239,13 +237,6 @@ def dice_handler(message: Message) -> None:
             else:
                 bot.send_message(message.chat.id, 'Победила дружба🤝')
         reset_users()
-
-
-def reset_users():
-    first_dice['username'] = None
-    first_dice['dice'] = 0
-    second_dice['username'] = None
-    second_dice['dice'] = 0
 
 
 @bot.message_handler(content_types=['text'])  # All messages
@@ -300,21 +291,37 @@ def callback_query(call) -> None:
                          reply_markup=ReplyKeyboardRemove(selective=True))
 
 
-def get_song(message: Message, data: str) -> None:
+def get_song(message: Message, choice: str) -> None:
     log(message, 'info')
-    res = requests.get(API['API_Deezer'] + data + message.text.replace(' ', '+')).json()
-    if data == 'artist?q=':
+    res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
+    if choice == 'artist?q=':
+        songs = requests.get(res['data'][0]['tracklist'].replace('50', '5')).json()
+        data = [(i['link'], i['preview'], i['title'], i['contributors'][0]['name'], i['duration']) for i in songs['data']]
+        bot.send_chat_action(message.chat.id, 'upload_photo')
         bot.send_photo(message.chat.id, res['data'][0]['picture_xl'])
-        songs = requests.get(res['data'][0]['tracklist'].replace('50', '10')).json()
-        print(songs.json())
-        # for i, y in songs['data'][0].values():
-        #     print(i, ' ', y, '/n')
-    # print(res)preview
+        for link, preview, title, name, duration in data:
+            bot.send_chat_action(message.chat.id, 'upload_audio')
+            bot.send_audio(message.chat.id, audio=preview, caption=link, duration=duration,
+                           performer=name, title=title, disable_notification=True)
+    else:
+        song = res['data'][0]
+        data = [song['link'], song['preview'], song['title'], song['artist']['name'], song['duration']]
+        bot.send_chat_action(message.chat.id, 'upload_audio')
+        bot.send_audio(message.chat.id, audio=data[1], caption=data[0], duration=data[4],
+                       performer=data[3], title=data[2])
 
 
 def trans_word(message: Message) -> None:
     log(message, 'info')
+    bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, tr_w(message.text))
+
+
+def reset_users():
+    first_dice['username'] = None
+    first_dice['dice'] = 0
+    second_dice['username'] = None
+    second_dice['dice'] = 0
 
 
 bot.polling(none_stop=True)
