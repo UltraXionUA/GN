@@ -29,7 +29,13 @@ def webhook() -> str:
         return 'OK'
     else:
         abort_code = 418
-        if 'X-Github-Event' or 'X-Github-Delivery' or 'X-Hub-Signature' or 'User-Agent' not in request.headers:
+        if 'X-Github-Event' not in request.headers:
+            abort(abort_code)
+        if 'X-Github-Delivery' not in request.headers:
+            abort(abort_code)
+        if 'X-Hub-Signature' not in request.headers:
+            abort(abort_code)
+        if 'User-Agent'not in request.headers:
             abort(abort_code)
         ua = request.headers.get('User-Agent')
         if not ua.startswith('GitHub-Hookshot/'):
