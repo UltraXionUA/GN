@@ -4,6 +4,7 @@ from funcs import tr_w, rend_d, hi_r, log
 from config import TOKEN, API  # TEST_TOKEN
 from datetime import datetime as dt
 from pars import parser_memes
+from threading import Timer
 from telebot import TeleBot
 import requests
 import db
@@ -14,9 +15,6 @@ import re
 
 bot = TeleBot(TOKEN)
 log('Bot is successful running!')
-# Dice local storage
-first_dice: dict = {'username': None, 'dice': 0}
-second_dice: dict = {'username': None, 'dice': 0}
 
 
 @bot.message_handler(commands=['start'])  # /start
@@ -206,21 +204,22 @@ def text_handler(message: Message) -> None:
     bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
 
 
+# Dice local storage
+first_dice: dict = {'username': None, 'dice': 0}
+second_dice: dict = {'username': None, 'dice': 0}
+
+
 @bot.message_handler(commands=['dice'])  # /dice
 def dice_handler(message: Message) -> None:
-    def reset_users():
-        first_dice['username'] = None
-        first_dice['dice'] = 0
-        second_dice['username'] = None
-        second_dice['dice'] = 0
     res = requests.post(f'https://api.telegram.org/bot{TOKEN}/sendDice?chat_id={message.chat.id}').json()
     log(message, 'info')
+    t = Timer(120.0, reset_users)
     if first_dice['username'] is None:
-        first_dice['username'] = res['result']['chat']['username']
-        first_dice['dice'] = res['result']['dice']['value']
+        first_dice['username'], first_dice['dice'] = res['result']['chat']['username'], res['result']['dice']['value']
+        t.start()
     elif second_dice['username'] is None:
-        second_dice['username'] = res['result']['chat']['username']
-        second_dice['dice'] = res['result']['dice']['value']
+        second_dice['username'], second_dice['dice'] = res['result']['chat']['username'], res['result']['dice']['value']
+        t.cancel()
         if first_dice['username'] != second_dice['username']:
             bot.send_chat_action(message.chat.id, 'typing')
             time.sleep(4)
@@ -233,6 +232,13 @@ def dice_handler(message: Message) -> None:
             else:
                 bot.send_message(message.chat.id, 'Победила дружба🤝')
         reset_users()
+
+
+def reset_users():
+    first_dice['username'] = None
+    first_dice['dice'] = 0
+    second_dice['username'] = None
+    second_dice['dice'] = 0
 
 
 @bot.message_handler(content_types=['text'])  # All messages

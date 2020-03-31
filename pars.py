@@ -23,7 +23,9 @@ def parser_memes() -> None:  # Main parser
 
 
 def main():
+    schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
     schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
+    schedule.every().day.at("06:00").do(parser_memes)  # Do pars every 06:00
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
     while True:
         schedule.run_pending()
