@@ -347,30 +347,33 @@ def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
 def get_song(message: Message, choice: str) -> None:
     log(message, 'info')
     res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
-    if choice == 'artist?q=' and res['data']:
-        songs = requests.get(res['data'][0]['tracklist'].replace('50', '5')).json()
-        if songs['data']:
-            data = [(i['link'], i['preview'], i['title'], i['contributors'][0]['name'], i['duration']) for i in songs['data']]
-            bot.send_chat_action(message.chat.id, 'upload_photo')
-            bot.send_photo(message.chat.id, res['data'][0]['picture_xl'])
-            for link, preview, title, name, duration in data:
-                print(link, preview, title, name, duration)
-                bot.send_chat_action(message.chat.id, 'upload_audio')
-                bot.send_audio(message.chat.id, audio=preview, caption=link, duration=duration,
-                               performer=name, title=title, disable_notification=True)
+    if res['data']:
+        if choice == 'artist?q=':
+            songs = requests.get(res['data'][0]['tracklist'].replace('50', '5')).json()
+            if songs['data']:
+                data = [(i['link'], i['preview'], i['title'], i['contributors'][0]['name'], i['duration']) for i in songs['data']]
+                bot.send_chat_action(message.chat.id, 'upload_photo')
+                bot.send_photo(message.chat.id, res['data'][0]['picture_xl'])
+                for link, preview, title, name, duration in data:
+                    bot.send_chat_action(message.from_user.id, 'upload_audio')
+                    bot.send_audio(message.chat.id, audio=preview, caption=link, duration=duration,
+                                   performer=name, title=title, disable_notification=True)
+            else:
+                bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
+        elif choice == 'track?q=':
+            song = res['data']
+            if song[0]:
+                data = [song[0]['link'], song[0]['preview'], song[0]['title'],
+                        song[0]['artist']['name'], song[0]['duration']]
+                bot.send_chat_action(message.from_user.id, 'upload_audio')
+                bot.send_audio(message.chat.id, audio=data[1], caption=data[0], duration=data[4],
+                               performer=data[3], title=data[2])
+            else:
+                bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
         else:
             bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
-    elif choice == 'track?q=' and res['data']:
-        song = res['data']
-        if song[0]:
-            data = [song[0]['link'], song[0]['preview'], song[0]['title'],
-                    song[0]['artist']['name'], song[0]['duration']]
-            print(data, 'n')
-            bot.send_chat_action(message.chat.id, 'upload_audio')
-            bot.send_audio(message.chat.id, audio=data[1], caption=data[0], duration=data[4],
-                           performer=data[3], title=data[2])
-        else:
-            bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
+    else:
+        bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
 
 
 def trans_word(message: Message) -> None:
