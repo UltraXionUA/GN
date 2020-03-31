@@ -16,17 +16,17 @@ API = {'API_Weather': 'http://' + 'api.openweathermap.org/data/2.5/weather?q={}&
 
 URLS = {'memes': ['https://' + 'www.reddit.com/r/Pikabu/search?q=flair%3AМем&restrict_sr=1&sort=new']}
 
-# BD_CONNECT = {'user': 'UltraXionUA',  # Онлайн БД
-#               'password': 'DB25813123321',
-#               'host': 'UltraXionUA.mysql.pythonanywhere-services.com',
-#               'database': 'UltraXionUA$test',
-#               'cursorclass': pymysql.cursors.DictCursor
-#               }
-
-BD_CONNECT = {'unix_socket': '/Applications/MAMP/tmp/mysql/mysql.sock',  # Локальная БД
-              'user': 'root',
-              'password': 'root',
-              'db': 'Bot_DB',
-              'charset': 'utf8mb4',
+BD_CONNECT = {'user': 'UltraXionUA',  # Онлайн БД
+              'password': 'DB25813123321',
+              'host': 'UltraXionUA.mysql.pythonanywhere-services.com',
+              'database': 'UltraXionUA$test',
               'cursorclass': pymysql.cursors.DictCursor
               }
+
+# BD_CONNECT = {'unix_socket': '/Applications/MAMP/tmp/mysql/mysql.sock',  # Локальная БД
+#               'user': 'root',
+#               'password': 'root',
+#               'db': 'Bot_DB',
+#               'charset': 'utf8mb4',
+#               'cursorclass': pymysql.cursors.DictCursor
+#               }
