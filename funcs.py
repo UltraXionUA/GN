@@ -5,7 +5,7 @@ from langdetect import detect
 from datetime import datetime
 import logging
 
-logging.basicConfig(filename="logger.log", level=logging.INFO, filemode='w')  # Turn on logger
+logging.basicConfig(filename="logger.log", level=logging.INFO)  # Turn on logger
 
 
 def log(message, type_l='None') -> None:  # Message processing
