@@ -266,7 +266,6 @@ def dice_handler(message: Message) -> None:
 @bot.message_handler(content_types=['text'])  # All messages
 @bot.edited_message_handler(content_types=['text'])
 def text_handler(message: Message) -> None:
-    print(message)
     if dt.fromtimestamp(message.date).strftime("%Y-%m-%d-%H.%M.%S") >= dt.now().strftime("%Y-%m-%d-%H.%M.%S"):
         log(message, 'info')
         text = message.text.lower()
