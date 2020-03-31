@@ -15,6 +15,10 @@ API = {'API_Weather': 'http://' + 'api.openweathermap.org/data/2.5/weather?q={}&
        'API_Deezer': 'https://' + 'api.deezer.com/search/'
        }
 
+PasteBin = {'URL': 'http://' + 'pastebin.com/api/api_post.php',
+            'DevApi': '2d13a3dcd3657d8d7a64d3ea12dfbaf5',
+            'UserApi': 'eaaf7366142b140c579a72a63b1a1d9c'}
+
 URLS = {'memes': ['https://' + 'www.reddit.com/r/Pikabu/search?q=flair%3AМем&restrict_sr=1&sort=new']}  # Memes URL
 
 BD_CONNECT = {'user': 'UltraXionUA',  # Python Anywhere DB

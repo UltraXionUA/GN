@@ -1,8 +1,9 @@
 """Main file for GNBot"""
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
 from funcs import tr_w, rend_d, hi_r, log
-from config import TOKEN, API  # TEST_TOKEN
+from config import TOKEN, API, PasteBin
 from datetime import datetime as dt
+from urllib import parse, request
 from pars import parser_memes
 from threading import Timer
 from telebot import TeleBot
@@ -11,9 +12,8 @@ import db
 import time
 import random
 import re
-from urllib import parse, request
 
-print(dt.fromtimestamp(208))
+
 bot = TeleBot(TOKEN)
 log('Bot is successful running!')
 # Dice local storage
@@ -32,21 +32,8 @@ def start_handler(message: Message) -> None:
 @bot.message_handler(commands=['help'])  # /help
 def help_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'typing')
-    bot.send_message(message.chat.id, 'start - Начальная страница\n'
-                                      'ru_meme - Рандомный мем из нашей базы данных\n'
-                                      'en_meme - Рандомный англоязычный мем\n'
-                                      'gif - Рандомная гифка\n'
-                                      'joke - Рандомная шутка\n'
-                                      'dice - Кинуть кубик\n'
-                                      'sticker - Рандомный стикер нашей базы дданых\n'
-                                      'sticker_gn - Рандомный стикер ГН\n'
-                                      'weather - Погода на текущий день\n'
-                                      'translate - Пеереводчик\n'
-                                      '______Админ_команды______\n'
-                                      'Обучение бота: \n'
-                                      '- Любой текст (Добавить фразу в БД)\n'
-                                      'Слово - Любой текст (Добавить фразу с ассоциацией к слову в БД)\n'
-                                      '-parser (Отпарсить контент в БД)')
+    bot.send_message(message.chat.id, 'Тут должна была быть помощь🆘, но её тут не будет🌚\n'
+                                      'Если что пиши мне: 💢@Ultra_Xion💢')
     log(message, 'info')
 
 
@@ -117,7 +104,7 @@ def music_handler(message: Message) -> None:
 @bot.message_handler(commands=['translate'])  # /translate
 def translate_handler(message) -> None:
     bot.send_chat_action(message.chat.id, 'typing')
-    msg = bot.send_message(message.chat.id, 'Введите то что нужно перевести')
+    msg = bot.send_message(message.chat.id, 'Введите то что нужно перевести👁‍🗨')
     bot.register_next_step_handler(msg, trans_word)
     log(message, 'info')
 
@@ -188,6 +175,7 @@ def parser_handler(message: Message) -> None:
 @bot.message_handler(content_types=['text'], regexp=r'^\-$')
 def text_handler(message: Message) -> None:
     if message.reply_to_message:
+        log(message, 'info')
         reply_to = message.reply_to_message.from_user
         if message.text == '+':
             bot.send_message(message.chat.id, f'{message.from_user.username.title()} подкинул 10 к карме '
@@ -217,22 +205,30 @@ def text_handler(message: Message) -> None:
 
 @bot.message_handler(commands=['code'])  # Send url on PasteBin
 def code_handler(message: Message) -> None:
+    log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('Bash', callback_data='bash'),
-                 InlineKeyboardButton('HTML 5', callback_data='html5'))
+                 InlineKeyboardButton('HTML 5', callback_data='html5'),
+                 InlineKeyboardButton('CSS', callback_data='css'))
     keyboard.add(InlineKeyboardButton('JavaScript', callback_data='javascript'),
-                 InlineKeyboardButton('Pascal', callback_data='pascal'))
+                 InlineKeyboardButton('Pascal', callback_data='pascal'),
+                 InlineKeyboardButton('JSON', callback_data='json'))
     keyboard.add(InlineKeyboardButton('Perl', callback_data='perl'),
-                 InlineKeyboardButton('C#', callback_data=' csharp'))
+                 InlineKeyboardButton('C#', callback_data=' csharp'),
+                 InlineKeyboardButton('Objective C', callback_data='objc'))
     keyboard.add(InlineKeyboardButton('C', callback_data='c'),
-                 InlineKeyboardButton('C++', callback_data='cpp'))
+                 InlineKeyboardButton('C++', callback_data='cpp'),
+                 InlineKeyboardButton('Ruby', callback_data='ruby'))
     keyboard.add(InlineKeyboardButton('Delphi', callback_data='delphi'),
-                 InlineKeyboardButton('Java', callback_data='java'))
+                 InlineKeyboardButton('Java', callback_data='java'),
+                 InlineKeyboardButton('CoffeeScript', callback_data='coffeescript'))
     keyboard.add(InlineKeyboardButton('PHP', callback_data='php'),
-                 InlineKeyboardButton('Python', callback_data='python'))
+                 InlineKeyboardButton('Python', callback_data='python'),
+                 InlineKeyboardButton('PostgreSQL', callback_data='postgresql'))
     keyboard.add(InlineKeyboardButton('SQL', callback_data='sql'),
-                 InlineKeyboardButton('Swift', callback_data='swift'))
+                 InlineKeyboardButton('Swift', callback_data='swift'),
+                 InlineKeyboardButton('Rust', callback_data='rust'))
     leng = bot.send_message(message.chat.id, 'Выберите нужный вам язык😈', reply_markup=keyboard)
     time.sleep(20)
     bot.delete_message(message.chat.id, leng.message_id)
@@ -240,6 +236,7 @@ def code_handler(message: Message) -> None:
 
 @bot.message_handler(commands=['dice'])  # /dice
 def dice_handler(message: Message) -> None:
+    log(message, 'info')
     res = requests.post(f'https://api.telegram.org/bot{TOKEN}/sendDice?chat_id={message.chat.id}').json()
     log(message, 'info')
     t = Timer(120.0, reset_users)
@@ -293,10 +290,11 @@ def text_handler(message: Message) -> None:
 
 @bot.callback_query_handler(func=lambda call: True)  # Catch callback's
 def callback_query(call) -> None:
-    bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
     time.sleep(1)
+    bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
     if call.data == 'artist?q=' or call.data == 'track?q=':
         bot.send_chat_action(call.from_user.id, 'typing')
+        time.sleep(1)
         if call.data == 'artist?q=':
             bot.answer_callback_query(call.id, 'Вы выбрали по артисту')
             msg = bot.send_message(call.message.chat.id, 'Введите имя/псевдоним/группу')
@@ -327,18 +325,18 @@ def set_name(message: Message, leng: str) -> None:  # Set file name
     time.sleep(1)
     name = bot.send_message(message.chat.id, 'Укажите имя проекта💡')
     bot.register_next_step_handler(name, get_url, message.text, leng)
+    log(message, 'info')
 
 
 def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
-    url = "http://pastebin.com/api/api_post.php"
-    values = {'api_option': 'paste', 'api_dev_key': '2d13a3dcd3657d8d7a64d3ea12dfbaf5',
+    log(message, 'info')
+    values = {'api_option': 'paste', 'api_dev_key': f'{PasteBin["DevApi"]}',
               'api_paste_code': f'{code}', 'api_paste_private': '0',
-              'api_paste_name': f'{message.text}.php', 'api_paste_expire_date': '1D',
-              'api_paste_format': f'{leng}', 'api_user_key': 'eaaf7366142b140c579a72a63b1a1d9c',
-              'api_paste_name': f'{message.text}.php', 'api_paste_code': f'{code}'}
-    data = parse.urlencode(values)
-    data = data.encode('utf-8')
-    req = request.Request(url, data)
+              'api_paste_name': f'{message.text}', 'api_paste_expire_date': '1D',
+              'api_paste_format': f'{leng}', 'api_user_key': f'{PasteBin["UserApi"]}',
+              'api_paste_name': f'{message.text}', 'api_paste_code': f'{code}'}
+    data = parse.urlencode(values).encode('utf-8')
+    req = request.Request(PasteBin['URL'], data)
     with request.urlopen(req) as response:
         url_bin = str(response.read()).replace('b\'', '').replace('\'', '')
     bot.send_chat_action(message.from_user.id, 'typing')
@@ -358,11 +356,8 @@ def get_song(message: Message, choice: str) -> None:
             for link, preview, title, name, duration in data:
                 print(link, preview, title, name, duration)
                 bot.send_chat_action(message.chat.id, 'upload_audio')
-                requests.post(f'https://api.telegram.org/bot{TOKEN}/sendAudio?chat_id={message.chat.id}'
-                              f'&audio={preview}&caption={link}&duration={duration}&performer={name}'
-                              f'&title={title}&disable_notification=True')
-                # bot.send_audio(message.chat.id, audio=preview, caption=link, duration=duration,
-                #                performer=name, title=title, disable_notification=True)
+                bot.send_audio(message.chat.id, audio=preview, caption=link, duration=duration,
+                               performer=name, title=title, disable_notification=True)
         else:
             bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
     elif choice == 'track?q=' and res['data']:
@@ -384,7 +379,7 @@ def trans_word(message: Message) -> None:
     bot.send_message(message.chat.id, tr_w(message.text))
 
 
-def reset_users():
+def reset_users() -> None:
     first_dice['username'] = None
     first_dice['dice'] = 0
     second_dice['username'] = None
@@ -393,3 +388,7 @@ def reset_users():
 
 bot.polling(none_stop=True)
 time.sleep(100)
+
+# requests.post(f'https://api.telegram.org/bot{TOKEN}/sendAudio?chat_id={message.chat.id}'
+#                               f'&audio={preview}&caption={link}&duration={duration}&performer={name}'
+#                               f'&title={title}&disable_notification=True')

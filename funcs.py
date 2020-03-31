@@ -33,9 +33,9 @@ def log(message, type_l='None') -> None:  # Message processing
 def tr_w(words) -> str:  # Define and translate
     leng_code = detect(words)
     if leng_code == 'mk':
-        return 'Не удалось распознат язык'
-    return Translator().translate(words, dest='en').text if leng_code == 'ru' \
-        else Translator().translate(words, dest='ru').text
+        return 'Не удалось распознат язык⛔️'
+    return Translator().translate(words, dest='en').text + '🇷🇺' if leng_code == 'ru' \
+        else Translator().translate(words, dest='ru').text + '🇬🇧'
 
 
 def rend_d() -> bool:  # Random True or False
