@@ -293,13 +293,13 @@ def callback_query(call) -> None:
     time.sleep(1)
     bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
     if call.data == 'artist?q=' or call.data == 'track?q=':
-        bot.send_chat_action(call.message.chat.id, 'typing')
+        bot.send_chat_action(call.from_user.id, 'typing')
         time.sleep(1)
         if call.data == 'artist?q=':
-            bot.answer_callback_query(call.id, 'Вы выбрали по артисту')
-            msg = bot.send_message(call.message.chat.id, 'Введите имя/псевдоним/группу')
+            bot.answer_callback_query(call.id, 'Вы выбрали поиск по артисту')
+            msg = bot.send_message(call.message.chat.id, 'Введите имя, псевдоним или группу')
         else:
-            bot.answer_callback_query(call.id, 'Вы выбрали по треку')
+            bot.answer_callback_query(call.id, 'Вы выбрали поиск по треку')
             msg = bot.send_message(call.message.chat.id, 'Введите название трека🖊')
         bot.register_next_step_handler(msg, get_song, call.data)
     elif call.data == 'Kharkov' or call.data == 'Poltava':
@@ -321,7 +321,7 @@ def callback_query(call) -> None:
 
 
 def set_name(message: Message, leng: str) -> None:  # Set file name
-    bot.send_chat_action(message.chat.id, 'typing')
+    bot.send_chat_action(message.from_user.id, 'typing')
     time.sleep(1)
     name = bot.send_message(message.chat.id, 'Укажите имя проекта💡')
     bot.register_next_step_handler(name, get_url, message.text, leng)
