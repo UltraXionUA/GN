@@ -21,20 +21,20 @@ PasteBin = {'URL': 'http://' + 'pastebin.com/api/api_post.php',
 
 URLS = {'memes': ['https://' + 'www.reddit.com/r/Pikabu/search?q=flair%3AМем&restrict_sr=1&sort=new']}  # Memes URL
 
-# BD_CONNECT = {'user': 'UltraXionUA',  # Python Anywhere DB
-#               'password': 'DB25813123321',
-#               'host': 'UltraXionUA.mysql.pythonanywhere-services.com',
-#               'database': 'UltraXionUA$test',
-#               'cursorclass': pymysql.cursors.DictCursor
-#               }
-
-BD_CONNECT = {'unix_socket': '/Applications/MAMP/tmp/mysql/mysql.sock',  # Local DB
-              'user': 'root',
-              'password': 'root',
-              'db': 'Bot_DB',
-              'charset': 'utf8mb4',
+BD_CONNECT = {'user': 'UltraXionUA',  # Python Anywhere DB
+              'password': 'DB25813123321',
+              'host': 'UltraXionUA.mysql.pythonanywhere-services.com',
+              'database': 'UltraXionUA$test',
               'cursorclass': pymysql.cursors.DictCursor
               }
+
+# BD_CONNECT = {'unix_socket': '/Applications/MAMP/tmp/mysql/mysql.sock',  # Local DB
+#               'user': 'root',
+#               'password': 'root',
+#               'db': 'Bot_DB',
+#               'charset': 'utf8mb4',
+#               'cursorclass': pymysql.cursors.DictCursor
+#               }
 
 # api.telegram.org/bot1077848786:AAHfMrRKadc3Plo14rpE7dPJJC3bVbbVod0/sendMessage  # To add autoposting
 # {"chat_id":"-1001339129150","text":" {{Url}}"}
