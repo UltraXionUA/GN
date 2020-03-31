@@ -223,9 +223,9 @@ def dice_handler(message: Message):
     elif second_dice['username'] is None:
         second_dice['username'] = res['result']['chat']['username']
         second_dice['dice'] = res['result']['dice']['value']
-        bot.send_chat_action(message.chat.id, 'typing')
-        time.sleep(4)
         if first_dice['username'] != second_dice['username']:
+            bot.send_chat_action(message.chat.id, 'typing')
+            time.sleep(4)
             if first_dice['dice'] > second_dice['dice']:
                 bot.send_message(message.chat.id, f'{first_dice["username"].title()}🥇 победил '
                                                   f'{second_dice["username"].title()}🥈')
