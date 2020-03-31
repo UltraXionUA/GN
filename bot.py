@@ -11,8 +11,9 @@ import db
 import time
 import random
 import re
+from urllib import parse, request
 
-
+print(dt.fromtimestamp(208))
 bot = TeleBot(TOKEN)
 log('Bot is successful running!')
 # Dice local storage
@@ -109,8 +110,8 @@ def music_handler(message: Message) -> None:
     keyboard.add(InlineKeyboardButton('По исполнителю🎤', callback_data='artist?q='),
                  InlineKeyboardButton('По треку🎼', callback_data='track?q='))
     msg = bot.send_message(message.chat.id, 'Как будем искать музыку?🎧', reply_markup=keyboard)
-    # time.sleep(10)
-    # bot.delete_message(msg.chat.id, msg.message_id)
+    time.sleep(10)
+    bot.delete_message(msg.chat.id, msg.message_id)
 
 
 @bot.message_handler(commands=['translate'])  # /translate
@@ -214,6 +215,29 @@ def text_handler(message: Message) -> None:
     bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
 
 
+@bot.message_handler(commands=['code'])  # Send url on PasteBin
+def code_handler(message: Message) -> None:
+    bot.send_chat_action(message.chat.id, 'typing')
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton('Bash', callback_data='bash'),
+                 InlineKeyboardButton('HTML 5', callback_data='html5'))
+    keyboard.add(InlineKeyboardButton('JavaScript', callback_data='javascript'),
+                 InlineKeyboardButton('Pascal', callback_data='pascal'))
+    keyboard.add(InlineKeyboardButton('Perl', callback_data='perl'),
+                 InlineKeyboardButton('C#', callback_data=' csharp'))
+    keyboard.add(InlineKeyboardButton('C', callback_data='c'),
+                 InlineKeyboardButton('C++', callback_data='cpp'))
+    keyboard.add(InlineKeyboardButton('Delphi', callback_data='delphi'),
+                 InlineKeyboardButton('Java', callback_data='java'))
+    keyboard.add(InlineKeyboardButton('PHP', callback_data='php'),
+                 InlineKeyboardButton('Python', callback_data='python'))
+    keyboard.add(InlineKeyboardButton('SQL', callback_data='sql'),
+                 InlineKeyboardButton('Swift', callback_data='swift'))
+    leng = bot.send_message(message.chat.id, 'Выберите нужный вам язык😈', reply_markup=keyboard)
+    time.sleep(20)
+    bot.delete_message(message.chat.id, leng.message_id)
+
+
 @bot.message_handler(commands=['dice'])  # /dice
 def dice_handler(message: Message) -> None:
     res = requests.post(f'https://api.telegram.org/bot{TOKEN}/sendDice?chat_id={message.chat.id}').json()
@@ -270,13 +294,16 @@ def text_handler(message: Message) -> None:
 
 @bot.callback_query_handler(func=lambda call: True)  # Catch callback's
 def callback_query(call) -> None:
-    bot.edit_message_text(chat_id=call.from_user.id, message_id=call.message.message_id, text=call.message.text)
+    bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
+    time.sleep(1)
     if call.data == 'artist?q=' or call.data == 'track?q=':
         bot.send_chat_action(call.from_user.id, 'typing')
         if call.data == 'artist?q=':
-            msg = bot.send_message(call.from_user.id, 'Введите имя/псевдоним/группу')
+            bot.answer_callback_query(call.id, 'Вы выбрали по артисту')
+            msg = bot.send_message(call.message.chat.id, 'Введите имя/псевдоним/группу')
         else:
-            msg = bot.send_message(call.from_user.id, 'Введите название трека')
+            bot.answer_callback_query(call.id, 'Вы выбрали по треку')
+            msg = bot.send_message(call.message.chat.id, 'Введите название трека🖊')
         bot.register_next_step_handler(msg, get_song, call.data)
     elif call.data == 'Kharkov' or call.data == 'Poltava':
         res = requests.get(API['API_Weather'].format(call.data)).json()
@@ -289,26 +316,67 @@ def callback_query(call) -> None:
                                             f"Влажность: {res['main']['humidity']} %💧\n"
                                             f"Ветер: {res['wind']['speed']} м\\с💨\n",
                          reply_markup=ReplyKeyboardRemove(selective=True))
+    else:
+        bot.answer_callback_query(call.id, call.data.title())
+        bot.send_chat_action(call.from_user.id, 'typing')
+        code = bot.send_message(call.message.chat.id, 'Отправьте мне ваш код👾')
+        bot.register_next_step_handler(code, set_name, call.data)
+
+
+def set_name(message: Message, leng: str) -> None:  # Set file name
+    bot.send_chat_action(message.from_user.id, 'typing')
+    time.sleep(1)
+    name = bot.send_message(message.chat.id, 'Укажите имя проекта💡')
+    bot.register_next_step_handler(name, get_url, message.text, leng)
+
+
+def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
+    url = "http://pastebin.com/api/api_post.php"
+    values = {'api_option': 'paste', 'api_dev_key': '2d13a3dcd3657d8d7a64d3ea12dfbaf5',
+              'api_paste_code': f'{code}', 'api_paste_private': '0',
+              'api_paste_name': f'{message.text}.php', 'api_paste_expire_date': '1D',
+              'api_paste_format': f'{leng}', 'api_user_key': 'eaaf7366142b140c579a72a63b1a1d9c',
+              'api_paste_name': f'{message.text}.php', 'api_paste_code': f'{code}'}
+    data = parse.urlencode(values)
+    data = data.encode('utf-8')
+    req = request.Request(url, data)
+    with request.urlopen(req) as response:
+        url_bin = str(response.read()).replace('b\'', '').replace('\'', '')
+    bot.send_chat_action(message.from_user.id, 'typing')
+    time.sleep(1)
+    bot.send_message(message.chat.id, url_bin)
 
 
 def get_song(message: Message, choice: str) -> None:
     log(message, 'info')
     res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
-    if choice == 'artist?q=':
+    if choice == 'artist?q=' and res['data']:
         songs = requests.get(res['data'][0]['tracklist'].replace('50', '5')).json()
-        data = [(i['link'], i['preview'], i['title'], i['contributors'][0]['name'], i['duration']) for i in songs['data']]
-        bot.send_chat_action(message.chat.id, 'upload_photo')
-        bot.send_photo(message.chat.id, res['data'][0]['picture_xl'])
-        for link, preview, title, name, duration in data:
+        if songs['data']:
+            data = [(i['link'], i['preview'], i['title'], i['contributors'][0]['name'], i['duration']) for i in songs['data']]
+            bot.send_chat_action(message.chat.id, 'upload_photo')
+            bot.send_photo(message.chat.id, res['data'][0]['picture_xl'])
+            for link, preview, title, name, duration in data:
+                print(link, preview, title, name, duration)
+                bot.send_chat_action(message.chat.id, 'upload_audio')
+                requests.post(f'https://api.telegram.org/bot{TOKEN}/sendAudio?chat_id={message.chat.id}'
+                              f'&audio={preview}&caption={link}&duration={duration}&performer={name}'
+                              f'&title={title}&disable_notification=True')
+                # bot.send_audio(message.chat.id, audio=preview, caption=link, duration=duration,
+                #                performer=name, title=title, disable_notification=True)
+        else:
+            bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
+    elif choice == 'track?q=' and res['data']:
+        song = res['data']
+        if song[0]:
+            data = [song[0]['link'], song[0]['preview'], song[0]['title'],
+                    song[0]['artist']['name'], song[0]['duration']]
+            print(data, 'n')
             bot.send_chat_action(message.chat.id, 'upload_audio')
-            bot.send_audio(message.chat.id, audio=preview, caption=link, duration=duration,
-                           performer=name, title=title, disable_notification=True)
-    else:
-        song = res['data'][0]
-        data = [song['link'], song['preview'], song['title'], song['artist']['name'], song['duration']]
-        bot.send_chat_action(message.chat.id, 'upload_audio')
-        bot.send_audio(message.chat.id, audio=data[1], caption=data[0], duration=data[4],
-                       performer=data[3], title=data[2])
+            bot.send_audio(message.chat.id, audio=data[1], caption=data[0], duration=data[4],
+                           performer=data[3], title=data[2])
+        else:
+            bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
 
 
 def trans_word(message: Message) -> None:
