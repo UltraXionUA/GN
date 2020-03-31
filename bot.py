@@ -225,14 +225,15 @@ def dice_handler(message: Message):
         second_dice['dice'] = res['result']['dice']['value']
         bot.send_chat_action(message.chat.id, 'typing')
         time.sleep(4)
-        if first_dice['dice'] > second_dice['dice']:
-            bot.send_message(message.chat.id, f'{first_dice["username"].title()}🥇 победил '
-                                              f'{second_dice["username"].title()}🥈')
-        elif first_dice['dice'] < second_dice['dice']:
-            bot.send_message(message.chat.id, f'{second_dice["username"].title()}🥇 победил '
-                                              f'{first_dice["username"].title()}🥈')
-        else:
-            bot.send_message(message.chat.id, 'Победила дружба🤝')
+        if first_dice['username'] != second_dice['username']:
+            if first_dice['dice'] > second_dice['dice']:
+                bot.send_message(message.chat.id, f'{first_dice["username"].title()}🥇 победил '
+                                                  f'{second_dice["username"].title()}🥈')
+            elif first_dice['dice'] < second_dice['dice']:
+                bot.send_message(message.chat.id, f'{second_dice["username"].title()}🥇 победил '
+                                                  f'{first_dice["username"].title()}🥈')
+            else:
+                bot.send_message(message.chat.id, 'Победила дружба🤝')
         reset_users()
 
 
