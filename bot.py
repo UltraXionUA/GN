@@ -6,7 +6,7 @@ from datetime import datetime as dt
 from urllib import parse, request
 from pars import parser_memes
 from threading import Timer
-from telebot import TeleBot, types
+from telebot import TeleBot
 import requests
 import db
 import time
@@ -207,7 +207,7 @@ def text_handler(message: Message) -> None:
 def code_handler(message: Message) -> None:
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
-    keyboard = types.ReplyKeyboardMarkup()
+    keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('Bash', callback_data='bash'),
                  InlineKeyboardButton('HTML 5', callback_data='html5'),
                  InlineKeyboardButton('CSS', callback_data='css'))
@@ -230,8 +230,6 @@ def code_handler(message: Message) -> None:
                  InlineKeyboardButton('Swift', callback_data='swift'),
                  InlineKeyboardButton('Rust', callback_data='rust'))
     leng = bot.send_message(message.chat.id, 'Выберите нужный вам язык😈', reply_markup=keyboard)
-    markup = types.ReplyKeyboardRemove(selective=False)
-    bot.register_next_step_handler(leng, set_code, markup)
     time.sleep(20)
     bot.delete_message(message.chat.id, leng.message_id)
 
@@ -315,13 +313,11 @@ def callback_query(call) -> None:
                                                 f"Влажность: {res['main']['humidity']} %💧\n"
                                                 f"Ветер: {res['wind']['speed']} м\\с💨\n",
                          reply_markup=ReplyKeyboardRemove(selective=True))
-
-
-def set_code(message: Message, markup):
-    bot.send_chat_action(message.from_user.id, 'typing')
-    time.sleep(1)
-    code = bot.send_message(message.chat.id, 'Отправьте мне ваш код👾', reply_markup=markup)
-    bot.register_next_step_handler(code, set_name, message.text)
+    else:
+        bot.send_chat_action(call.from_user.id, 'typing')
+        time.sleep(1)
+        code = bot.send_message(call.message.chat.id, 'Отправьте мне ваш код👾')
+        bot.register_next_step_handler(code, set_name, call.data)
 
 
 def set_name(message: Message, leng: str) -> None:  # Set file name
