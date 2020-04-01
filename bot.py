@@ -6,7 +6,7 @@ from datetime import datetime as dt
 from urllib import parse, request
 from pars import parser_memes
 from threading import Timer
-from telebot import TeleBot
+from telebot import TeleBot, types
 import requests
 import db
 import time
@@ -97,7 +97,7 @@ def music_handler(message: Message) -> None:
     keyboard.add(InlineKeyboardButton('По исполнителю🎤', callback_data='artist?q='),
                  InlineKeyboardButton('По треку🎼', callback_data='track?q='))
     msg = bot.send_message(message.chat.id, 'Как будем искать музыку?🎧', reply_markup=keyboard)
-    time.sleep(10)
+    time.sleep(15)
     bot.delete_message(message.chat.id, msg.message_id)
 
 
@@ -207,7 +207,7 @@ def text_handler(message: Message) -> None:
 def code_handler(message: Message) -> None:
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
-    keyboard = InlineKeyboardMarkup()
+    keyboard = types.ReplyKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('Bash', callback_data='bash'),
                  InlineKeyboardButton('HTML 5', callback_data='html5'),
                  InlineKeyboardButton('CSS', callback_data='css'))
@@ -230,6 +230,8 @@ def code_handler(message: Message) -> None:
                  InlineKeyboardButton('Swift', callback_data='swift'),
                  InlineKeyboardButton('Rust', callback_data='rust'))
     leng = bot.send_message(message.chat.id, 'Выберите нужный вам язык😈', reply_markup=keyboard)
+    markup = types.ReplyKeyboardRemove(selective=False)
+    bot.register_next_step_handler(leng, set_code, markup)
     time.sleep(20)
     bot.delete_message(message.chat.id, leng.message_id)
 
@@ -313,11 +315,13 @@ def callback_query(call) -> None:
                                                 f"Влажность: {res['main']['humidity']} %💧\n"
                                                 f"Ветер: {res['wind']['speed']} м\\с💨\n",
                          reply_markup=ReplyKeyboardRemove(selective=True))
-    else:
-        bot.answer_callback_query(call.id, call.data.title())
-        bot.send_chat_action(call.from_user.id, 'typing')
-        code = bot.send_message(call.message.chat.id, 'Отправьте мне ваш код👾')
-        bot.register_next_step_handler(code, set_name, call.data)
+
+
+def set_code(message: Message, markup):
+    bot.send_chat_action(message.from_user.id, 'typing')
+    time.sleep(1)
+    code = bot.send_message(message.chat.id, 'Отправьте мне ваш код👾', reply_markup=markup)
+    bot.register_next_step_handler(code, set_name, message.text)
 
 
 def set_name(message: Message, leng: str) -> None:  # Set file name
@@ -332,7 +336,7 @@ def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
     log(message, 'info')
     values = {'api_option': 'paste', 'api_dev_key': f'{PasteBin["DevApi"]}',
               'api_paste_code': f'{code}', 'api_paste_private': '0',
-              'api_paste_name': f'{message.text}', 'api_paste_expire_date': '1D',
+              'api_paste_name': f'{message.text}', 'api_paste_expire_date': '1H',
               'api_paste_format': f'{leng}', 'api_user_key': f'{PasteBin["UserApi"]}',
               'api_paste_name': f'{message.text}', 'api_paste_code': f'{code}'}
     data = parse.urlencode(values).encode('utf-8')
@@ -344,14 +348,15 @@ def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
     bot.send_message(message.chat.id, url_bin)
 
 
-def get_song(message: Message, choice: str) -> None:
+def get_song(message: Message, choice: str, count=5) -> None:
     log(message, 'info')
     res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
     if res['data']:
         if choice == 'artist?q=':
-            songs = requests.get(res['data'][0]['tracklist'].replace('50', '5')).json()
+            songs = requests.get(res['data'][0]['tracklist'].replace('50', f'{count}')).json()
             if songs['data']:
-                data = [(i['link'], i['preview'], i['title'], i['contributors'][0]['name'], i['duration']) for i in songs['data']]
+                data = [(i['link'], i['preview'], i['title'], i['contributors'][0]['name'], i['duration'])
+                        for i in songs['data']]
                 bot.send_chat_action(message.chat.id, 'upload_photo')
                 bot.send_photo(message.chat.id, res['data'][0]['picture_xl'])
                 for link, preview, title, name, duration in data:
