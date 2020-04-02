@@ -1,5 +1,5 @@
 """Mains file for GNBot"""
-from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
+from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove, InputMediaPhoto
 from funcs import tr_w, rend_d, hi_r, log, download_song
 from config import TOKEN, API, PasteBin
 from datetime import datetime as dt
@@ -13,9 +13,6 @@ import time
 import random
 import re
 
-# import os
-# import shutil
-# import subprocess
 
 
 bot = TeleBot(TOKEN)
@@ -24,6 +21,7 @@ log('Bot is successful running!')
 first_dice: dict = {'username': None, 'dice': 0}
 second_dice: dict = {'username': None, 'dice': 0}
 data_songs = []
+len_songs = 0
 
 
 @bot.message_handler(commands=['start'])  # /start
@@ -293,18 +291,19 @@ def text_handler(message: Message) -> None:
                 bot.reply_to(message, db.get_simple_answer())
 
 
-# @bot.callback_query_handler(func=lambda call: re.match('^move_to', call.data))
-# def moving_to_some_page(call):
-#     bot.edit_message_text(chat_id=call.from_user.id, message_id=call.message.message_id,
-#                           text="Список песен:", reply_markup=inline_keyboard(int(call.data.split()[1])))
-#     bot.answer_callback_query(call.id)
-
-
 @bot.callback_query_handler(func=lambda call: True)  # Catch callback's
 def callback_query(call):
-    if re.fullmatch('^move_to', call.data):
-        bot.edit_message_text(chat_id=call.from_user.id, message_id=call.message.message_id,
-                              text="Список песен:", reply_markup=inline_keyboard(int(call.data.split()[1])))
+    if call.data == 'move_to pass':
+        bot.answer_callback_query(call.id, '⛔️')
+    elif re.fullmatch(r'^move_to\s\d$', call.data):
+        if call.message.content_type == 'photo':
+            bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                   media=InputMediaPhoto(call.message.photo[-1].file_id),
+                                   reply_markup=inline_keyboard(int(call.data.split()[1])))
+        else:
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                   text=call.message.text,
+                                   reply_markup=inline_keyboard(int(call.data.split()[1])))
         bot.answer_callback_query(call.id)
     elif re.fullmatch(r'\w.+-\w.+', call.data):
         print('!!!!')
@@ -374,39 +373,25 @@ def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
 
 def get_song(message: Message, choice: str) -> None:
     log(message, 'info')
+    global data_songs
     res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
     try:
         if res['data']:
             if choice == 'artist?q=':
                 songs = requests.get(res['data'][0]['tracklist']).json()
                 if songs['data']:
-                    global data_songs
                     data_songs.clear()
                     data_songs = [{'title': i['title'], 'name': i['contributors'][0]['name']} for i in songs['data']]
                     if data_songs:
-                        # for song in data:
-                        # print(f"{song['name']}-{song['title']}")
-                        # keyboard.add(InlineKeyboardButton(f"{song['name']} - {song['title']}",
-                        #                                   callback_data=f"{song['name']}-{song['title']}"))
-                        # keyboard.add(InlineKeyboardButton('⬅️', callback_data='<-'),
-                        #              InlineKeyboardButton('➡️', callback_data='->'))
                         bot.send_photo(message.chat.id, res['data'][0]['picture_xl'],
                                        reply_markup=inline_keyboard(0))
                     else:
                         raise FileExistsError
-            # elif choice == 'track?q=':
-            #     global data_songs
-            #     data_songs.clear()
-            #     data_songs = [{'title': i['title'], 'name': i['artist']['name']} for i in res['data']]
-            #     if data_songs:
-            #         pass
-                    # for i in range(5):
-                    #     print(f"{data_songs[i]['name']}-{data_songs[i]['title']}")
-                    #     keyboard.add(InlineKeyboardButton(f"{data_songs[i]['name']} - {data[i]['title']}",
-                    #                                       callback_data=f"{data[i]['name']}-{data[i]['title']}"))
-                    # keyboard.add(InlineKeyboardButton('⬅️', callback_data='<-'),
-                    #              InlineKeyboardButton('➡️', callback_data='->'))
-                    # bot.send_message(message.chat.id, 'Результат поиска:', reply_markup=keyboard)
+            elif choice == 'track?q=':
+                data_songs.clear()
+                data_songs = [{'title': i['title'], 'name': i['artist']['name']} for i in res['data']]
+                if data_songs:
+                    bot.send_message(message.chat.id, 'Результат поиска🔎', reply_markup=inline_keyboard(0))
                 else:
                     raise FileExistsError
             else:
@@ -418,18 +403,19 @@ def get_song(message: Message, choice: str) -> None:
 
 
 def inline_keyboard(some_index):
-    global data_songs
+    global data_songs, len_songs
     some_keyboard = choose_keyboard(some_index)
     some_keyboard.add(
-        InlineKeyboardButton(text="⬅️",
-                             callback_data=f"move_to {some_index - 1}"),
-        InlineKeyboardButton(text="➡️️",
-                             callback_data=f"move_to {some_index + 1 if some_index < len(data_songs) - 1 else 0}"))
+        InlineKeyboardButton(text="⬅️️",
+                             callback_data=f"move_to {some_index - 1 if some_index > 0 else 'pass'}"),
+        InlineKeyboardButton(text="➡️",
+                             callback_data=f"move_to "
+                                           f"{some_index + 1 if some_index < len_songs - 1 else 'pass'}"))
     return some_keyboard
 
 
 def choose_keyboard(some_index):
-    global data_songs
+    global data_songs, len_songs
     some_keyboard = InlineKeyboardMarkup()
     list_data, buf = [], []
     for i, en in enumerate(data_songs, 1):
@@ -437,6 +423,7 @@ def choose_keyboard(some_index):
         if i % 5 == 0:
             list_data.append(buf.copy())
             buf.clear()
+    len_songs = len(list_data)
     for songs in list_data[some_index]:
         some_keyboard.add(InlineKeyboardButton(f"{songs['name']} - {songs['title']}",
                                                callback_data=f"{songs['name']}-{songs['title']}"))
@@ -458,32 +445,3 @@ def reset_users() -> None:
 
 bot.polling(none_stop=True)
 time.sleep(100)
-
-# requests.post(f'https://api.telegram.org/bot{TOKEN}/sendAudio?chat_id={message.chat.id}'
-#                               f'&audio={preview}&caption={link}&duration={duration}&performer={name}'
-#                               f'&title={title}&disable_notification=True')
-
-
-# song = None
-#             try:
-#                 subprocess.Popen(["ypc", f"\"{message.text}\"", "-nAudio", "-a"], stdout=subprocess.PIPE,
-#                                                                                          stderr=subprocess.STDOUT)
-#                 folder, dir = [] '/Users/ultraxion/PycharmProjects/GN/Audio'
-#                 for i in os.walk(dir):
-#                     folder.append(i)
-#                 for address, dirs, files in folder:
-#                     for file in files:
-#                         if file.endswith('.mp3') and song is None:
-#                             song = file
-#                             print(song)
-#                 for the_file in os.listdir(dir):
-#                     file_path = os.path.join(dir, the_file)
-#                     try:
-#                         if os.path.isfile(file_path):
-#                             os.unlink(file_path)
-#                         elif os.path.isdir(file_path):
-#                             shutil.rmtree(file_path)
-#                     except Exception as e:
-#                         print(e)
-#             except Exception as e:
-#                 print("PIZDA!", e)
