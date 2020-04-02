@@ -12,6 +12,7 @@ import db
 import time
 import random
 import re
+
 # import os
 # import shutil
 # import subprocess
@@ -22,6 +23,7 @@ log('Bot is successful running!')
 # Dice local storage
 first_dice: dict = {'username': None, 'dice': 0}
 second_dice: dict = {'username': None, 'dice': 0}
+data_songs = []
 
 
 @bot.message_handler(commands=['start'])  # /start
@@ -291,12 +293,21 @@ def text_handler(message: Message) -> None:
                 bot.reply_to(message, db.get_simple_answer())
 
 
+# @bot.callback_query_handler(func=lambda call: re.match('^move_to', call.data))
+# def moving_to_some_page(call):
+#     bot.edit_message_text(chat_id=call.from_user.id, message_id=call.message.message_id,
+#                           text="Список песен:", reply_markup=inline_keyboard(int(call.data.split()[1])))
+#     bot.answer_callback_query(call.id)
+
+
 @bot.callback_query_handler(func=lambda call: True)  # Catch callback's
-def callback_query(call) -> None:
-    time.sleep(1)
-    if call.data == '<-' or call.data == '->':
-        bot.send_message(call.message.chat.id, "Услышал <- или ->")
-    elif re.fullmatch(r'^.+-.+$', call.data):
+def callback_query(call):
+    if re.fullmatch('^move_to', call.data):
+        bot.edit_message_text(chat_id=call.from_user.id, message_id=call.message.message_id,
+                              text="Список песен:", reply_markup=inline_keyboard(int(call.data.split()[1])))
+        bot.answer_callback_query(call.id)
+    elif re.fullmatch(r'\w.+-\w.+', call.data):
+        print('!!!!')
         name_title = call.data.replace('-', ' ').replace(' ', '+')
         print(name_title)
         res = requests.get(API['API_Deezer'] + 'track?q=' + name_title).json()
@@ -364,33 +375,38 @@ def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
 def get_song(message: Message, choice: str) -> None:
     log(message, 'info')
     res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
-    keyboard = InlineKeyboardMarkup()
     try:
         if res['data']:
             if choice == 'artist?q=':
-                songs = requests.get(res['data'][0]['tracklist'].replace('50', f'{5}')).json()
+                songs = requests.get(res['data'][0]['tracklist']).json()
                 if songs['data']:
-                    data = [{'title': i['title'], 'name': i['contributors'][0]['name']} for i in songs['data']]
-                    if data:
-                        print(data)
-                        for song in data:
-                            keyboard.add(InlineKeyboardButton(f"{song['name']} - {song['title']}",
-                                                              callback_data=f"{song['name']}-{song['title']}"))
-                        keyboard.add(InlineKeyboardButton('⬅️', callback_data='<-'),
-                                     InlineKeyboardButton('➡️', callback_data='->'))
-                        bot.send_photo(message.chat.id, res['data'][0]['picture_xl'], reply_markup=keyboard)
+                    global data_songs
+                    data_songs.clear()
+                    data_songs = [{'title': i['title'], 'name': i['contributors'][0]['name']} for i in songs['data']]
+                    if data_songs:
+                        # for song in data:
+                        # print(f"{song['name']}-{song['title']}")
+                        # keyboard.add(InlineKeyboardButton(f"{song['name']} - {song['title']}",
+                        #                                   callback_data=f"{song['name']}-{song['title']}"))
+                        # keyboard.add(InlineKeyboardButton('⬅️', callback_data='<-'),
+                        #              InlineKeyboardButton('➡️', callback_data='->'))
+                        bot.send_photo(message.chat.id, res['data'][0]['picture_xl'],
+                                       reply_markup=inline_keyboard(0))
                     else:
                         raise FileExistsError
-            elif choice == 'track?q=':
-                data = [{'title': i['title'], 'name': i['artist']['name']} for i in res['data']]
-                if data:
-                    for i in range(5):
-                        keyboard.add(InlineKeyboardButton(f"{data[i]['name']} - {data[i]['title']}",
-                                                          callback_data=f"{data[i]['name']}-{data[i]['title']}"))
-                        print(data[i]['name'], data[i]['title'])
-                    keyboard.add(InlineKeyboardButton('⬅️', callback_data='<-'),
-                                 InlineKeyboardButton('➡️', callback_data='->'))
-                    bot.send_message(message.chat.id, f'Результат поиска:', reply_markup=keyboard)
+            # elif choice == 'track?q=':
+            #     global data_songs
+            #     data_songs.clear()
+            #     data_songs = [{'title': i['title'], 'name': i['artist']['name']} for i in res['data']]
+            #     if data_songs:
+            #         pass
+                    # for i in range(5):
+                    #     print(f"{data_songs[i]['name']}-{data_songs[i]['title']}")
+                    #     keyboard.add(InlineKeyboardButton(f"{data_songs[i]['name']} - {data[i]['title']}",
+                    #                                       callback_data=f"{data[i]['name']}-{data[i]['title']}"))
+                    # keyboard.add(InlineKeyboardButton('⬅️', callback_data='<-'),
+                    #              InlineKeyboardButton('➡️', callback_data='->'))
+                    # bot.send_message(message.chat.id, 'Результат поиска:', reply_markup=keyboard)
                 else:
                     raise FileExistsError
             else:
@@ -399,6 +415,32 @@ def get_song(message: Message, choice: str) -> None:
             raise FileExistsError
     except FileExistsError:
         bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
+
+
+def inline_keyboard(some_index):
+    global data_songs
+    some_keyboard = choose_keyboard(some_index)
+    some_keyboard.add(
+        InlineKeyboardButton(text="⬅️",
+                             callback_data=f"move_to {some_index - 1}"),
+        InlineKeyboardButton(text="➡️️",
+                             callback_data=f"move_to {some_index + 1 if some_index < len(data_songs) - 1 else 0}"))
+    return some_keyboard
+
+
+def choose_keyboard(some_index):
+    global data_songs
+    some_keyboard = InlineKeyboardMarkup()
+    list_data, buf = [], []
+    for i, en in enumerate(data_songs, 1):
+        buf.append(en)
+        if i % 5 == 0:
+            list_data.append(buf.copy())
+            buf.clear()
+    for songs in list_data[some_index]:
+        some_keyboard.add(InlineKeyboardButton(f"{songs['name']} - {songs['title']}",
+                                               callback_data=f"{songs['name']}-{songs['title']}"))
+    return some_keyboard
 
 
 def trans_word(message: Message) -> None:
