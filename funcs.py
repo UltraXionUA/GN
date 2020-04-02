@@ -4,6 +4,7 @@ from random import randint
 from langdetect import detect
 from datetime import datetime
 import logging
+import requests
 
 logging.basicConfig(filename="logger.log", level=logging.INFO)  # Turn on logger
 
@@ -28,6 +29,15 @@ def log(message, type_l='None') -> None:  # Message processing
     else:
         print("<!-------!>", datetime.now().strftime("%Y-%m-%d-%H.%M.%S"), "<!-------!>\n", message)
         logging.info(message + ' ' + str(datetime.now().strftime("%Y-%m-%d-%H.%M.%S")))
+
+
+def download_song(url_mp3: str):
+    req = requests.get(url_mp3, stream=True)
+    file_name = 'Buffer_for_song'
+    with open('Buffer_for_song' + '.mp3', 'wb') as f:
+        f.write(req.content)
+    file = open(file_name + '.mp3', 'rb')
+    return file
 
 
 def tr_w(words) -> str:  # Define and translate
