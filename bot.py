@@ -11,10 +11,11 @@ import requests
 import db
 import time
 import random
+import re
 # import os
 # import shutil
-import re
 # import subprocess
+
 
 bot = TeleBot(TOKEN)
 log('Bot is successful running!')
@@ -293,7 +294,9 @@ def text_handler(message: Message) -> None:
 @bot.callback_query_handler(func=lambda call: True)  # Catch callback's
 def callback_query(call) -> None:
     time.sleep(1)
-    if re.fullmatch(r'^.+-.+$', call.data):
+    if call.data == '-' or call.data == '+':
+        bot.send_message(call.message.chat.id, "Услышал + или -")
+    elif re.fullmatch(r'^.+-.+$', call.data):
         name_title = call.data.replace('-', ' ').replace(' ', '+')
         res = requests.get(API['API_Deezer'] + 'track?q=' + name_title).json()
         data = {'link': res['data'][0]['link'], 'preview': res['data'][0]['preview'],
@@ -360,57 +363,39 @@ def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
 def get_song(message: Message, choice: str) -> None:
     log(message, 'info')
     res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
-    if res['data']:
-        if choice == 'artist?q=':
-            songs = requests.get(res['data'][0]['tracklist'].replace('50', f'{5}')).json()
-            if songs['data']:
-                keyboard = InlineKeyboardMarkup()
-                data = [{'title': i['title'], 'name': i['contributors'][0]['name']} for i in songs['data']]
-                for song in data:
-                    keyboard.add(InlineKeyboardButton(f"{song['name']} - {song['title']}",
-                                                      callback_data=f"{song['name']}-{song['title']}"))
-                keyboard.add(InlineKeyboardButton('⬅️'),
-                             InlineKeyboardButton('➡️'))
-                bot.send_photo(message.chat.id, res['data'][0]['picture_xl'], reply_markup=keyboard)
+    keyboard = InlineKeyboardMarkup()
+    try:
+        if res['data']:
+            if choice == 'artist?q=':
+                songs = requests.get(res['data'][0]['tracklist'].replace('50', f'{5}')).json()
+                if songs['data']:
+                    data = [{'title': i['title'], 'name': i['contributors'][0]['name']} for i in songs['data']]
+                    if data:
+                        for song in data:
+                            keyboard.add(InlineKeyboardButton(f"{song['name']} - {song['title']}",
+                                                              callback_data=f"{song['name']}-{song['title']}"))
+                        keyboard.add(InlineKeyboardButton('⬅️', callback_data='-'),
+                                     InlineKeyboardButton('➡️', callback_data='+'))
+                        bot.send_photo(message.chat.id, res['data'][0]['picture_xl'], reply_markup=keyboard)
+                    else:
+                        raise FileExistsError
+            elif choice == 'track?q=':
+                data = [{'title': i['title'], 'name': i['artist']['name']} for i in res['data']]
+                if data:
+                    for i in range(5):
+                        keyboard.add(InlineKeyboardButton(f"{data[i]['name']} - {data[i]['title']}",
+                                                          callback_data=f"{data[i]['name']}-{data[i]['title']}"))
+                    keyboard.add(InlineKeyboardButton('⬅️', callback_data='-'),
+                                 InlineKeyboardButton('➡️', callback_data='+'))
+                    bot.send_message(message.chat.id, f'Результат поиска:', reply_markup=keyboard)
+                else:
+                    raise FileExistsError
             else:
-                bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
-        elif choice == 'track?q=':
-            data = {'link': res['data'][0]['link'], 'preview': res['data'][0]['preview'],
-                    'title': res['data'][0]['title'], 'name': res['data'][0]['artist']['name'],
-                    'duration': res['data'][0]['duration']}
-            print(res['data'][0])
-            file = None
-            bot.send_chat_action(message.chat.id, 'upload_document')
-            # try:
-            #     MyOut = subprocess.Popen(["ypc", f"\"{message.text}\"", "-n Audio", "-a"],
-            #                 stdout=subprocess.PIPE,
-            #                 stderr=subprocess.STDOUT)
-            #     print(MyOut.communicate())
-            #     folder = '/Users/ultraxion/PycharmProjects/GN/Audio/Audio'
-            #     for file in os.path.abspath(folder):
-            #         if file.endswith(".mp3"):
-            #             print(os.path.join(folder, file))
-            #             file = open(file, 'rb')
-                # for the_file in os.listdir(folder):
-                #     file_path = os.path.join(folder, the_file)
-                #     try:
-                #         if os.path.isfile(file_path):
-                #             os.unlink(file_path)
-                #         # elif os.path.isdir(file_path): shutil.rmtree(file_path)
-                #     except Exception as e:
-                #         print(e)
-            # except Exception as e:
-            #     print("PIZDA!", e)
-            # bot.send_audio(message.chat.id, audio=file, caption=data['link'],
-            #                duration=data['duration'], performer=data['name'], title=data['title'])
+                raise FileExistsError
         else:
-            bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
-    else:
+            raise FileExistsError
+    except FileExistsError:
         bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
-
-# subprocess.call('ypc "Vsyo kak u Ludey" -a', env={"PATH": "venv/bin/activate"})
-
-
 
 
 def trans_word(message: Message) -> None:
@@ -432,3 +417,28 @@ time.sleep(100)
 # requests.post(f'https://api.telegram.org/bot{TOKEN}/sendAudio?chat_id={message.chat.id}'
 #                               f'&audio={preview}&caption={link}&duration={duration}&performer={name}'
 #                               f'&title={title}&disable_notification=True')
+
+
+# song = None
+#             try:
+#                 subprocess.Popen(["ypc", f"\"{message.text}\"", "-nAudio", "-a"], stdout=subprocess.PIPE,
+#                                                                                          stderr=subprocess.STDOUT)
+#                 folder, dir = [] '/Users/ultraxion/PycharmProjects/GN/Audio'
+#                 for i in os.walk(dir):
+#                     folder.append(i)
+#                 for address, dirs, files in folder:
+#                     for file in files:
+#                         if file.endswith('.mp3') and song is None:
+#                             song = file
+#                             print(song)
+#                 for the_file in os.listdir(dir):
+#                     file_path = os.path.join(dir, the_file)
+#                     try:
+#                         if os.path.isfile(file_path):
+#                             os.unlink(file_path)
+#                         elif os.path.isdir(file_path):
+#                             shutil.rmtree(file_path)
+#                     except Exception as e:
+#                         print(e)
+#             except Exception as e:
+#                 print("PIZDA!", e)
