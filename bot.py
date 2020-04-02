@@ -294,10 +294,11 @@ def text_handler(message: Message) -> None:
 @bot.callback_query_handler(func=lambda call: True)  # Catch callback's
 def callback_query(call) -> None:
     time.sleep(1)
-    if call.data == '-' or call.data == '+':
-        bot.send_message(call.message.chat.id, "Услышал + или -")
+    if call.data == '<-' or call.data == '->':
+        bot.send_message(call.message.chat.id, "Услышал <- или ->")
     elif re.fullmatch(r'^.+-.+$', call.data):
         name_title = call.data.replace('-', ' ').replace(' ', '+')
+        print(name_title)
         res = requests.get(API['API_Deezer'] + 'track?q=' + name_title).json()
         data = {'link': res['data'][0]['link'], 'preview': res['data'][0]['preview'],
                 'title': res['data'][0]['title'], 'name': res['data'][0]['artist']['name'],
@@ -371,11 +372,12 @@ def get_song(message: Message, choice: str) -> None:
                 if songs['data']:
                     data = [{'title': i['title'], 'name': i['contributors'][0]['name']} for i in songs['data']]
                     if data:
+                        print(data)
                         for song in data:
                             keyboard.add(InlineKeyboardButton(f"{song['name']} - {song['title']}",
                                                               callback_data=f"{song['name']}-{song['title']}"))
-                        keyboard.add(InlineKeyboardButton('⬅️', callback_data='-'),
-                                     InlineKeyboardButton('➡️', callback_data='+'))
+                        keyboard.add(InlineKeyboardButton('⬅️', callback_data='<-'),
+                                     InlineKeyboardButton('➡️', callback_data='->'))
                         bot.send_photo(message.chat.id, res['data'][0]['picture_xl'], reply_markup=keyboard)
                     else:
                         raise FileExistsError
@@ -385,8 +387,9 @@ def get_song(message: Message, choice: str) -> None:
                     for i in range(5):
                         keyboard.add(InlineKeyboardButton(f"{data[i]['name']} - {data[i]['title']}",
                                                           callback_data=f"{data[i]['name']}-{data[i]['title']}"))
-                    keyboard.add(InlineKeyboardButton('⬅️', callback_data='-'),
-                                 InlineKeyboardButton('➡️', callback_data='+'))
+                        print(data[i]['name'], data[i]['title'])
+                    keyboard.add(InlineKeyboardButton('⬅️', callback_data='<-'),
+                                 InlineKeyboardButton('➡️', callback_data='->'))
                     bot.send_message(message.chat.id, f'Результат поиска:', reply_markup=keyboard)
                 else:
                     raise FileExistsError
