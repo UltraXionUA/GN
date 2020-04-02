@@ -364,11 +364,13 @@ def get_song(message: Message, choice: str) -> None:
         if choice == 'artist?q=':
             songs = requests.get(res['data'][0]['tracklist'].replace('50', f'{5}')).json()
             if songs['data']:
-                keyboard = InlineKeyboardMarkup(row_width=1)
+                keyboard = InlineKeyboardMarkup()
                 data = [{'title': i['title'], 'name': i['contributors'][0]['name']} for i in songs['data']]
                 for song in data:
                     keyboard.add(InlineKeyboardButton(f"{song['name']} - {song['title']}",
                                                       callback_data=f"{song['name']}-{song['title']}"))
+                keyboard.add(InlineKeyboardButton('⬅️'),
+                             InlineKeyboardButton('➡️'))
                 bot.send_photo(message.chat.id, res['data'][0]['picture_xl'], reply_markup=keyboard)
             else:
                 bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
