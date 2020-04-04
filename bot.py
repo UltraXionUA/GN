@@ -14,7 +14,6 @@ import random
 import re
 
 
-
 bot = TeleBot(TOKEN)
 log('Bot is successful running!')
 # Dice local storage
@@ -90,6 +89,13 @@ def weather_handler(message: Message) -> None:
     msg = bot.send_message(message.chat.id, 'Погода в каком из города вас интерсует?🧐', reply_markup=keyboard)
     time.sleep(10)
     bot.delete_message(msg.chat.id, msg.message_id)
+
+
+@bot.message_handler(commands=['detect'])  # /music
+def detect_handler(message: Message) -> None:
+    log(message, 'info')
+    msg = bot.send_message(message.chat.id, 'Запишите песню которую нужно определить')
+    bot.register_next_step_handler(msg, detect_music)
 
 
 @bot.message_handler(commands=['music'])  # /music
@@ -347,6 +353,20 @@ def callback_query(call):
         bot.register_next_step_handler(code, set_name, call.data)
 
 
+def detect_music(message: Message):  # Detect your music
+    API['AUDD_data']['url'] = bot.get_file_url(message.voice.file_id).replace('https://api.telegram.org',
+                                                                            'http://esc-ru.appspot.com/') \
+                                                                            + '?host=api.telegram.org'
+    result = requests.post(API['AUDD'], data=API['AUDD_data']).json()
+    if result['status'] == 'success' and result['result'] is not None:
+        if result['result']['deezer']:
+            bot.send_photo(message.chat.id, result['result']['deezer']['artist']['picture_xl'],
+                           caption=f"{result['result']['artist']} - {result['result']['title']}\n"
+                                  f"{result['result']['deezer']['link']}")
+        else:
+            bot.send_message(message.chat.id, f"{result['result']['artist']} - {result['result']['title']}")
+
+
 def set_name(message: Message, leng: str) -> None:  # Set file name
     bot.send_chat_action(message.from_user.id, 'typing')
     time.sleep(1)
@@ -371,7 +391,7 @@ def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
     bot.send_message(message.chat.id, url_bin)
 
 
-def get_song(message: Message, choice: str) -> None:
+def get_song(message: Message, choice: str) -> None:  # Get song
     log(message, 'info')
     global data_songs
     res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
@@ -402,7 +422,7 @@ def get_song(message: Message, choice: str) -> None:
         bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
 
 
-def inline_keyboard(some_index):
+def inline_keyboard(some_index) -> InlineKeyboardMarkup:  # Navigation for music
     global data_songs, len_songs
     some_keyboard = choose_keyboard(some_index)
     some_keyboard.add(
@@ -414,7 +434,7 @@ def inline_keyboard(some_index):
     return some_keyboard
 
 
-def choose_keyboard(some_index):
+def choose_keyboard(some_index) -> InlineKeyboardMarkup:  # Buttons for music
     global data_songs, len_songs
     some_keyboard = InlineKeyboardMarkup()
     list_data, buf = [], []
@@ -430,13 +450,13 @@ def choose_keyboard(some_index):
     return some_keyboard
 
 
-def trans_word(message: Message) -> None:
+def trans_word(message: Message) -> None:  # Translate function
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, tr_w(message.text))
 
 
-def reset_users() -> None:
+def reset_users() -> None:  # Reset users for Dice game
     first_dice['username'] = None
     first_dice['dice'] = 0
     second_dice['username'] = None

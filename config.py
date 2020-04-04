@@ -12,7 +12,12 @@ API = {'API_Weather': 'http://' + 'api.openweathermap.org/data/2.5/weather?q={}&
                                'guns, gaming, science, memes'
                                '&rating=R',
        'API_Meme': 'https://' + 'meme-api.herokuapp.com/gimme',
-       'API_Deezer': 'https://' + 'api.deezer.com/search/'
+       'API_Deezer': 'https://' + 'api.deezer.com/search/',
+       'AUDD_data': {'url': 'None',
+                     'return': 'deezer',
+                     'api_token': 'e80cb21e8b4bc33ca36f4a1db75708ed'
+                     },
+       'AUDD': 'https://' + 'api.audd.io/'
        }
 
 PasteBin = {'URL': 'http://' + 'pastebin.com/api/api_post.php',
