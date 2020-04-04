@@ -1,7 +1,8 @@
 """Mains file for GNBot"""
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove, InputMediaPhoto
 from funcs import tr_w, rend_d, hi_r, log, download_song
-from config import TOKEN, API, PasteBin
+from config import TOKEN, API
+from pytils.translit import slugify
 from datetime import datetime as dt
 from urllib import parse, request
 from pars import parser_memes
@@ -180,22 +181,21 @@ def parser_handler(message: Message) -> None:
                                          'Задание выполнено', 'Затея увенчалась успехом']))
 
 
-@bot.message_handler(content_types=['text'], regexp=r'^\+$')  # Change karma
-@bot.message_handler(content_types=['text'], regexp=r'^\-$')
+@bot.message_handler(content_types=['text'], regexp=r'^\++$')  # Change karma
+@bot.message_handler(content_types=['text'], regexp=r'^\-+$')
 def text_handler(message: Message) -> None:
     if message.reply_to_message:
         log(message, 'info')
+        msg = list(message.text)
         reply_to = message.reply_to_message.from_user
-        if message.text == '+':
-            bot.send_message(message.chat.id, f'{message.from_user.username.title()} подкинул 10 к карме '
+        if msg[0] == '+':
+            bot.send_message(message.chat.id, f'{message.from_user.username.title()} подкинул {len(msg) * 10} к карме '
                                               f'{reply_to.username.title()}\nИтого карма: '
-                                              f'{db.change_karma(reply_to, "+")}')
+                                              f'{db.change_karma(reply_to, msg)}')
         else:
-            bot.send_message(message.chat.id, f'{message.from_user.username.title()} осуждает на -10 '
+            bot.send_message(message.chat.id, f'{message.from_user.username.title()} осуждает на -{len(msg) * 10} '
                                               f'{reply_to.username.title()}\nИтого карма: '
-                                              f'{db.change_karma(reply_to, "-")}')
-        db.change_karma(reply_to, message.text)
-        time.sleep(20)
+                                              f'{db.change_karma(reply_to, msg)}')
 
 
 @bot.message_handler(content_types=['text'], regexp=r'^-.+$')  # Add answer to DB
@@ -206,10 +206,13 @@ def text_handler(message: Message) -> None:
 
 @bot.message_handler(content_types=['text'], regexp=r'^\w+.?-.?\w.+$')  # Add answer with word to DB
 def text_handler(message: Message) -> None:
-    word = re.findall(r'\w.+-', message.text)[0].replace('-', '').rstrip()
-    answer = re.findall(r'-.\w.+', message.text)[0].replace('-', '').lstrip()
-    db.add_to_db(word, answer)
-    bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
+    buf = message.text.lower().split()
+    print(buf)
+    if buf[0] not in ['---', 'кто-то', 'где-то', 'когда-нибудь', 'кто-нибудь', 'зачем-то']:
+        word = re.findall(r'\w.+-', message.text)[0].replace('-', '').rstrip()
+        answer = re.findall(r'-.\w.+', message.text)[0].replace('-', '').lstrip()
+        db.add_to_db(word, answer)
+        bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
 
 
 @bot.message_handler(commands=['code'])  # Send url on PasteBin
@@ -308,8 +311,8 @@ def callback_query(call):
                                    reply_markup=inline_keyboard(int(call.data.split()[1])))
         else:
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                   text=call.message.text,
-                                   reply_markup=inline_keyboard(int(call.data.split()[1])))
+                                  text=call.message.text,
+                                  reply_markup=inline_keyboard(int(call.data.split()[1])))
         bot.answer_callback_query(call.id)
     elif re.fullmatch(r'\w.+-\w.+', call.data):
         print('!!!!')
@@ -355,14 +358,14 @@ def callback_query(call):
 
 def detect_music(message: Message):  # Detect your music
     API['AUDD_data']['url'] = bot.get_file_url(message.voice.file_id).replace('https://api.telegram.org',
-                                                                            'http://esc-ru.appspot.com/') \
-                                                                            + '?host=api.telegram.org'
+                                                                              'http://esc-ru.appspot.com/') \
+                              + '?host=api.telegram.org'
     result = requests.post(API['AUDD'], data=API['AUDD_data']).json()
     if result['status'] == 'success' and result['result'] is not None:
         if result['result']['deezer']:
             bot.send_photo(message.chat.id, result['result']['deezer']['artist']['picture_xl'],
                            caption=f"{result['result']['artist']} - {result['result']['title']}\n"
-                                  f"{result['result']['deezer']['link']}")
+                                   f"{result['result']['deezer']['link']}")
         else:
             bot.send_message(message.chat.id, f"{result['result']['artist']} - {result['result']['title']}")
 
@@ -377,13 +380,13 @@ def set_name(message: Message, leng: str) -> None:  # Set file name
 
 def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
     log(message, 'info')
-    values = {'api_option': 'paste', 'api_dev_key': f'{PasteBin["DevApi"]}',
+    values = {'api_option': 'paste', 'api_dev_key': f"{API['PasteBin']['DevApi']}",
               'api_paste_code': f'{code}', 'api_paste_private': '0',
               'api_paste_name': f'{message.text}', 'api_paste_expire_date': '1H',
-              'api_paste_format': f'{leng}', 'api_user_key': f'{PasteBin["UserApi"]}',
+              'api_paste_format': f'{leng}', 'api_user_key': f"{API['PasteBin']['UserApi']}",
               'api_paste_name': f'{message.text}', 'api_paste_code': f'{code}'}
     data = parse.urlencode(values).encode('utf-8')
-    req = request.Request(PasteBin['URL'], data)
+    req = request.Request(API['PasteBin']['URL'], data)
     with request.urlopen(req) as response:
         url_bin = str(response.read()).replace('b\'', '').replace('\'', '')
     bot.send_chat_action(message.chat.id, 'typing')
@@ -446,7 +449,8 @@ def choose_keyboard(some_index) -> InlineKeyboardMarkup:  # Buttons for music
     len_songs = len(list_data)
     for songs in list_data[some_index]:
         some_keyboard.add(InlineKeyboardButton(f"{songs['name']} - {songs['title']}",
-                                               callback_data=f"{songs['name']}-{songs['title']}"))
+                                               callback_data=slugify(f"{songs['name']}-{songs['title']}")
+                                               .replace('-', ' ')))
     return some_keyboard
 
 

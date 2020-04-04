@@ -32,10 +32,10 @@ def change_karma(user, action) -> dict:  # Change Karma
             connection.commit()
         cursor.execute(f'SELECT `karma` FROM `Users` WHERE `username` = \'{user.username}\';')
         karma = cursor.fetchone()['karma']
-        if action == '+':
-            karma += 10
+        if action[0] == '+':
+            karma += len(action) * 10
         else:
-            karma -= 10
+            karma -= len(action) * 10
         cursor.execute(f'UPDATE `Users` SET `karma` = \'{karma}\' WHERE `username` = \'{user.username}\';')
         connection.commit()
     connection.close()
