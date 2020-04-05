@@ -2,7 +2,6 @@
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove, InputMediaPhoto
 from funcs import tr_w, rend_d, hi_r, log, download_song
 from config import TOKEN, API
-from pytils.translit import slugify
 from datetime import datetime as dt
 from urllib import parse, request
 from pars import parser_memes
@@ -172,13 +171,6 @@ def contact_handler(message: Message) -> None:
         bot.send_chat_action(message.chat.id, 'typing')
         bot.reply_to(message.chat.id, random.choice(['Если мне будет одиноко и холодно я знаю куда позвонить',
                                                      'Трубку не берут', 'Сохранил']))
-
-
-@bot.message_handler(content_types=['text'], regexp=r'^-parser$')  # Turn on parser
-def parser_handler(message: Message) -> None:
-    parser_memes()
-    bot.reply_to(message, random.choice(['Я сделаль', 'Завдання виконано', 'Готово',
-                                         'Задание выполнено', 'Затея увенчалась успехом']))
 
 
 @bot.message_handler(content_types=['text'], regexp=r'^\++$')  # Change karma
@@ -396,10 +388,11 @@ def get_song(message: Message, choice: str) -> None:  # Get song
     log(message, 'info')
     global data_songs
     res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
+    print(res)
     try:
         if res['data']:
             if choice == 'artist?q=':
-                songs = requests.get(res['data'][0]['tracklist']).json()
+                songs = requests.get(res['data'][0]['tracklist'].replace('limit=50', 'limit=100')).json()
                 if songs['data']:
                     data_songs.clear()
                     data_songs = [{'id': i['id'], 'title': i['title'], 'name': i['contributors'][0]['name'],
