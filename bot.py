@@ -315,16 +315,15 @@ def callback_query(call):
                                   reply_markup=inline_keyboard(int(call.data.split()[1])))
         bot.answer_callback_query(call.id)
     elif re.fullmatch(r'\w.+-\w.+', call.data):
-        print('!!!!')
         name_title = call.data.replace('-', ' ').replace(' ', '+')
-        print(name_title)
         res = requests.get(API['API_Deezer'] + 'track?q=' + name_title).json()
-        data = {'link': res['data'][0]['link'], 'preview': res['data'][0]['preview'],
-                'title': res['data'][0]['title'], 'name': res['data'][0]['artist']['name'],
-                'duration': res['data'][0]['duration']}
-        bot.send_chat_action(call.message.chat.id, 'upload_document')
-        bot.send_audio(call.message.chat.id, audio=download_song(data['preview']), caption=data['link'],
-                       duration=data['duration'], performer=data['name'], title=data['title'])
+        if res['total'] > 0:
+            data = {'link': res['data'][0]['link'], 'preview': res['data'][0]['preview'],
+                    'title': res['data'][0]['title'], 'name': res['data'][0]['artist']['name'],
+                    'duration': res['data'][0]['duration']}
+            bot.send_chat_action(call.message.chat.id, 'upload_document')
+            bot.send_audio(call.message.chat.id, audio=download_song(data['preview']), caption=data['link'],
+                           duration=data['duration'], performer=data['name'], title=data['title'])
     elif call.data == 'artist?q=' or call.data == 'track?q=':
         bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
         bot.send_chat_action(call.message.chat.id, 'typing')
@@ -398,6 +397,7 @@ def get_song(message: Message, choice: str) -> None:  # Get song
     log(message, 'info')
     global data_songs
     res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
+    print(message.text.replace(' ', '+'))
     try:
         if res['data']:
             if choice == 'artist?q=':
@@ -449,8 +449,8 @@ def choose_keyboard(some_index) -> InlineKeyboardMarkup:  # Buttons for music
     len_songs = len(list_data)
     for songs in list_data[some_index]:
         some_keyboard.add(InlineKeyboardButton(f"{songs['name']} - {songs['title']}",
-                                               callback_data=slugify(f"{songs['name']}-{songs['title']}")
-                                               .replace('-', ' ')))
+                                               callback_data=f"{songs['name']}"
+                                                             f"-{songs['title']}"))
     return some_keyboard
 
 

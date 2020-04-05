@@ -9,3 +9,4 @@ django
 python-dotenv
 GitPython
 schedule
+pytils
