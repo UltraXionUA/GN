@@ -314,16 +314,15 @@ def callback_query(call):
                                   text=call.message.text,
                                   reply_markup=inline_keyboard(int(call.data.split()[1])))
         bot.answer_callback_query(call.id)
-    elif re.fullmatch(r'\w.+-\w.+', call.data):
-        name_title = call.data.replace('-', ' ').replace(' ', '+')
-        res = requests.get(API['API_Deezer'] + 'track?q=' + name_title).json()
-        if res['total'] > 0:
-            data = {'link': res['data'][0]['link'], 'preview': res['data'][0]['preview'],
-                    'title': res['data'][0]['title'], 'name': res['data'][0]['artist']['name'],
-                    'duration': res['data'][0]['duration']}
-            bot.send_chat_action(call.message.chat.id, 'upload_document')
-            bot.send_audio(call.message.chat.id, audio=download_song(data['preview']), caption=data['link'],
-                           duration=data['duration'], performer=data['name'], title=data['title'])
+    elif re.fullmatch(r'^ID:\s?\d+$', call.data):
+        song_id = call.data.replace('ID: ', '')
+        global data_songs
+        for i in data_songs:
+            if i['id'] == int(song_id):
+                bot.send_chat_action(call.message.chat.id, 'upload_document')
+                bot.send_audio(call.message.chat.id, audio=download_song(i['preview']), caption=i['link'],
+                                performer=i['name'], title=i['title'])
+                break
     elif call.data == 'artist?q=' or call.data == 'track?q=':
         bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
         bot.send_chat_action(call.message.chat.id, 'typing')
@@ -397,14 +396,14 @@ def get_song(message: Message, choice: str) -> None:  # Get song
     log(message, 'info')
     global data_songs
     res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
-    print(message.text.replace(' ', '+'))
     try:
         if res['data']:
             if choice == 'artist?q=':
                 songs = requests.get(res['data'][0]['tracklist']).json()
                 if songs['data']:
                     data_songs.clear()
-                    data_songs = [{'title': i['title'], 'name': i['contributors'][0]['name']} for i in songs['data']]
+                    data_songs = [{'id': i['id'], 'title': i['title'], 'name': i['contributors'][0]['name'],
+                                   'link': i['link'], 'preview': i['preview']} for i in songs['data']]
                     if data_songs:
                         bot.send_photo(message.chat.id, res['data'][0]['picture_xl'],
                                        reply_markup=inline_keyboard(0))
@@ -412,7 +411,8 @@ def get_song(message: Message, choice: str) -> None:  # Get song
                         raise FileExistsError
             elif choice == 'track?q=':
                 data_songs.clear()
-                data_songs = [{'title': i['title'], 'name': i['artist']['name']} for i in res['data']]
+                data_songs = [{'id': i['id'], 'title': i['title'], 'name': i['artist']['name'],
+                               'link': i['link'], 'preview': i['preview']} for i in res['data']]
                 if data_songs:
                     bot.send_message(message.chat.id, 'Результат поиска🔎', reply_markup=inline_keyboard(0))
                 else:
@@ -449,8 +449,7 @@ def choose_keyboard(some_index) -> InlineKeyboardMarkup:  # Buttons for music
     len_songs = len(list_data)
     for songs in list_data[some_index]:
         some_keyboard.add(InlineKeyboardButton(f"{songs['name']} - {songs['title']}",
-                                               callback_data=f"{songs['name']}"
-                                                             f"-{songs['title']}"))
+                                               callback_data=f"ID: {songs['id']}"))
     return some_keyboard
 
 
