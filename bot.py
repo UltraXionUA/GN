@@ -4,7 +4,6 @@ from funcs import tr_w, rend_d, hi_r, log, download_song
 from config import TOKEN, API
 from datetime import datetime as dt
 from urllib import parse, request
-from pars import parser_memes
 from threading import Timer
 from telebot import TeleBot
 import requests
@@ -12,7 +11,6 @@ import db
 import time
 import random
 import re
-
 
 bot = TeleBot(TOKEN)
 log('Bot is successful running!')
@@ -91,11 +89,16 @@ def weather_handler(message: Message) -> None:
     bot.delete_message(msg.chat.id, msg.message_id)
 
 
-@bot.message_handler(commands=['detect'])  # /music
+@bot.message_handler(commands=['detect'])  # /detect_music
 def detect_handler(message: Message) -> None:
     log(message, 'info')
-    msg = bot.send_message(message.chat.id, 'Запишите песню которую нужно определить')
-    bot.register_next_step_handler(msg, detect_music)
+    bot.send_chat_action(message.chat.id, 'typing')
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton('Записать🔊', callback_data='record'),
+                 InlineKeyboardButton('Напеть🎙', callback_data='sing'))
+    msg = bot.send_message(message.chat.id, 'Запишите песню которую нужно определить🔎', reply_markup=keyboard)
+    time.sleep(30)
+    bot.delete_message(msg.chat.id, msg.message_id)
 
 
 @bot.message_handler(commands=['music'])  # /music
@@ -313,7 +316,7 @@ def callback_query(call):
             if i['id'] == int(song_id):
                 bot.send_chat_action(call.message.chat.id, 'upload_document')
                 bot.send_audio(call.message.chat.id, audio=download_song(i['preview']), caption=i['link'],
-                                performer=i['name'], title=i['title'])
+                               performer=i['name'], title=i['title'])
                 break
     elif call.data == 'artist?q=' or call.data == 'track?q=':
         bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
@@ -326,6 +329,14 @@ def callback_query(call):
             bot.answer_callback_query(call.id, 'Вы выбрали поиск по треку')
             msg = bot.send_message(call.message.chat.id, 'Введите название трека🖊')
         bot.register_next_step_handler(msg, get_song, call.data)
+    elif call.data == 'record' or call.data == 'sing':
+        bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
+        if call.data == 'record':
+            bot.answer_callback_query(call.id, 'Вы выбрали ' + 'Записать')
+        else:
+            bot.answer_callback_query(call.id, 'Вы выбрали ' + 'Напеть')
+        msg = bot.send_message(call.message.chat.id, 'Запишите то что нужно определить')
+        bot.register_next_step_handler(msg, detect_music, call.data)
     elif call.data == 'Kharkov' or call.data == 'Poltava':
         bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
         res = requests.get(API['API_Weather'].format(call.data)).json()
@@ -340,24 +351,39 @@ def callback_query(call):
                          reply_markup=ReplyKeyboardRemove(selective=True))
     else:
         bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
+        bot.answer_callback_query(call.id, 'Вы выбрали ' + call.data)
         bot.send_chat_action(call.from_user.id, 'typing')
         time.sleep(1)
         code = bot.send_message(call.message.chat.id, 'Отправьте мне ваш код👾')
         bot.register_next_step_handler(code, set_name, call.data)
 
 
-def detect_music(message: Message):  # Detect your music
-    API['AUDD_data']['url'] = bot.get_file_url(message.voice.file_id).replace('https://api.telegram.org',
-                                                                              'http://esc-ru.appspot.com/') \
+def detect_music(message: Message, type_r):
+    API['AUDD_data']['url'] = bot.get_file_url(message.voice.file_id).replace('https://' + 'api.telegram.org',
+                                                                              'http://' + 'esc-ru.appspot.com/') \
                               + '?host=api.telegram.org'
-    result = requests.post(API['AUDD'], data=API['AUDD_data']).json()
+    if type_r == 'sing':
+        result = requests.post(API['AUDD'] + 'recognizeWithOffset/', data={'url': API['AUDD_data']['url'],
+                                                                           'api_token': API['AUDD_data'][
+                                                                               'api_token']}).json()
+    else:
+        result = requests.post(API['AUDD'], data=API['AUDD_data']).json()
     if result['status'] == 'success' and result['result'] is not None:
-        if result['result']['deezer']:
-            bot.send_photo(message.chat.id, result['result']['deezer']['artist']['picture_xl'],
-                           caption=f"{result['result']['artist']} - {result['result']['title']}\n"
-                                   f"{result['result']['deezer']['link']}")
+        if type_r != 'sing':
+            if result['result']['deezer']:
+                bot.send_photo(message.chat.id, result['result']['deezer']['artist']['picture_xl'],
+                               caption=f"{result['result']['artist']} - {result['result']['title']}🎵\n"
+                                       f"{result['result']['deezer']['link']}")
+            else:
+                bot.send_message(message.chat.id, f"{result['result']['artist']} - {result['result']['title']}🎵")
         else:
-            bot.send_message(message.chat.id, f"{result['result']['artist']} - {result['result']['title']}")
+            msg = bot.send_message(message.chat.id, "Результат: ")
+            for i in result['result']['list']:
+                msg = bot.edit_message_text(msg.text + f"\nСовпадение: {i['score']}%\n"
+                                                       f"{i['artist']} - {i['title']}🎵",
+                                            message.chat.id, msg.message_id)
+    else:
+        bot.send_message(message.chat.id, 'Ничего не нашлось😔')
 
 
 def set_name(message: Message, leng: str) -> None:  # Set file name
