@@ -6,6 +6,7 @@ from datetime import datetime
 import logging
 import requests
 
+
 logging.basicConfig(filename="logger.log", level=logging.INFO)  # Turn on logger
 
 
@@ -54,3 +55,4 @@ def rend_d() -> bool:  # Random True or False
 
 def hi_r(data: str) -> bool:  # Filter age rating
     return True if data == 'r' or 'pg-13' or 'pg' else False
+

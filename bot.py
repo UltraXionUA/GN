@@ -2,20 +2,24 @@
 # <<< Import's >>>
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove, InputMediaPhoto
 from funcs import tr_w, rend_d, hi_r, log, download_song
-from config import TOKEN, API
 from datetime import datetime as dt
 from urllib import parse, request
+from config import TOKEN, API
 from threading import Timer
+from threading import Thread
 from telebot import TeleBot
+from pars import main
 import requests
+import random
 import db
 import time
-import random
 import re
 # <<< End import's>>
 
 bot = TeleBot(TOKEN)
 log('Bot is successful running!')
+Parser = Thread(target=main, name='Parser')
+Parser.start()
 
 
 # <<< Start >>>

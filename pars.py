@@ -2,6 +2,7 @@
 from bs4 import BeautifulSoup
 from config import URLS
 from db import add_memes
+from funcs import log
 import requests
 import re
 import schedule
@@ -20,6 +21,7 @@ def parser_memes() -> None:  # Main parser
             if re.fullmatch(r'https?://i.redd.it/?\.?\w+.?\w+', url):
                 links.add(url)
         add_memes(links)
+        log('Parser is done', 'info')
 
 
 def main():
