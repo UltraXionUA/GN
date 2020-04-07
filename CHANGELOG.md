@@ -1,0 +1,109 @@
+- lyrics music and link on dezeer
+- lyrics music and link on dezeer
+- sing
+- fix slug
+- fix slug
+- fix slug
+- fix slug
+- fix slug
+- many change karma and slug for music
+- many change karma and slug for music
+- conf
+- conf
+- conf
+- conf
+- conf
+- conf
+- conf
+- conf
+- УдаленÐdel folder
+- songs
+- fix
+- fix
+- fix
+- fix
+- fix
+- fix fix fix
+- fix music
+- fix music
+- fix music
+- fix music
+- fix music
+- eeeehu
+- PasteBin
+- PasteBin
+- PasteBin
+- fix git
+- fix git
+- songsstart
+- songsstart
+- timer
+- dice final
+- myfolder is deleted
+- dice final
+- dice final
+- dice final
+- refactor
+- refactor
+- refactor
+- refactor
+- refactor
+- refactor
+- refactor
+- refactor
+- refactor
+- refactor
+- refactor
+- refactor
+- tests hooks
+- tests hooks
+- tests hooks
+- tests hooks
+- tests hooks
+- tests hooks
+- tests hooks
+- tests hooks
+- tests hooks
+- tests hooks
+- tests hooks
+- tests hooks
+- webhooks
+- karma fix
+- karma fix
+- karma fix
+- karma fix
+- karma fix
+- karma fix
+- karma fix
+- Tests_done
+- joke
+- joke
+- joke
+- joke
+- joke
+- DB
+- Fuck eee
+- testgithook
+- testgithook
+- testgithook
+- testgithook
+- testgithook
+- testgithook
+- testgithook
+- testgithook
+- testgithook
+- pythonanywhrere_final_bitch
+- pythonanywhrere_final_bitch
+- pythonanywhrere_final_bitch
+- pythonanywhrere_final_bitch
+- pythonanywhrere_final
+- pythonanywhrere_final
+- pythonanywhrere_final
+- pythonanywhrere_final
+- pythonanywhrere
+- First_commit_to_new_repository
+- First_commit_to_new_repository
+- First_commit_to_new_repository
+- First_commit_to_new_repository
+- First_commit_to_new_repository
+- Initial commit

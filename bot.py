@@ -468,7 +468,6 @@ second_dice: dict = {'username': None, 'dice': 0}
 def dice_handler(message: Message) -> None:
     log(message, 'info')
     res = requests.post(f'https://api.telegram.org/bot{TOKEN}/sendDice?chat_id={message.chat.id}').json()
-    log(message, 'info')
     t = Timer(120.0, reset_users)
     if first_dice['username'] is None:
         first_dice['username'], first_dice['dice'] = message.from_user.username, res['result']['dice']['value']
