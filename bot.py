@@ -357,7 +357,6 @@ def news_handler(message: Message) -> None:
                                  callback_data=f"move_to_ {index + 1 if index < len(news) - 1 else 'pass'}"))
         if news[index]['image'] is not None:
             if news[index]['description'] is not None:
-                print(re.sub(r'^https?:\/\/.*[\r\n]*|\w+\.\w+(\.\w+)?$', '', news[index]['title']))
                 bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
                                        media=InputMediaPhoto(news[index]['image'],
                                        caption='<b>' + news[index]['title'] + '</b>\n\n' +
@@ -414,8 +413,6 @@ def gn_sticker_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_sticker(message.chat.id, db.random_gn_sticker())
     log(message, 'info')
-
-
 # <<< End sticker GN >>>
 
 
@@ -425,8 +422,6 @@ def sticker_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_sticker(message.chat.id, db.random_sticker())
     log(message, 'info')
-
-
 # <<< End sticker >>>
 
 
