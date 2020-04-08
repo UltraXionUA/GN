@@ -36,11 +36,9 @@ def log(message, type_l='None') -> None:  # Message processing
 
 def download_song(url_mp3: str):
     req = requests.get(url_mp3, stream=True)
-    file_name = 'Buffer_for_song'
     with open('Buffer_for_song' + '.mp3', 'wb') as f:
         f.write(req.content)
-    file = open(file_name + '.mp3', 'rb')
-    return file
+    return open('Buffer_for_song' + '.mp3', 'rb')
 
 
 def tr_w(words) -> str:  # Define and translate

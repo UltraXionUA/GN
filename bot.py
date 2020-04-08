@@ -5,16 +5,19 @@ from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, R
 from funcs import tr_w, rend_d, hi_r, log, download_song, clear_link
 from datetime import datetime as dt
 from urllib import parse, request
-from config import TOKEN, API, Empty_bg  # TEST_TOKEN
+from config import TOKEN, API, Empty_bg, TEST_TOKEN
 from threading import Timer
 from threading import Thread
 from telebot import TeleBot
+from pytube import YouTube
 from pars import main
 import requests
 import random
 import db
 import time
+import os
 import re
+
 # <<< End import's>>
 
 bot = TeleBot(TOKEN)
@@ -30,6 +33,8 @@ def start_handler(message: Message) -> None:
     bot.send_message(message.chat.id, 'Здравствуй, меня зовут GNBot🖥\n'
                                       'Я создан дабы служить верой и правдой сообществу 💎Голубой носок💎')
     log(message, 'info')
+
+
 # <<< End start >>>
 
 
@@ -40,6 +45,8 @@ def help_handler(message: Message) -> None:
     bot.send_message(message.chat.id, 'Тут должна была быть помощь🆘, но её тут не будет🌚\n'
                                       'Если что пиши мне: 💢@Ultra_Xion💢')
     log(message, 'info')
+
+
 # <<< End help >>>
 
 
@@ -53,6 +60,8 @@ def gif_handler(message: Message) -> None:
             bot.send_document(message.chat.id, data['data']['images']['downsized_large']['url'])
             break
     log(message, 'info')
+
+
 # <<< End gif >>>
 
 
@@ -69,6 +78,8 @@ def joke_handler(message: Message) -> None:
         bot.send_message(message.chat.id, joke['panchline'] + '🌚')
     else:
         bot.send_message(message.chat.id, joke['setup'] + '🌚')
+
+
 # <<< End joke >>>
 
 
@@ -78,6 +89,8 @@ def meme_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_photo(message.chat.id, db.random_meme())
     log(message, 'info')
+
+
 # <<< End ru meme >>>
 
 
@@ -88,6 +101,8 @@ def meme_en_handler(message: Message) -> None:
     meme = requests.get(API['API_Meme']).json()
     bot.send_photo(message.chat.id, meme['url'])
     log(message, 'info')
+
+
 # <<< End en meme >>>
 
 
@@ -117,6 +132,8 @@ def callback_query(call):
                                            f"Влажность: {res['main']['humidity']} %💧\n"
                                            f"Ветер: {res['wind']['speed']} м\\с💨\n",
                      reply_markup=ReplyKeyboardRemove(selective=True))
+
+
 # <<< End weather >>>
 
 
@@ -180,6 +197,8 @@ def detect_music(message: Message, type_r):
             bot.send_message(call.message.chat.id, res['result'][0]['lyrics'])
     else:
         bot.send_message(message.chat.id, 'Ничего не нашлось😔')
+
+
 # <<< End detect music >>>
 
 
@@ -314,12 +333,14 @@ def callback_query(call):
             res = requests.get(API['AUDD'] + 'findLyrics/?q=' + i['name'] + ' ' + i['title']).json()
             if res['status'] == 'success' and res['result'] is not None:
                 bot.send_message(call.message.chat.id, res['result'][0]['lyrics'])
+
+
 # <<< End music >>>
 
 
 # <<< News >>>
 news = []
-msg = None
+news_msg = None
 
 
 @bot.message_handler(commands=['news'])  # /news
@@ -335,11 +356,11 @@ def news_handler(message: Message) -> None:
 
     def main_news(news_type: str) -> None:
         global news
-        global msg
+        global news_msg
         res = requests.get(API['News']['URL'].replace('Method', f'{news_type}') + API['News']['Api_Key']).json()
         if res['status'] == 'ok':
             news = [{'title': i['title'], 'description': i['description'],
-                'url': i['url'], 'image': i['urlToImage'], 'published': i['publishedAt']} for i in res['articles']]
+                     'url': i['url'], 'image': i['urlToImage'], 'published': i['publishedAt']} for i in res['articles']]
         for i in news:
             if i['image'] is not None:
                 i['title'] = clear_link(i['title'])
@@ -357,18 +378,20 @@ def news_handler(message: Message) -> None:
                                  callback_data=f"move_to_ {index + 1 if index < len(news) - 1 else 'pass'}"))
         if news[index]['image'] is not None:
             if news[index]['description'] is not None:
-                bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
+                bot.edit_message_media(chat_id=news_msg.chat.id, message_id=news_msg.message_id,
                                        media=InputMediaPhoto(news[index]['image'],
-                                       caption='<b>' + news[index]['title'] + '</b>\n\n' +
-                                       news[index]['description'] + '\n\n' +
-                                       '<i>' + news[index]['published'].replace('T', ' ').replace('Z', '') + '</i>',
+                                                             caption='<b>' + news[index]['title'] + '</b>\n\n' +
+                                                             news[index]['description'] + '\n\n' +
+                                                             '<i>' + news[index]['published'].replace('T',' ').replace(
+                                                             'Z', '') + '</i>',
                                                              parse_mode='HTML'),
                                        reply_markup=keyboard2)
             else:
-                bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
+                bot.edit_message_media(chat_id=news_msg.chat.id, message_id=news_msg.message_id,
                                        media=InputMediaPhoto(news[index]['image'],
-                                       caption='<b>' + news[index]['title'] + '</b>\n' +
-                                       '<i>' + news[index]['published'].replace('T', ' ').replace('Z', '') + '</i>',
+                                                             caption='<b>' + news[index]['title'] + '</b>\n' +
+                                                             '<i>' + news[index]['published'].replace('T', ' ').replace(
+                                                             'Z', '') + '</i>',
                                                              parse_mode='HTML'),
                                        reply_markup=keyboard2)
         else:
@@ -376,9 +399,9 @@ def news_handler(message: Message) -> None:
 
     @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^News\s?\w+$', call.data))
     def choice_news_query(call):
-        global msg
+        global news_msg
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        msg = bot.send_photo(call.message.chat.id, Empty_bg)
+        news_msg = bot.send_photo(call.message.chat.id, Empty_bg)
         main_news(call.data.split()[1])
 
     @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to_\s?\d+$', call.data))
@@ -388,12 +411,34 @@ def news_handler(message: Message) -> None:
     @bot.callback_query_handler(func=lambda call: call.data == 'move_to_ pass')
     def news_pass(call):
         bot.answer_callback_query(call.id, '⛔️')
+
+
 # <<< End news >>>
+
+
+# <<< YouTube Music >>>
+@bot.message_handler(commands=['youtube_music'])  # /youtube_music
+def youtube_music_handler(message: Message) -> None:
+    log(message, 'info')
+    link = bot.send_message(message.chat.id, 'Отправьте мне ссылку на видео🔗')
+    bot.register_next_step_handler(link, send_audio)
+
+
+def send_audio(message: Message) -> None:
+    if re.fullmatch(r'^https?:\/\/.*[\r\n]*$', message.text):
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton('YouTube', url=message.text))
+        yt = YouTube(message.text)
+        bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(), 'rb'),
+                       reply_markup=keyboard, duration=yt.length,
+                       title=yt.title)
+        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), yt.title + '.mp4'))
+# <<< End YouTube Music >>>
 
 
 # <<< Translate >>>
 @bot.message_handler(commands=['translate'])  # /translate
-def translate_handler(message) -> None:
+def translate_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'typing')
     msg = bot.send_message(message.chat.id, 'Введите то что нужно перевести👁‍🗨')
     bot.register_next_step_handler(msg, trans_word)
@@ -404,6 +449,8 @@ def trans_word(message: Message) -> None:  # Translate function
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, tr_w(message.text))
+
+
 # <<< End Translate >>>
 
 
@@ -413,6 +460,8 @@ def gn_sticker_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_sticker(message.chat.id, db.random_gn_sticker())
     log(message, 'info')
+
+
 # <<< End sticker GN >>>
 
 
@@ -422,6 +471,8 @@ def sticker_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_sticker(message.chat.id, db.random_sticker())
     log(message, 'info')
+
+
 # <<< End sticker >>>
 
 
@@ -450,6 +501,8 @@ def text_handler(message: Message) -> None:
             bot.send_message(message.chat.id, f'{message.from_user.username.title()} осуждает на -{len(msg) * 10} '
                                               f'{reply_to.username.title()}\nИтого карма: '
                                               f'{db.change_karma(reply_to, msg)}')
+
+
 # <<< End change karma >>>
 
 
@@ -458,6 +511,8 @@ def text_handler(message: Message) -> None:
 def text_handler(message: Message) -> None:
     db.add_answer(message.text.replace('-', '').lstrip())
     bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
+
+
 # <<< End add answer >>>
 
 
@@ -471,6 +526,8 @@ def text_handler(message: Message) -> None:
         answer = re.findall(r'-.\w.+', message.text)[0].replace('-', '').lstrip()
         db.add_to_db(word, answer)
         bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
+
+
 # <<< End add answer with word >>>
 
 
@@ -539,6 +596,8 @@ def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
     bot.send_chat_action(message.chat.id, 'typing')
     time.sleep(1)
     bot.send_message(message.chat.id, url_bin)
+
+
 # <<< End code PasteBin >>>
 
 
@@ -577,6 +636,8 @@ def reset_users() -> None:  # Reset users for Dice game
     first_dice['dice'] = 0
     second_dice['username'] = None
     second_dice['dice'] = 0
+
+
 # <<< End dice game >>>
 
 
@@ -607,6 +668,8 @@ def text_handler(message: Message) -> None:
                 bot.reply_to(message, db.get_answer(random.choice(result)))
             elif rend_d():
                 bot.reply_to(message, db.get_simple_answer())
+
+
 # <<< End all message >>>
 
 
@@ -645,6 +708,8 @@ def contact_handler(message: Message) -> None:
         bot.send_chat_action(message.chat.id, 'typing')
         bot.reply_to(message.chat.id, random.choice(['Если мне будет одиноко и холодно я знаю куда позвонить',
                                                      'Трубку не берут', 'Сохранил']))
+
+
 # <<< End answer's  >>>
 
 
