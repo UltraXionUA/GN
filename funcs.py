@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Function file for GNBot"""
 from googletrans import Translator
 from random import randint
@@ -5,6 +6,7 @@ from langdetect import detect
 from datetime import datetime
 import logging
 import requests
+import re
 
 
 logging.basicConfig(filename="logger.log", level=logging.INFO)  # Turn on logger
@@ -47,6 +49,13 @@ def tr_w(words) -> str:  # Define and translate
         return 'Не удалось распознат язык⛔️'
     return Translator().translate(words, dest='en').text if leng_code == 'ru' \
         else Translator().translate(words, dest='ru').text
+
+
+def clear_link(string: str) -> str:  # Clear string of links
+    clear_string = re.sub(r'^https?:\/\/.*[\r\n]*|[www\.]?\w+\-?\w+\.\w.', '', string, flags=re.MULTILINE)
+    clear_string = re.sub(r'\s+', ' ', clear_string, flags=re.MULTILINE)
+    clear_string = re.sub(r'(\s-\s+m)?', '', clear_string, flags=re.MULTILINE)
+    return clear_string
 
 
 def rend_d() -> bool:  # Random True or False

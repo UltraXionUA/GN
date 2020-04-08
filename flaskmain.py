@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Flask web app for GNBot"""
 from flask import Flask, request, abort
 import git

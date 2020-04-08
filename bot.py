@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 """Mains file for GNBot"""
 # <<< Import's >>>
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove, InputMediaPhoto
-from funcs import tr_w, rend_d, hi_r, log, download_song
+from funcs import tr_w, rend_d, hi_r, log, download_song, clear_link
 from datetime import datetime as dt
 from urllib import parse, request
-from config import TOKEN, API
+from config import TOKEN, API, Empty_bg  # TEST_TOKEN
 from threading import Timer
 from threading import Thread
 from telebot import TeleBot
@@ -256,6 +257,8 @@ def inline_keyboard(some_index) -> InlineKeyboardMarkup:  # Navigation for music
         if i % 5 == 0:
             list_data.append(buf.copy())
             buf.clear()
+    if buf is not None:
+        list_data.append(buf)
     len_songs = len(list_data)
     for songs in list_data[some_index]:
         some_keyboard.add(InlineKeyboardButton(f"{songs['name']} - {songs['title']}",
@@ -295,7 +298,7 @@ def callback_query(call):
         if i['id'] == int(song_id):
             keyboard = InlineKeyboardMarkup(row_width=2)
             keyboard.add(InlineKeyboardButton('Текст', callback_data=f'Lyric: {str(song_id)}'),
-                         InlineKeyboardButton('Dezeer', url=i['link']),)
+                         InlineKeyboardButton('Dezeer', url=i['link']), )
             bot.send_chat_action(call.message.chat.id, 'upload_document')
             bot.send_audio(call.message.chat.id, audio=download_song(i['preview']), reply_markup=keyboard,
                            performer=i['name'], title=i['title'])
@@ -312,6 +315,81 @@ def callback_query(call):
             if res['status'] == 'success' and res['result'] is not None:
                 bot.send_message(call.message.chat.id, res['result'][0]['lyrics'])
 # <<< End music >>>
+
+
+# <<< News >>>
+news = []
+msg = None
+
+
+@bot.message_handler(commands=['news'])  # /news
+def news_handler(message: Message) -> None:
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(InlineKeyboardButton('Технологии', callback_data='News technology'),
+                 InlineKeyboardButton('Наука', callback_data='News science'))
+    keyboard.add(InlineKeyboardButton('Здоровье', callback_data='News health'),
+                 InlineKeyboardButton('Общие', callback_data='News general'))
+    keyboard.add(InlineKeyboardButton('Развлечения', callback_data='News entertainment'),
+                 InlineKeyboardButton('Спорт', callback_data='News sports'))
+    bot.send_message(message.chat.id, '<b>Новости</b>', reply_markup=keyboard, parse_mode='HTML')
+
+    def main_news(news_type: str) -> None:
+        global news
+        global msg
+        res = requests.get(API['News']['URL'].replace('Method', f'{news_type}') + API['News']['Api_Key']).json()
+        if res['status'] == 'ok':
+            news = [{'title': i['title'], 'description': i['description'],
+                'url': i['url'], 'image': i['urlToImage'], 'published': i['publishedAt']} for i in res['articles']]
+        for i in news:
+            if i['image'] is not None:
+                i['title'] = clear_link(i['title'])
+                if i['description'] is not None:
+                    i['description'] = clear_link(i['description'])
+        send_news(0)
+
+    def send_news(index: int) -> None:
+        keyboard2 = InlineKeyboardMarkup()
+        keyboard2.add(InlineKeyboardButton('Читать', url=news[index]['url']))
+        keyboard2.add(
+            InlineKeyboardButton(text="⬅️️",
+                                 callback_data=f"move_to_ {index - 1 if index > 0 else 'pass'}"),
+            InlineKeyboardButton(text="➡️",
+                                 callback_data=f"move_to_ {index + 1 if index < len(news) - 1 else 'pass'}"))
+        if news[index]['image'] is not None:
+            if news[index]['description'] is not None:
+                print(re.sub(r'^https?:\/\/.*[\r\n]*|\w+\.\w+(\.\w+)?$', '', news[index]['title']))
+                bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
+                                       media=InputMediaPhoto(news[index]['image'],
+                                       caption='<b>' + news[index]['title'] + '</b>\n\n' +
+                                       news[index]['description'] + '\n\n' +
+                                       '<i>' + news[index]['published'].replace('T', ' ').replace('Z', '') + '</i>',
+                                                             parse_mode='HTML'),
+                                       reply_markup=keyboard2)
+            else:
+                bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
+                                       media=InputMediaPhoto(news[index]['image'],
+                                       caption='<b>' + news[index]['title'] + '</b>\n' +
+                                       '<i>' + news[index]['published'].replace('T', ' ').replace('Z', '') + '</i>',
+                                                             parse_mode='HTML'),
+                                       reply_markup=keyboard2)
+        else:
+            send_news(index + 2)
+
+    @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^News\s?\w+$', call.data))
+    def choice_news_query(call):
+        global msg
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+        msg = bot.send_photo(call.message.chat.id, Empty_bg)
+        main_news(call.data.split()[1])
+
+    @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to_\s?\d+$', call.data))
+    def next_news_query(call):
+        send_news(int(call.data.split()[1]))
+
+    @bot.callback_query_handler(func=lambda call: call.data == 'move_to_ pass')
+    def news_pass(call):
+        bot.answer_callback_query(call.id, '⛔️')
+# <<< End news >>>
 
 
 # <<< Translate >>>
@@ -336,6 +414,8 @@ def gn_sticker_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_sticker(message.chat.id, db.random_gn_sticker())
     log(message, 'info')
+
+
 # <<< End sticker GN >>>
 
 
@@ -345,6 +425,8 @@ def sticker_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_sticker(message.chat.id, db.random_sticker())
     log(message, 'info')
+
+
 # <<< End sticker >>>
 
 
@@ -352,6 +434,8 @@ def sticker_handler(message: Message) -> None:
 @bot.message_handler(content_types=['sticker'])  # Add new sticker
 def add_sticker_handler(message: Message) -> None:
     db.add_sticker(message.sticker.file_id, message.sticker.emoji, message.sticker.set_name)
+
+
 # <<< End add new sticker  >>>
 
 

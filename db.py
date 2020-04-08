@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Control DB file for GNBot"""
 from funcs import log
 import config

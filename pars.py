@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Parser file for GNBot"""
 from bs4 import BeautifulSoup
 from config import URLS
