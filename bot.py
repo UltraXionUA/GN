@@ -244,7 +244,9 @@ def get_song(message: Message, choice: str) -> None:  # Get song
                 if songs['data']:
                     data_songs.clear()
                     data_songs = [{'id': i['id'], 'title': i['title'], 'name': i['contributors'][0]['name'],
-                                   'link': i['link'], 'preview': i['preview']} for i in songs['data']]
+                                   'link': i['link'], 'preview': i['preview'], 'duration': i['duration']}
+                                  for i in songs['data']]
+                    create_data_song()
                     if data_songs:
                         bot.send_photo(message.chat.id, res['data'][0]['picture_xl'],
                                        reply_markup=inline_keyboard(0))
@@ -253,7 +255,9 @@ def get_song(message: Message, choice: str) -> None:  # Get song
             elif choice == 'track?q=':
                 data_songs.clear()
                 data_songs = [{'id': i['id'], 'title': i['title'], 'name': i['artist']['name'],
-                               'link': i['link'], 'preview': i['preview']} for i in res['data']]
+                               'link': i['link'], 'preview': i['preview'], 'duration': i['duration']}
+                              for i in res['data']]
+                create_data_song()
                 if data_songs:
                     bot.send_message(message.chat.id, 'Результат поиска🔎', reply_markup=inline_keyboard(0))
                 else:
@@ -266,19 +270,21 @@ def get_song(message: Message, choice: str) -> None:  # Get song
         bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
 
 
-def inline_keyboard(some_index) -> InlineKeyboardMarkup:  # Navigation for music
-    global data_songs, len_songs
-    some_keyboard = InlineKeyboardMarkup()
-    list_data, buf = [], []
+def create_data_song():
+    global data_songs
+    list_music, buf = [], []
     for i, en in enumerate(data_songs, 1):
         buf.append(en)
         if i % 5 == 0:
-            list_data.append(buf.copy())
+            list_music.append(buf.copy())
             buf.clear()
-    if buf is not None:
-        list_data.append(buf)
-    len_songs = len(list_data)
-    for songs in list_data[some_index]:
+    data_songs = list_music.copy()
+
+
+def inline_keyboard(some_index) -> InlineKeyboardMarkup:  # Navigation for music
+    global data_songs
+    some_keyboard = InlineKeyboardMarkup()
+    for songs in data_songs[some_index]:
         some_keyboard.add(InlineKeyboardButton(f"{songs['name']} - {songs['title']}",
                                                callback_data=f"ID: {songs['id']}"))
     some_keyboard.add(
@@ -286,7 +292,7 @@ def inline_keyboard(some_index) -> InlineKeyboardMarkup:  # Navigation for music
                              callback_data=f"move_to {some_index - 1 if some_index > 0 else 'pass'}"),
         InlineKeyboardButton(text="➡️",
                              callback_data=f"move_to "
-                                           f"{some_index + 1 if some_index < len_songs - 1 else 'pass'}"))
+                                           f"{some_index + 1 if some_index < len(data_songs) - 1 else 'pass'}"))
     return some_keyboard
 
 
@@ -313,14 +319,15 @@ def callback_query(call):
     song_id = call.data.replace('ID: ', '')
     global data_songs
     for i in data_songs:
-        if i['id'] == int(song_id):
-            keyboard = InlineKeyboardMarkup(row_width=2)
-            keyboard.add(InlineKeyboardButton('Текст', callback_data=f'Lyric: {str(song_id)}'),
-                         InlineKeyboardButton('Dezeer', url=i['link']), )
-            bot.send_chat_action(call.message.chat.id, 'upload_document')
-            bot.send_audio(call.message.chat.id, audio=download_song(i['preview']), reply_markup=keyboard,
-                           performer=i['name'], title=i['title'])
-            break
+        for j in i:
+            if j['id'] == int(song_id):
+                keyboard = InlineKeyboardMarkup(row_width=2)
+                keyboard.add(InlineKeyboardButton('Текст', callback_data=f'Lyric: {str(song_id)}'),
+                             InlineKeyboardButton('Dezeer', url=j['link']), )
+                bot.send_chat_action(call.message.chat.id, 'upload_document')
+                bot.send_audio(call.message.chat.id, audio=download_song(j['preview']), reply_markup=keyboard,
+                               performer=j['name'], title=j['title'], duration=j['duration'])
+                break
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric:\s?\d+$', call.data))
@@ -328,12 +335,11 @@ def callback_query(call):
     global data_songs
     song_id = call.data.replace('Lyric: ', '')
     for i in data_songs:
-        if i['id'] == int(song_id):
-            res = requests.get(API['AUDD'] + 'findLyrics/?q=' + i['name'] + ' ' + i['title']).json()
-            if res['status'] == 'success' and res['result'] is not None:
-                bot.send_message(call.message.chat.id, res['result'][0]['lyrics'])
-
-
+        for j in i:
+            if j['id'] == int(song_id):
+                res = requests.get(API['AUDD'] + 'findLyrics/?q=' + j['name'] + ' ' + j['title']).json()
+                if res['status'] == 'success' and res['result'] is not None:
+                    bot.reply_to(call.message, res['result'][0]['lyrics'])
 # <<< End music >>>
 
 
@@ -381,7 +387,7 @@ def news_handler(message: Message) -> None:
                                        media=InputMediaPhoto(news[index]['image'],
                                                              caption='<b>' + news[index]['title'] + '</b>\n\n' +
                                                              news[index]['description'] + '\n\n' +
-                                                             '<i>' + news[index]['published'].replace('T',' ').replace(
+                                                             '<i>' + news[index]['published'].replace('T', ' ').replace(
                                                              'Z', '') + '</i>',
                                                              parse_mode='HTML'),
                                        reply_markup=keyboard2)
@@ -443,8 +449,8 @@ def send_audio(message: Message, method: str) -> None:
                            title=yt.title)
         else:
             bot.send_video(message.chat.id,
-                           open(yt.streams.filter(subtype='mp4', progressive=True)
-                           .order_by('resolution').desc()[0].download(), 'rb'),
+                           open(yt.streams.filter(subtype='mp4',
+                                                  progressive=True).order_by('resolution').desc()[0].download(), 'rb'),
                            duration=yt.length, reply_markup=keyboard)
         try:
             os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), yt.title + '.mp4'))
