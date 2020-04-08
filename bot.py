@@ -6,6 +6,7 @@ from funcs import tr_w, rend_d, hi_r, log, download_song, clear_link
 from datetime import datetime as dt
 from urllib import parse, request
 from config import TOKEN, API, Empty_bg, TEST_TOKEN
+from youtube_unlimited_search import YoutubeUnlimitedSearch
 from threading import Timer
 from threading import Thread
 from telebot import TeleBot
@@ -17,6 +18,7 @@ import db
 import time
 import os
 import re
+
 # <<< End import's>>
 
 bot = TeleBot(TOKEN)
@@ -321,13 +323,30 @@ def callback_query(call):
     for i in data_songs:
         for j in i:
             if j['id'] == int(song_id):
+                res = YoutubeUnlimitedSearch(f'{j["name"]} - {j["title"]}', max_results=1).get()
                 keyboard = InlineKeyboardMarkup(row_width=2)
                 keyboard.add(InlineKeyboardButton('Текст', callback_data=f'Lyric: {str(song_id)}'),
-                             InlineKeyboardButton('Dezeer', url=j['link']), )
+                             InlineKeyboardButton('Dezeer', url=j['link']))
+                keyboard.add(InlineKeyboardButton('Полная песня', callback_data=res[0]['link']))
                 bot.send_chat_action(call.message.chat.id, 'upload_document')
                 bot.send_audio(call.message.chat.id, audio=download_song(j['preview']), reply_markup=keyboard,
                                performer=j['name'], title=j['title'], duration=j['duration'])
+                try:
+                    os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'Buffer_for_song' + '.mp3'))
+                except FileNotFoundError:
+                    log('Need to remove file', 'info')
                 break
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^/watch\?v=\w+$', call.data))
+def callback_query(call):
+    yt = YouTube('https://www.youtube.com/' + call.data)
+    bot.send_audio(call.message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
+                   title=yt.title, duration=yt.length)
+    try:
+        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'video' + '.mp4'))
+    except FileNotFoundError:
+        log('Need to remove file', 'info')
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric:\s?\d+$', call.data))
@@ -340,6 +359,8 @@ def callback_query(call):
                 res = requests.get(API['AUDD'] + 'findLyrics/?q=' + j['name'] + ' ' + j['title']).json()
                 if res['status'] == 'success' and res['result'] is not None:
                     bot.reply_to(call.message, res['result'][0]['lyrics'])
+
+
 # <<< End music >>>
 
 
@@ -386,17 +407,19 @@ def news_handler(message: Message) -> None:
                 bot.edit_message_media(chat_id=news_msg.chat.id, message_id=news_msg.message_id,
                                        media=InputMediaPhoto(news[index]['image'],
                                                              caption='<b>' + news[index]['title'] + '</b>\n\n' +
-                                                             news[index]['description'] + '\n\n' +
-                                                             '<i>' + news[index]['published'].replace('T', ' ').replace(
-                                                             'Z', '') + '</i>',
+                                                                     news[index]['description'] + '\n\n' +
+                                                                     '<i>' + news[index]['published'].replace('T',
+                                                                                                              ' ').replace(
+                                                                 'Z', '') + '</i>',
                                                              parse_mode='HTML'),
                                        reply_markup=keyboard2)
             else:
                 bot.edit_message_media(chat_id=news_msg.chat.id, message_id=news_msg.message_id,
                                        media=InputMediaPhoto(news[index]['image'],
                                                              caption='<b>' + news[index]['title'] + '</b>\n' +
-                                                             '<i>' + news[index]['published'].replace('T', ' ').replace(
-                                                             'Z', '') + '</i>',
+                                                                     '<i>' + news[index]['published'].replace('T',
+                                                                                                              ' ').replace(
+                                                                 'Z', '') + '</i>',
                                                              parse_mode='HTML'),
                                        reply_markup=keyboard2)
         else:
@@ -416,6 +439,8 @@ def news_handler(message: Message) -> None:
     @bot.callback_query_handler(func=lambda call: call.data == 'move_to_ pass')
     def news_pass(call):
         bot.answer_callback_query(call.id, '⛔️')
+
+
 # <<< End news >>>
 
 
@@ -444,21 +469,23 @@ def send_audio(message: Message, method: str) -> None:
         yt = YouTube(message.text)
         if method == 'Audio':
             bot.send_chat_action(message.chat.id, 'upload_audio')
-            bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(), 'rb'),
+            bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
                            reply_markup=keyboard, duration=yt.length,
                            title=yt.title)
         else:
-            bot.send_video(message.chat.id,
-                           open(yt.streams.filter(subtype='mp4',
-                                                  progressive=True).order_by('resolution').desc()[0].download(), 'rb'),
+            yt.streams.filter(subtype='mp4',
+                              progressive=True).order_by('resolution').desc()[0].download(filename='file')
+            bot.send_video(message.chat.id, open('video.mp4', 'rb'),
                            duration=yt.length, reply_markup=keyboard)
         try:
-            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), yt.title + '.mp4'))
+            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
         except FileNotFoundError:
             log('Need to remove file', 'info')
 
     else:
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
+
+
 # <<< End YouTube >>>
 
 
@@ -475,6 +502,8 @@ def trans_word(message: Message) -> None:  # Translate function
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, tr_w(message.text))
+
+
 # <<< End Translate >>>
 
 
@@ -484,6 +513,8 @@ def gn_sticker_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_sticker(message.chat.id, db.random_gn_sticker())
     log(message, 'info')
+
+
 # <<< End sticker GN >>>
 
 
@@ -493,6 +524,8 @@ def sticker_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_sticker(message.chat.id, db.random_sticker())
     log(message, 'info')
+
+
 # <<< End sticker >>>
 
 
@@ -500,6 +533,8 @@ def sticker_handler(message: Message) -> None:
 @bot.message_handler(content_types=['sticker'])  # Add new sticker
 def add_sticker_handler(message: Message) -> None:
     db.add_sticker(message.sticker.file_id, message.sticker.emoji, message.sticker.set_name)
+
+
 # <<< End add new sticker  >>>
 
 
@@ -519,6 +554,8 @@ def text_handler(message: Message) -> None:
             bot.send_message(message.chat.id, f'{message.from_user.username.title()} осуждает на -{len(msg) * 10} '
                                               f'{reply_to.username.title()}\nИтого карма: '
                                               f'{db.change_karma(reply_to, msg)}')
+
+
 # <<< End change karma >>>
 
 
@@ -612,6 +649,8 @@ def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
     bot.send_chat_action(message.chat.id, 'typing')
     time.sleep(1)
     bot.send_message(message.chat.id, url_bin)
+
+
 # <<< End code PasteBin >>>
 
 
