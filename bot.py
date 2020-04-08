@@ -17,7 +17,6 @@ import db
 import time
 import os
 import re
-
 # <<< End import's>>
 
 bot = TeleBot(TOKEN)
@@ -411,29 +410,50 @@ def news_handler(message: Message) -> None:
     @bot.callback_query_handler(func=lambda call: call.data == 'move_to_ pass')
     def news_pass(call):
         bot.answer_callback_query(call.id, '⛔️')
-
-
 # <<< End news >>>
 
 
-# <<< YouTube Music >>>
-@bot.message_handler(commands=['youtube_music'])  # /youtube_music
+# <<< YouTube >>>
+@bot.message_handler(commands=['youtube'])  # /youtube
 def youtube_music_handler(message: Message) -> None:
     log(message, 'info')
-    link = bot.send_message(message.chat.id, 'Отправьте мне ссылку на видео🔗')
-    bot.register_next_step_handler(link, send_audio)
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton('Видео📺', callback_data='Video'),
+                 InlineKeyboardButton('Аудио🎧', callback_data='Audio'))
+    bot.send_message(message.chat.id, 'Выберите что вам отправить🧐', reply_markup=keyboard)
 
 
-def send_audio(message: Message) -> None:
+@bot.callback_query_handler(func=lambda call: call.data == 'Audio' or call.data == 'Video')
+def youtube_pass(call):
+    bot.answer_callback_query(call.id, 'Вы выбрали ' + tr_w(call.data))
+    bot.delete_message(call.message.chat.id, call.message.message_id)
+    link = bot.send_message(call.message.chat.id, 'Отправьте мне ссылку на видео🔗')
+    bot.register_next_step_handler(link, send_audio, call.data)
+
+
+def send_audio(message: Message, method: str) -> None:
     if re.fullmatch(r'^https?:\/\/.*[\r\n]*$', message.text):
         keyboard = InlineKeyboardMarkup()
         keyboard.add(InlineKeyboardButton('YouTube', url=message.text))
         yt = YouTube(message.text)
-        bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(), 'rb'),
-                       reply_markup=keyboard, duration=yt.length,
-                       title=yt.title)
-        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), yt.title + '.mp4'))
-# <<< End YouTube Music >>>
+        if method == 'Audio':
+            bot.send_chat_action(message.chat.id, 'upload_audio')
+            bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(), 'rb'),
+                           reply_markup=keyboard, duration=yt.length,
+                           title=yt.title)
+        else:
+            bot.send_video(message.chat.id,
+                           open(yt.streams.filter(subtype='mp4', progressive=True)
+                           .order_by('resolution').desc()[0].download(), 'rb'),
+                           duration=yt.length, reply_markup=keyboard)
+        try:
+            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), yt.title + '.mp4'))
+        except FileNotFoundError:
+            log('Need to remove file', 'info')
+
+    else:
+        bot.send_message(message.chat.id, 'Не верный формат данных😔')
+# <<< End YouTube >>>
 
 
 # <<< Translate >>>
@@ -449,8 +469,6 @@ def trans_word(message: Message) -> None:  # Translate function
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, tr_w(message.text))
-
-
 # <<< End Translate >>>
 
 
@@ -460,8 +478,6 @@ def gn_sticker_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_sticker(message.chat.id, db.random_gn_sticker())
     log(message, 'info')
-
-
 # <<< End sticker GN >>>
 
 
@@ -471,8 +487,6 @@ def sticker_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_sticker(message.chat.id, db.random_sticker())
     log(message, 'info')
-
-
 # <<< End sticker >>>
 
 
@@ -480,8 +494,6 @@ def sticker_handler(message: Message) -> None:
 @bot.message_handler(content_types=['sticker'])  # Add new sticker
 def add_sticker_handler(message: Message) -> None:
     db.add_sticker(message.sticker.file_id, message.sticker.emoji, message.sticker.set_name)
-
-
 # <<< End add new sticker  >>>
 
 
@@ -501,8 +513,6 @@ def text_handler(message: Message) -> None:
             bot.send_message(message.chat.id, f'{message.from_user.username.title()} осуждает на -{len(msg) * 10} '
                                               f'{reply_to.username.title()}\nИтого карма: '
                                               f'{db.change_karma(reply_to, msg)}')
-
-
 # <<< End change karma >>>
 
 
@@ -596,8 +606,6 @@ def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
     bot.send_chat_action(message.chat.id, 'typing')
     time.sleep(1)
     bot.send_message(message.chat.id, url_bin)
-
-
 # <<< End code PasteBin >>>
 
 
