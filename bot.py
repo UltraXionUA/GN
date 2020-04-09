@@ -143,19 +143,19 @@ def show_weather(message: Message) -> None:
                               text=f"<i>{weather_data[index]['valid_date']} "
                                    f"{get_day(weather_data[index]['valid_date'])}</i>\n"
                                    f"<b>Город {tr_w(city_data['city_name'])} {city_data['country_code']}</b>🏢\n\n"
-                                   f"Погода {weather_data[index]['weather']['description']}️"
+                                   f"<b>Погода</b> {weather_data[index]['weather']['description']}️"
                                    f"{get_weather_emoji(str(weather_data[index]['weather']['code']))}\n"
-                                   f"Теспература {weather_data[index]['low_temp']} - "
+                                   f"<b>Теспература</b> {weather_data[index]['low_temp']} - "
                                    f"{weather_data[index]['max_temp']}°C🌡\n"
-                                   f"По ощушению {weather_data[index]['app_min_temp']} - "
+                                   f"<b>По ощушению</b> {weather_data[index]['app_min_temp']} - "
                                    f"{weather_data[index]['app_max_temp']}°C🌡\n"
-                                   f"Облачность {weather_data[index]['clouds']}%☁️\n"
-                                   f"Вероятность осадков {weather_data[index]['pop']}%☔️️\n"
-                                   f"Видимость {weather_data[index]['vis']} км🔭\n"
-                                   f"Влажность {weather_data[index]['rh']} %💧\n"
-                                   f"Атмоc. давление {weather_data[index]['pres']} дин·см²⏲\n"
-                                   f"Ветер {weather_data[index]['wind_cdir_full']} 🧭\n"
-                                   f"Cкорость ветра {float('{:.1f}'.format(weather_data[index]['wind_spd']))} м\\с💨\n",
+                                   f"<b>Облачность</b> {weather_data[index]['clouds']}%☁️\n"
+                                   f"<b>Вероятность осадков</b> {weather_data[index]['pop']}%☔️️\n"
+                                   f"<b>Видимость</b> {weather_data[index]['vis']} км🔭\n"
+                                   f"<b>Влажность</b> {weather_data[index]['rh']} %💧\n"
+                                   f"<b>Атмоc. давление</b> {weather_data[index]['pres']} дин·см²⏲\n"
+                                   f"<b>Ветер</b> {weather_data[index]['wind_cdir_full']} 🧭\n"
+                                   f"<b>Cкорость ветра</b> {float('{:.1f}'.format(weather_data[index]['wind_spd']))} м\\с💨\n",
                               reply_markup=keyboard, parse_mode='HTML')
     try:
         res = requests.get(API['API_Weather'].replace('CityName', city_name)).json()
