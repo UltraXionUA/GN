@@ -19,7 +19,6 @@ import db
 import time
 import os
 import re
-
 # <<< End import's>>
 
 bot = TeleBot(TOKEN)
@@ -129,9 +128,6 @@ def show_weather(message: Message) -> None:
         city_name = 'K' + slugify(message.text)
     else:
         city_name = slugify(message.text).title()
-    res = requests.get(API['API_Weather'].replace('CityName', city_name)).json()
-    city_data = {'city_name': res['city_name'], 'country_code': res['country_code']}
-    weather_data = [i for i in res['data']]
 
     def weather(index: int) -> None:
         keyboard = InlineKeyboardMarkup(row_width=2)
@@ -159,9 +155,15 @@ def show_weather(message: Message) -> None:
                                    f"Ветер {weather_data[index]['wind_cdir_full']} 🧭\n"
                                    f"Cкорость ветра {float('{:.1f}'.format(weather_data[index]['wind_spd']))} м\\с💨\n",
                               reply_markup=keyboard, parse_mode='HTML')
-
-    weather_msg = bot.send_message(message.chat.id, 'Загрузка...')
-    weather(0)
+    try:
+        res = requests.get(API['API_Weather'].replace('CityName', city_name)).json()
+    except Exception :
+        bot.send_message(message.chat.id, 'Не удалось найти ваш город😔')
+    else:
+        city_data = {'city_name': res['city_name'], 'country_code': res['country_code']}
+        weather_data = [i for i in res['data']]
+        weather_msg = bot.send_message(message.chat.id, 'Загрузка...')
+        weather(0)
 
     @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to__\s\d+$', call.data))
     def weather_query(call):
