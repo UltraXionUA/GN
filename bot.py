@@ -129,7 +129,7 @@ def show_weather(message: Message) -> None:
         city_name = 'K' + slugify(message.text)
     else:
         city_name = slugify(message.text).title()
-    res = requests.get(API['Weather2.0'].replace('CityName', city_name)).json()
+    res = requests.get(API['API_Weather'].replace('CityName', city_name)).json()
     city_data = {'city_name': res['city_name'], 'country_code': res['country_code']}
     weather_data = [i for i in res['data']]
 
