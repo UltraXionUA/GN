@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """Mains file for GNBot"""
 # <<< Import's >>>
-from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
+from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LabeledPrice
+from telebot.types import PreCheckoutQuery, SuccessfulPayment
 from funcs import tr_w, rend_d, hi_r, log, download_song, clear_link, get_day, get_weather_emoji
 from youtube_unlimited_search import YoutubeUnlimitedSearch
-from config import TOKEN, API, Empty_bg, TEST_TOKEN
+from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, TEST_TOKEN
 from datetime import datetime as dt
 from pytils.translit import slugify
 from urllib import parse, request
@@ -64,6 +65,47 @@ def gif_handler(message: Message) -> None:
 
 
 # <<< End gif >>>
+
+
+# <<< Donate >>>
+@bot.message_handler(commands=['donate'])  # /donate
+def donate_handler(message: Message) -> None:
+    log(message, 'info')
+    bot.send_chat_action(message.chat.id, 'typing')
+    bot.send_message(message.chat.id, 'Здесь вы можете поддержать раработчика и дать мотивацию '
+                                      'на внесение нового фунционала в <b>GNBot</b>\n'
+                                      'C уважением <i>@Ultra_Xion</i>', parse_mode='HTML')
+    if PAYMENT_TOKEN.split(':')[1] == 'LIVE':
+        keyboard = InlineKeyboardMarkup(row_width=1)
+        keyboard.add(InlineKeyboardButton('1 грн', callback_data='1 UAH'),
+                     InlineKeyboardButton('10 грн', callback_data='10 UAH'),
+                     InlineKeyboardButton('100 грн', callback_data='100 UAH'),
+                     InlineKeyboardButton('1000 грн', callback_data='1000 UAH'),
+                     InlineKeyboardButton('Своя сумма', callback_data='Other'))
+        bot.send_message(message.chat.id, 'Сумма поддержки💸', reply_markup=keyboard)
+        time.sleep(20)
+        bot.delete_message(message.chat.id, message.message_id)
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^\d+\sUAH$', call.data))
+def donate_query(call):
+    bot.answer_callback_query(call.id, 'Вы выбрали ' + call.data)
+    bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
+    price = LabeledPrice('Поддержать', amount=int(call.data.split()[0]) * 100)
+    bot.send_invoice(call.message.chat.id, title='Поддержка',
+                     description='Поддержка разработчика GNBot',
+                     provider_token=PAYMENT_TOKEN, currency='uah',
+                     photo_url='https://' + 'i.redd.it/6mfq9bv5u5n31.png',
+                     photo_height=1494, photo_width=1295, photo_size=142,
+                     is_flexible=False, prices=[price],
+                     start_parameter='donate-programmer-gnbot',
+                     invoice_payload='donate-is-done')
+
+
+@bot.pre_checkout_query_handler(func=lambda query: True)
+def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
+    bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+# <<< End donate >>>
 
 
 # <<< Joke >>>
