@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """Mains file for GNBot"""
 # <<< Import's >>>
-from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove, InputMediaPhoto
-from funcs import tr_w, rend_d, hi_r, log, download_song, clear_link
+from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
+from funcs import tr_w, rend_d, hi_r, log, download_song, clear_link, get_day, get_weather_emoji
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from config import TOKEN, API, Empty_bg, TEST_TOKEN
 from datetime import datetime as dt
+from pytils.translit import slugify
 from urllib import parse, request
 from threading import Thread
 from telebot import TeleBot
@@ -108,33 +109,68 @@ def meme_en_handler(message: Message) -> None:
 
 
 # <<< Weather >>>
+weather_data = []
+weather_msg = None
+city_data = None
+
+
 @bot.message_handler(commands=['weather'])  # /weather
 def weather_handler(message: Message) -> None:
+    global weather_data
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(InlineKeyboardButton('Харьков', callback_data='Kharkov'),
-                 InlineKeyboardButton('Полтава', callback_data='Poltava'))
-    msg = bot.send_message(message.chat.id, 'Погода в каком из города вас интерсует?🧐', reply_markup=keyboard)
-    time.sleep(10)
-    bot.delete_message(msg.chat.id, msg.message_id)
+    city = bot.send_message(message.chat.id, 'Введите название города✒️')
+    bot.register_next_step_handler(city, show_weather)
 
 
-@bot.callback_query_handler(func=lambda call: call.data == 'Kharkov' or call.data == 'Poltava')
-def callback_query(call):
-    bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
-    res = requests.get(API['API_Weather'].format(call.data)).json()
-    bot.answer_callback_query(call.id, 'Вы выбрали ' + tr_w(call.data))
-    bot.send_message(call.message.chat.id, f"Город: {tr_w(call.data).title()}🏢\n"
-                                           f"Погода: {tr_w(res['weather'][0]['description']).title()}☀️\n"
-                                           f"Теспература: {(res['main']['temp'])}°C🌡\n"
-                                           f"По ощушению: {(res['main']['feels_like'])}°C🌡\n"
-                                           f"Атмосферное давление: {res['main']['pressure']} дин·см²⏲\n"
-                                           f"Влажность: {res['main']['humidity']} %💧\n"
-                                           f"Ветер: {res['wind']['speed']} м\\с💨\n",
-                     reply_markup=ReplyKeyboardRemove(selective=True))
+def show_weather(message: Message) -> None:
+    global weather_msg, city_data, weather_data
+    if message.text.lower() == 'харьков':
+        city_name = 'K' + slugify(message.text)
+    else:
+        city_name = slugify(message.text).title()
+    res = requests.get(API['Weather2.0'].replace('CityName', city_name)).json()
+    city_data = {'city_name': res['city_name'], 'country_code': res['country_code']}
+    weather_data = [i for i in res['data']]
 
+    def weather(index: int) -> None:
+        keyboard = InlineKeyboardMarkup(row_width=2)
+        keyboard.add(
+            InlineKeyboardButton(text="⬅️️",
+                                 callback_data=f"move_to__ {index - 1 if index > 0 else 'pass'}"),
+            InlineKeyboardButton(text="➡️",
+                                 callback_data=f"move_to__ "
+                                               f"{index + 1 if index < len(weather_data) - 1 else 'pass'}"))
+        bot.edit_message_text(chat_id=weather_msg.chat.id, message_id=weather_msg.message_id,
+                              text=f"<i>{weather_data[index]['valid_date']} "
+                                   f"{get_day(weather_data[index]['valid_date'])}</i>\n"
+                                   f"<b>Город {tr_w(city_data['city_name'])} {city_data['country_code']}</b>🏢\n\n"
+                                   f"Погода {weather_data[index]['weather']['description']}️"
+                                   f"{get_weather_emoji(str(weather_data[index]['weather']['code']))}\n"
+                                   f"Теспература {weather_data[index]['low_temp']} - "
+                                   f"{weather_data[index]['max_temp']}°C🌡\n"
+                                   f"По ощушению {weather_data[index]['app_min_temp']} - "
+                                   f"{weather_data[index]['app_max_temp']}°C🌡\n"
+                                   f"Облачность {weather_data[index]['clouds']}%☁️\n"
+                                   f"Вероятность осадков {weather_data[index]['pop']}%☔️️\n"
+                                   f"Видимость {weather_data[index]['vis']} км🔭\n"
+                                   f"Влажность {weather_data[index]['rh']} %💧\n"
+                                   f"Атмоc. давление {weather_data[index]['pres']} дин·см²⏲\n"
+                                   f"Ветер {weather_data[index]['wind_cdir_full']} 🧭\n"
+                                   f"Cкорость ветра {float('{:.1f}'.format(weather_data[index]['wind_spd']))} м\\с💨\n",
+                              reply_markup=keyboard, parse_mode='HTML')
 
+    weather_msg = bot.send_message(message.chat.id, 'Загрузка...')
+    weather(0)
+
+    @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to__\s\d+$', call.data))
+    def weather_query(call):
+        bot.answer_callback_query(call.id, 'Загрузка...')
+        weather(int(call.data.split()[1]))
+
+    @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to__\spass$', call.data))
+    def pass_query(call):
+        bot.answer_callback_query(call.id, '⛔️')
 # <<< End weather >>>
 
 
@@ -342,7 +378,7 @@ def callback_query(call):
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^/watch\?v=\w+\s.+$', call.data))
 def callback_query(call):
     global data_songs
-    yt = YouTube('https://www.youtube.com/' + call.data.split()[0])
+    yt = YouTube('https://' + 'www.youtube.com/' + call.data.split()[0])
     bot.send_chat_action(call.message.chat.id, 'upload_audio')
     for i in data_songs:
         for j in i:
@@ -468,7 +504,7 @@ def youtube_pass(call):
 
 
 def send_audio(message: Message, method: str) -> None:
-    if re.fullmatch(r'^https?://.*[\r\n]*$', message.text):
+    if re.fullmatch(r'^https?:\/\/.*[\r\n]*$', message.text):
         keyboard = InlineKeyboardMarkup()
         keyboard.add(InlineKeyboardButton('YouTube', url=message.text))
         yt = YouTube(message.text)

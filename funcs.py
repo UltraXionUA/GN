@@ -3,7 +3,7 @@
 from googletrans import Translator
 from random import randint
 from langdetect import detect
-from datetime import datetime
+from datetime import datetime as dt
 import logging
 import requests
 import re
@@ -15,7 +15,7 @@ logging.basicConfig(filename="logger.log", level=logging.INFO)  # Turn on logger
 def log(message, type_l='None') -> None:  # Message processing
     if type(message) is not str:
         def get_info():
-            return "<!-------!> " + str(datetime.now().strftime("%Y-%m-%d-%H.%M.%S")) + " <!-------!>\n " \
+            return "<!-------!> " + str(dt.now().strftime("%Y-%m-%d-%H.%M.%S")) + " <!-------!>\n " \
                                                f"Сообщение от {message.from_user.first_name}" \
                                                f"{message.from_user.last_name} " \
                                                f"(id = {str(message.from_user.id)})\n" \
@@ -30,8 +30,26 @@ def log(message, type_l='None') -> None:  # Message processing
         else:
             print('Wrong type logging input')
     else:
-        print("<!-------!>", datetime.now().strftime("%Y-%m-%d-%H.%M.%S"), "<!-------!>\n", message)
-        logging.info(message + ' ' + str(datetime.now().strftime("%Y-%m-%d-%H.%M.%S")))
+        print("<!-------!>", dt.now().strftime("%Y-%m-%d-%H.%M.%S"), "<!-------!>\n", message)
+        logging.info(message + ' ' + str(dt.now().strftime("%Y-%m-%d-%H.%M.%S")))
+
+
+def get_weather_emoji(code: str) -> str:
+    for emoji, codes in {'🌦': ['200', '201', '202'], '🌩': ['230', '231', '232', '233'],
+                         '🌧': ['500', '501', '502', '511', '520'],
+                         '🌨': ['600', '601', '602', '610', '621', '622', '300', '301', '302', '521'],
+                         '☁️': ['611', '612', '804'], '⛅️': ['700', '711', '721', '731', '741', '751', '802'],
+                         '☀️': ['800'], '️🌤️': ['801'], '🌥': ['803']}.items():
+        if code in codes:
+            return emoji
+    return '🌪'
+
+
+def get_day(data: str) -> str:
+    week_day = dt.strptime(data, '%Y-%m-%d').isoweekday()
+    for num, day in {1: 'ПН', 2: 'ВТ', 3: 'СР', 4: 'ЧТ', 5: 'ПТ', 6: 'СБ', 7: 'ВС'}.items():
+        if num == week_day:
+            return day
 
 
 def download_song(url_mp3: str):
