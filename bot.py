@@ -137,6 +137,8 @@ def show_weather(message: Message) -> None:
             InlineKeyboardButton(text="➡️",
                                  callback_data=f"move_to__ "
                                                f"{index + 1 if index < len(weather_data) - 1 else 'pass'}"))
+        keyboard.add(InlineKeyboardButton('Погода', url='https://' + f'darksky.net/forecast/{city_data["lat"]},'
+                                                                     f'{city_data["lon"]}/us12/en'))
         bot.edit_message_text(chat_id=weather_msg.chat.id, message_id=weather_msg.message_id,
                               text=f"<i>{weather_data[index]['valid_date']} "
                                    f"{get_day(weather_data[index]['valid_date'])}</i>\n"
@@ -160,7 +162,9 @@ def show_weather(message: Message) -> None:
     except Exception :
         bot.send_message(message.chat.id, 'Не удалось найти ваш город😔')
     else:
-        city_data = {'city_name': res['city_name'], 'country_code': res['country_code']}
+        city_data = {'city_name': res['city_name'], 'country_code': res['country_code'],
+                     'lat': res['lat'], 'lon': res['lon']}
+        print(city_data)
         weather_data = [i for i in res['data']]
         weather_msg = bot.send_message(message.chat.id, 'Загрузка...')
         weather(0)
