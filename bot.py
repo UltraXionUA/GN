@@ -164,7 +164,6 @@ def show_weather(message: Message) -> None:
     else:
         city_data = {'city_name': res['city_name'], 'country_code': res['country_code'],
                      'lat': res['lat'], 'lon': res['lon']}
-        print(city_data)
         weather_data = [i for i in res['data']]
         weather_msg = bot.send_message(message.chat.id, 'Загрузка...')
         weather(0)
