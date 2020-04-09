@@ -70,29 +70,49 @@ def gif_handler(message: Message) -> None:
 # <<< Donate >>>
 @bot.message_handler(commands=['donate'])  # /donate
 def donate_handler(message: Message) -> None:
+    print(message)
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
-    bot.send_message(message.chat.id, 'Здесь вы можете поддержать раработчика и дать мотивацию '
-                                      'на внесение нового фунционала в <b>GNBot</b>\n'
-                                      'C уважением <i>@Ultra_Xion</i>', parse_mode='HTML')
-    if PAYMENT_TOKEN.split(':')[1] == 'LIVE':
-        keyboard = InlineKeyboardMarkup(row_width=1)
-        keyboard.add(InlineKeyboardButton('1 грн', callback_data='1 UAH'),
-                     InlineKeyboardButton('10 грн', callback_data='10 UAH'),
-                     InlineKeyboardButton('100 грн', callback_data='100 UAH'),
-                     InlineKeyboardButton('1000 грн', callback_data='1000 UAH'),
-                     InlineKeyboardButton('Своя сумма', callback_data='Other'))
-        bot.send_message(message.chat.id, 'Сумма поддержки💸', reply_markup=keyboard)
-        time.sleep(20)
-        bot.delete_message(message.chat.id, message.message_id)
+    if message.chat.type == 'private':
+        bot.send_message(message.chat.id, 'Здесь вы можете поддержать раработчика и дать мотивацию '
+                                          'на внесение нового фунционала в <b>GNBot</b>\n'
+                                          'C уважением <i>@Ultra_Xion</i>', parse_mode='HTML')
+        if PAYMENT_TOKEN.split(':')[1] == 'LIVE':
+            keyboard = InlineKeyboardMarkup(row_width=1)
+            keyboard.add(InlineKeyboardButton('1 грн', callback_data='1 UAH'),
+                         InlineKeyboardButton('10 грн', callback_data='10 UAH'),
+                         InlineKeyboardButton('100 грн', callback_data='100 UAH'),
+                         InlineKeyboardButton('1000 грн', callback_data='1000 UAH'),
+                         InlineKeyboardButton('Своя сумма', callback_data='Своя сумма'))
+            msg = bot.send_message(message.chat.id, 'Сумма поддержки💸', reply_markup=keyboard)
+            time.sleep(20)
+            bot.delete_message(msg.chat.id, msg.message_id)
+    else:
+        bot.send_message(message.chat.id, 'К сожелению в группе эта функция недоступна😔\n'
+                                          'Что бы поддержать нас вы можете восползоваться'
+                                          'этой командой в личном чате с ботом 💢@GNTMBot💢')
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^\d+\sUAH$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^\d+\sUAH$', call.data) or call.data == 'Своя сумма')
 def donate_query(call):
     bot.answer_callback_query(call.id, 'Вы выбрали ' + call.data)
     bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
-    price = LabeledPrice('Поддержать', amount=int(call.data.split()[0]) * 100)
-    bot.send_invoice(call.message.chat.id, title='Поддержка',
+    if call.data == 'Своя сумма':
+        msg = bot.send_message(call.message.chat.id, 'Введите сумму🧐')
+        bot.register_next_step_handler(msg, send_payment, 'UAH')
+    else:
+        send_payment(call.message, call.data)
+
+
+def send_payment(message: Message, money) -> None:
+    local_money = None
+    if money == 'UAH':
+        if message.text.isdigit():
+            local_money = message.text + ' ' + money
+    else:
+        local_money = money
+    price = LabeledPrice('Поддержать', amount=int(local_money.split()[0]) * 100)
+    bot.send_invoice(message.chat.id, title='Поддержка',
                      description='Поддержка разработчика GNBot',
                      provider_token=PAYMENT_TOKEN, currency='uah',
                      photo_url='https://' + 'i.redd.it/6mfq9bv5u5n31.png',
@@ -105,6 +125,16 @@ def donate_query(call):
 @bot.pre_checkout_query_handler(func=lambda query: True)
 def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
     bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+
+
+@bot.message_handler(content_types=['successful_payment'])
+def process_successful_payment(message: Message) -> None:
+    promo = message.successful_payment
+    log(f'Successful_payment\nType: {promo.invoice_payload}\nSum: {promo.total_amount}{promo.currency}')
+    bot.send_message(message.chat.id, f'Платеж прошел успешно😌\n'
+                         f'{message.successful_payment.total_amount // 100} '
+                         f'{message.successful_payment.currency} были начислены на свет\n'
+                         f'Благодарим вас за поддержку проекта🥳')
 # <<< End donate >>>
 
 
