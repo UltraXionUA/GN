@@ -2,13 +2,15 @@
 """Mains file for GNBot"""
 # <<< Import's >>>
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LabeledPrice
-from telebot.types import PreCheckoutQuery, SuccessfulPayment
+from telebot.types import PreCheckoutQuery
 from funcs import tr_w, rend_d, hi_r, log, download_song, clear_link, get_day, get_weather_emoji
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, TEST_TOKEN
+from collections import defaultdict
 from datetime import datetime as dt
 from pytils.translit import slugify
 from urllib import parse, request
+from json import JSONDecodeError
 from threading import Thread
 from telebot import TeleBot
 from threading import Timer
@@ -31,10 +33,10 @@ Parser.start()
 # <<< Start >>>
 @bot.message_handler(commands=['start'])  # /start
 def start_handler(message: Message) -> None:
+    log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Здравствуй, меня зовут GNBot🖥\n'
                                       'Я создан дабы служить верой и правдой сообществу 💎Голубой носок💎')
-    log(message, 'info')
 
 
 # <<< End start >>>
@@ -43,10 +45,10 @@ def start_handler(message: Message) -> None:
 # <<< Help >>>
 @bot.message_handler(commands=['help'])  # /help
 def help_handler(message: Message) -> None:
+    log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Тут должна была быть помощь🆘, но её тут не будет🌚\n'
                                       'Если что пиши мне: 💢@Ultra_Xion💢')
-    log(message, 'info')
 
 
 # <<< End help >>>
@@ -55,13 +57,13 @@ def help_handler(message: Message) -> None:
 # <<< Gif >>>
 @bot.message_handler(commands=['gif'])  # /gif
 def gif_handler(message: Message) -> None:
+    log(message, 'info')
     bot.send_chat_action(message.chat.id, 'upload_video')
     while True:
         data = requests.get(API['API_Gif']).json()
         if hi_r(data['data']['rating']):
             bot.send_document(message.chat.id, data['data']['images']['downsized_large']['url'])
             break
-    log(message, 'info')
 
 
 # <<< End gif >>>
@@ -70,7 +72,6 @@ def gif_handler(message: Message) -> None:
 # <<< Donate >>>
 @bot.message_handler(commands=['donate'])  # /donate
 def donate_handler(message: Message) -> None:
-    print(message)
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
     if message.chat.type == 'private':
@@ -180,18 +181,51 @@ def meme_en_handler(message: Message) -> None:
 
 
 # <<< Weather >>>
-weather_data = []
-weather_msg = None
-city_data = None
+weather_data = defaultdict(dict)
+weather_msg = defaultdict(Message)
+city_data = defaultdict(dict)
 
 
 @bot.message_handler(commands=['weather'])  # /weather
 def weather_handler(message: Message) -> None:
-    global weather_data
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
     city = bot.send_message(message.chat.id, 'Введите название города✒️')
     bot.register_next_step_handler(city, show_weather)
+
+
+def weather(message: Message, index: int) -> None:
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        InlineKeyboardButton(text="⬅️️", callback_data=f"move_to__ {index - 1 if index > 0 else 'pass'}"),
+        InlineKeyboardButton(text="➡️", callback_data=f"move_to__ "
+                                f"{index + 1 if index < len(weather_data[message.chat.id]) - 1 else 'pass'}"))
+    keyboard.add(InlineKeyboardButton('Погода', url='https://' +
+                                                    f'darksky.net/forecast/{city_data[message.chat.id]["lat"]},'
+                                                    f'{city_data[message.chat.id]["lon"]}/us12/en'))
+    bot.edit_message_text(chat_id=weather_msg[message.chat.id].chat.id,
+                          message_id=weather_msg[message.chat.id].message_id,
+                          text=f"<i>{weather_data[message.chat.id][index]['valid_date']} "
+                               f"{get_day(weather_data[message.chat.id][index]['valid_date'])}</i>\n"
+                               f"<b>Город {tr_w(city_data[message.chat.id]['city_name'])} "
+                               f"{city_data[message.chat.id]['country_code']}</b>🏢\n\n"
+                               f"<b>Погода</b> {weather_data[message.chat.id][index]['weather']['description']}️"
+                               f"{get_weather_emoji(str(weather_data[message.chat.id][index]['weather']['code']))}\n"
+                               f"<b>Теспература</b> {weather_data[message.chat.id][index]['low_temp']} - "
+                               f"{weather_data[message.chat.id][index]['max_temp']}°C🌡\n"
+                               f"<b>По ощушению</b> {weather_data[message.chat.id][index]['app_min_temp']} - "
+                               f"{weather_data[message.chat.id][index]['app_max_temp']}°C🌡\n"
+                               f"<b>Облачность</b> {weather_data[message.chat.id][index]['clouds']}%☁️\n"
+                               f"<b>Вероятность осадков</b> {weather_data[message.chat.id][index]['pop']}%☔️️\n"
+                               f"<b>Видимость</b> {weather_data[message.chat.id][index]['vis']} км🔭\n"
+                               f"<b>Влажность</b> {weather_data[message.chat.id][index]['rh']} %💧\n"
+                               f"<b>Атмоc. давление</b> "
+                               f"{weather_data[message.chat.id][index]['pres']} дин·см²⏲\n"
+                               f"<b>Ветер</b> {weather_data[message.chat.id][index]['wind_cdir_full']} 🧭\n"
+                               f"<b>Cкорость ветра</b> "
+                               f"{float('{:.1f}'.format(weather_data[message.chat.id][index]['wind_spd']))}"
+                               f" м\\с💨\n",
+                          reply_markup=keyboard, parse_mode='HTML')
 
 
 def show_weather(message: Message) -> None:
@@ -200,54 +234,27 @@ def show_weather(message: Message) -> None:
         city_name = 'K' + slugify(message.text)
     else:
         city_name = slugify(message.text).title()
-
-    def weather(index: int) -> None:
-        keyboard = InlineKeyboardMarkup(row_width=2)
-        keyboard.add(
-            InlineKeyboardButton(text="⬅️️",
-                                 callback_data=f"move_to__ {index - 1 if index > 0 else 'pass'}"),
-            InlineKeyboardButton(text="➡️",
-                                 callback_data=f"move_to__ "
-                                               f"{index + 1 if index < len(weather_data) - 1 else 'pass'}"))
-        keyboard.add(InlineKeyboardButton('Погода', url='https://' + f'darksky.net/forecast/{city_data["lat"]},'
-                                                                     f'{city_data["lon"]}/us12/en'))
-        bot.edit_message_text(chat_id=weather_msg.chat.id, message_id=weather_msg.message_id,
-                              text=f"<i>{weather_data[index]['valid_date']} "
-                                   f"{get_day(weather_data[index]['valid_date'])}</i>\n"
-                                   f"<b>Город {tr_w(city_data['city_name'])} {city_data['country_code']}</b>🏢\n\n"
-                                   f"<b>Погода</b> {weather_data[index]['weather']['description']}️"
-                                   f"{get_weather_emoji(str(weather_data[index]['weather']['code']))}\n"
-                                   f"<b>Теспература</b> {weather_data[index]['low_temp']} - "
-                                   f"{weather_data[index]['max_temp']}°C🌡\n"
-                                   f"<b>По ощушению</b> {weather_data[index]['app_min_temp']} - "
-                                   f"{weather_data[index]['app_max_temp']}°C🌡\n"
-                                   f"<b>Облачность</b> {weather_data[index]['clouds']}%☁️\n"
-                                   f"<b>Вероятность осадков</b> {weather_data[index]['pop']}%☔️️\n"
-                                   f"<b>Видимость</b> {weather_data[index]['vis']} км🔭\n"
-                                   f"<b>Влажность</b> {weather_data[index]['rh']} %💧\n"
-                                   f"<b>Атмоc. давление</b> {weather_data[index]['pres']} дин·см²⏲\n"
-                                   f"<b>Ветер</b> {weather_data[index]['wind_cdir_full']} 🧭\n"
-                                   f"<b>Cкорость ветра</b> {float('{:.1f}'.format(weather_data[index]['wind_spd']))} м\\с💨\n",
-                              reply_markup=keyboard, parse_mode='HTML')
     try:
         res = requests.get(API['API_Weather'].replace('CityName', city_name)).json()
-    except Exception :
+    except JSONDecodeError:
         bot.send_message(message.chat.id, 'Не удалось найти ваш город😔')
     else:
-        city_data = {'city_name': res['city_name'], 'country_code': res['country_code'],
+        city_data[message.chat.id] = {'city_name': res['city_name'], 'country_code': res['country_code'],
                      'lat': res['lat'], 'lon': res['lon']}
-        weather_data = [i for i in res['data']]
-        weather_msg = bot.send_message(message.chat.id, 'Загрузка...')
-        weather(0)
+        weather_data[message.chat.id] = res['data']
+        weather_msg[message.chat.id] = bot.send_message(message.chat.id, 'Загрузка...')
+        weather(message, 0)
 
-    @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to__\s\d+$', call.data))
-    def weather_query(call):
-        bot.answer_callback_query(call.id, 'Загрузка...')
-        weather(int(call.data.split()[1]))
 
-    @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to__\spass$', call.data))
-    def pass_query(call):
-        bot.answer_callback_query(call.id, '⛔️')
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to__\s\d+$', call.data))
+def weather_query(call):
+    bot.answer_callback_query(call.id, 'Вы выбрали стр. ' + call.data.split()[1])
+    weather(call.message, int(call.data.split()[1]))
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to__\spass$', call.data))
+def pass_query(call):
+    bot.answer_callback_query(call.id, '⛔️')
 # <<< End weather >>>
 
 
@@ -343,9 +350,7 @@ def callback_query(call):
     bot.register_next_step_handler(msg, get_song, call.data)
 
 
-# local storage
-data_songs = []
-len_songs = 0
+data_songs = defaultdict(list)
 
 
 def get_song(message: Message, choice: str) -> None:  # Get song
@@ -357,24 +362,22 @@ def get_song(message: Message, choice: str) -> None:  # Get song
             if choice == 'artist?q=':
                 songs = requests.get(res['data'][0]['tracklist'].replace('limit=50', 'limit=100')).json()
                 if songs['data']:
-                    data_songs.clear()
-                    data_songs = [{'id': i['id'], 'title': i['title'], 'name': i['contributors'][0]['name'],
+                    data_songs[message.chat.id] = [{'id': i['id'], 'title': i['title'], 'name': i['contributors'][0]['name'],
                                    'link': i['link'], 'preview': i['preview'], 'duration': i['duration']}
                                   for i in songs['data']]
-                    create_data_song()
-                    if data_songs:
+                    create_data_song(message)
+                    if data_songs[message.chat.id]:
                         bot.send_photo(message.chat.id, res['data'][0]['picture_xl'],
-                                       reply_markup=inline_keyboard(0))
+                                       reply_markup=inline_keyboard(message, 0))
                     else:
                         raise FileExistsError
             elif choice == 'track?q=':
-                data_songs.clear()
-                data_songs = [{'id': i['id'], 'title': i['title'], 'name': i['artist']['name'],
+                data_songs[message.chat.id] = [{'id': i['id'], 'title': i['title'], 'name': i['artist']['name'],
                                'link': i['link'], 'preview': i['preview'], 'duration': i['duration']}
                               for i in res['data']]
-                create_data_song()
-                if data_songs:
-                    bot.send_message(message.chat.id, 'Результат поиска🔎', reply_markup=inline_keyboard(0))
+                create_data_song(message)
+                if data_songs[message.chat.id]:
+                    bot.send_message(message.chat.id, 'Результат поиска🔎', reply_markup=inline_keyboard(message, 0))
                 else:
                     raise FileExistsError
             else:
@@ -385,21 +388,21 @@ def get_song(message: Message, choice: str) -> None:  # Get song
         bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
 
 
-def create_data_song():
+def create_data_song(message: Message) -> None:
     global data_songs
     list_music, buf = [], []
-    for i, en in enumerate(data_songs, 1):
+    for i, en in enumerate(data_songs[message.chat.id], 1):
         buf.append(en)
         if i % 5 == 0:
             list_music.append(buf.copy())
             buf.clear()
-    data_songs = list_music.copy()
+    data_songs[message.chat.id] = list_music.copy()
 
 
-def inline_keyboard(some_index) -> InlineKeyboardMarkup:  # Navigation for music
+def inline_keyboard(message: Message, some_index) -> InlineKeyboardMarkup:  # Navigation for music
     global data_songs
     some_keyboard = InlineKeyboardMarkup()
-    for songs in data_songs[some_index]:
+    for songs in data_songs[message.chat.id][some_index]:
         some_keyboard.add(InlineKeyboardButton(f"{songs['name']} - {songs['title']}",
                                                callback_data=f"ID: {songs['id']}"))
     some_keyboard.add(
@@ -407,7 +410,7 @@ def inline_keyboard(some_index) -> InlineKeyboardMarkup:  # Navigation for music
                              callback_data=f"move_to {some_index - 1 if some_index > 0 else 'pass'}"),
         InlineKeyboardButton(text="➡️",
                              callback_data=f"move_to "
-                                           f"{some_index + 1 if some_index < len(data_songs) - 1 else 'pass'}"))
+                                           f"{some_index + 1 if some_index < len(data_songs[message.chat.id]) - 1 else 'pass'}"))
     return some_keyboard
 
 
@@ -421,11 +424,11 @@ def callback_query(call):
     if call.message.content_type == 'photo':
         bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                media=InputMediaPhoto(call.message.photo[-1].file_id),
-                               reply_markup=inline_keyboard(int(call.data.split()[1])))
+                               reply_markup=inline_keyboard(call.message, int(call.data.split()[1])))
     else:
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text=call.message.text,
-                              reply_markup=inline_keyboard(int(call.data.split()[1])))
+                              reply_markup=inline_keyboard(call.message, int(call.data.split()[1])))
     bot.answer_callback_query(call.id)
 
 
@@ -433,7 +436,7 @@ def callback_query(call):
 def callback_query(call):
     song_id = call.data.replace('ID: ', '')
     global data_songs
-    for i in data_songs:
+    for i in data_songs[call.message.chat.id]:
         for j in i:
             if j['id'] == int(song_id):
                 bot.answer_callback_query(call.id, 'Вы выбрали ' + j["name"] + ' - ' + j["title"])
@@ -457,7 +460,7 @@ def callback_query(call):
     global data_songs
     yt = YouTube('https://' + 'www.youtube.com/' + call.data.split()[0])
     bot.send_chat_action(call.message.chat.id, 'upload_audio')
-    for i in data_songs:
+    for i in data_songs[call.message.chat.id]:
         for j in i:
             if j['id'] == int(call.data.split()[1]):
                 bot.send_audio(call.message.chat.id,
@@ -473,7 +476,7 @@ def callback_query(call):
 def callback_query(call):
     global data_songs
     song_id = call.data.replace('Lyric: ', '')
-    for i in data_songs:
+    for i in data_songs[call.message.chat.id]:
         for j in i:
             if j['id'] == int(song_id):
                 res = requests.get(API['AUDD'] + 'findLyrics/?q=' + j['name'] + ' ' + j['title']).json()
@@ -485,12 +488,13 @@ def callback_query(call):
 
 
 # <<< News >>>
-news = []
-news_msg = None
+news = defaultdict(list)
+news_msg = defaultdict(Message)
 
 
 @bot.message_handler(commands=['news'])  # /news
 def news_handler(message: Message) -> None:
+    log(message, 'info')
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(InlineKeyboardButton('Технологии', callback_data='News technology'),
                  InlineKeyboardButton('Наука', callback_data='News science'))
@@ -500,63 +504,69 @@ def news_handler(message: Message) -> None:
                  InlineKeyboardButton('Спорт', callback_data='News sports'))
     bot.send_message(message.chat.id, '<b>Новости</b>', reply_markup=keyboard, parse_mode='HTML')
 
-    def main_news(news_type: str) -> None:
-        global news
-        global news_msg
-        res = requests.get(API['News']['URL'].replace('Method', f'{news_type}') + API['News']['Api_Key']).json()
-        if res['status'] == 'ok':
-            news = [{'title': i['title'], 'description': i['description'],
-                     'url': i['url'], 'image': i['urlToImage'], 'published': i['publishedAt']} for i in res['articles']]
-        for i in news:
-            if i['image'] is not None:
-                i['title'] = clear_link(i['title'])
-                if i['description'] is not None:
-                    i['description'] = clear_link(i['description'])
-        send_news(0)
 
-    def send_news(index: int) -> None:
-        keyboard2 = InlineKeyboardMarkup()
-        keyboard2.add(InlineKeyboardButton('Читать', url=news[index]['url']))
-        keyboard2.add(
-            InlineKeyboardButton(text="⬅️️",
-                                 callback_data=f"move_to_ {index - 1 if index > 0 else 'pass'}"),
-            InlineKeyboardButton(text="➡️",
-                                 callback_data=f"move_to_ {index + 1 if index < len(news) - 1 else 'pass'}"))
-        if news[index]['image'] is not None:
-            if news[index]['description'] is not None:
-                bot.edit_message_media(chat_id=news_msg.chat.id, message_id=news_msg.message_id,
-                                       media=InputMediaPhoto(news[index]['image'],
-                                                             caption='<b>' + news[index]['title'] + '</b>\n\n' +
-                                                             news[index]['description'] + '\n\n' +
-                                                             '<i>' + news[index]['published'].replace('T', ' ').replace(
-                                                             'Z', '') + '</i>',
-                                                             parse_mode='HTML'),
-                                       reply_markup=keyboard2)
-            else:
-                bot.edit_message_media(chat_id=news_msg.chat.id, message_id=news_msg.message_id,
-                                       media=InputMediaPhoto(news[index]['image'],
-                                                             caption='<b>' + news[index]['title'] + '</b>\n' +
-                                                             '<i>' + news[index]['published'].replace('T', ' ').replace(
-                                                             'Z', '') + '</i>',
-                                                             parse_mode='HTML'),
-                                       reply_markup=keyboard2)
+def main_news(message: Message, news_type: str) -> None:
+    global news
+    global news_msg
+    res = requests.get(API['News']['URL'].replace('Method', f'{news_type}') + API['News']['Api_Key']).json()
+    if res['status'] == 'ok':
+        news[message.chat.id] = [{'title': i['title'], 'description': i['description'],
+                 'url': i['url'], 'image': i['urlToImage'], 'published': i['publishedAt']} for i in res['articles']]
+    for i in news[message.chat.id]:
+        if i['image'] is not None:
+            i['title'] = clear_link(i['title'])
+            if i['description'] is not None:
+                i['description'] = clear_link(i['description'])
+    send_news(message, 0)
+
+
+def send_news(message: Message, index: int) -> None:
+    keyboard2 = InlineKeyboardMarkup()
+    keyboard2.add(InlineKeyboardButton('Читать', url=news[message.chat.id][index]['url']))
+    keyboard2.add(
+        InlineKeyboardButton(text="⬅️️",
+                             callback_data=f"move_to_ {index - 1 if index > 0 else 'pass'}"),
+        InlineKeyboardButton(text="➡️",
+                             callback_data=f"move_to_ {index + 1 if index < len(news[message.chat.id]) - 1 else 'pass'}"))
+    if news[message.chat.id][index]['image'] is not None and news[message.chat.id][index]['image'] != '':
+        print(news[message.chat.id][index])
+        if news[message.chat.id][index]['description'] is not None:
+            bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id, message_id=news_msg[message.chat.id].message_id,
+                                   media=InputMediaPhoto(news[message.chat.id][index]['image'],
+                                                         caption='<b>' + news[message.chat.id][index]['title'] + '</b>\n\n' +
+                                                         news[message.chat.id][index]['description'] + '\n\n' +
+                                                         '<i>' + news[message.chat.id][index]['published'].replace('T', ' ').replace(
+                                                         'Z', '') + '</i>',
+                                                         parse_mode='HTML'),
+                                   reply_markup=keyboard2)
         else:
-            send_news(index + 2)
+            bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id, message_id=news_msg[message.chat.id].message_id,
+                                   media=InputMediaPhoto(news[message.chat.id][index]['image'],
+                                                         caption='<b>' + news[message.chat.id][index]['title'] + '</b>\n' +
+                                                         '<i>' + news[message.chat.id][index]['published'].replace('T', ' ').replace(
+                                                         'Z', '') + '</i>',
+                                                         parse_mode='HTML'),
+                                   reply_markup=keyboard2)
+    else:
+        send_news(message, index + 2)
 
-    @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^News\s?\w+$', call.data))
-    def choice_news_query(call):
-        global news_msg
-        bot.delete_message(call.message.chat.id, call.message.message_id)
-        news_msg = bot.send_photo(call.message.chat.id, Empty_bg)
-        main_news(call.data.split()[1])
 
-    @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to_\s?\d+$', call.data))
-    def next_news_query(call):
-        send_news(int(call.data.split()[1]))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^News\s?\w+$', call.data))
+def choice_news_query(call):
+    global news_msg
+    bot.delete_message(call.message.chat.id, call.message.message_id)
+    news_msg[call.message.chat.id] = bot.send_photo(call.message.chat.id, Empty_bg)
+    main_news(call.message, call.data.split()[1])
 
-    @bot.callback_query_handler(func=lambda call: call.data == 'move_to_ pass')
-    def news_pass(call):
-        bot.answer_callback_query(call.id, '⛔️')
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to_\s?\d+$', call.data))
+def next_news_query(call):
+    send_news(call.message, int(call.data.split()[1]))
+
+
+@bot.callback_query_handler(func=lambda call: call.data == 'move_to_ pass')
+def news_pass(call):
+    bot.answer_callback_query(call.id, '⛔️')
 
 
 # <<< End news >>>
