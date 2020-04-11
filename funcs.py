@@ -52,13 +52,6 @@ def get_day(data: str) -> str:
             return day
 
 
-def download_song(url_mp3: str):
-    req = requests.get(url_mp3, stream=True)
-    with open('file' + '.mp3', 'wb') as f:
-        f.write(req.content)
-    return open('file' + '.mp3', 'rb')
-
-
 def tr_w(words) -> str:  # Define and translate
     leng_code = detect(words)
     if leng_code == 'mk':

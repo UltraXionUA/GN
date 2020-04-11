@@ -3,7 +3,7 @@
 # <<< Import's >>>
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LabeledPrice
 from telebot.types import PreCheckoutQuery, ShippingQuery
-from funcs import tr_w, rend_d, hi_r, log, download_song, clear_link, get_day, get_weather_emoji
+from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN  # TEST_TOKEN
 from collections import defaultdict
@@ -318,7 +318,6 @@ def detect_music(message: Message, type_r) -> None:
                 keyboard.add(InlineKeyboardButton('Текст',
                                                   callback_data=f"Lyric2: {str(result['result']['deezer']['id'])}"),
                              InlineKeyboardButton('Dezeer', url=result['result']['deezer']['link']))
-                print(res[0])
                 keyboard.add(InlineKeyboardButton('Песня', callback_data=res[0]['link']))
                 bot.send_photo(message.chat.id, result['result']['deezer']['artist']['picture_xl'],
                                caption=f"{result['result']['artist']} - {result['result']['title']}🎵",
@@ -341,6 +340,18 @@ def detect_music(message: Message, type_r) -> None:
         bot.send_message(message.chat.id, 'Ничего не нашлось😔')
 
 
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'/watch\?v=\w+.+', call.data))
+def callback_query(call):
+    global data_songs
+    yt = YouTube('https://' + 'www.youtube.com/' + call.data.split()[0])
+    bot.send_chat_action(call.message.chat.id, 'upload_audio')
+    bot.send_audio(call.message.chat.id,
+                   open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
+                   title=yt.title, duration=yt.length, performer=yt.author)
+    try:
+        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
+    except FileNotFoundError:
+        log('Error! Can\'t remove file', 'info')
 # <<< End detect music >>>
 
 
@@ -475,45 +486,20 @@ def callback_query(call):
             if j['id'] == int(song_id):
                 bot.answer_callback_query(call.id, 'Вы выбрали ' + j["name"] + ' - ' + j["title"])
                 res = YoutubeUnlimitedSearch(f'{j["name"]} - {j["title"]}', max_results=1).get()
+                yt = YouTube('https://' + 'www.youtube.com/' + res[0]['link'])
                 keyboard = InlineKeyboardMarkup(row_width=2)
                 keyboard.add(InlineKeyboardButton('Текст', callback_data=f'Lyric: {str(song_id)}'),
                              InlineKeyboardButton('Dezeer', url=j['link']))
-                keyboard.add(InlineKeyboardButton('Полная песня', callback_data=res[0]['link'] + ' ' + str(j["id"])))
                 bot.send_chat_action(call.message.chat.id, 'upload_audio')
-                bot.send_audio(call.message.chat.id, audio=download_song(j['preview']), reply_markup=keyboard,
-                               performer=j['name'], title=j['title'], duration=j['duration'])
-                try:
-                    os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp3'))
-                except FileNotFoundError:
-                    log('Need to remove file', 'info')
-                break
-
-
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^/watch\?v=\w+\s.+$',
-                                                           call.data) or re.fullmatch(r'/watch\?v=\w+.+', call.data))
-def callback_query(call):
-    global data_songs
-    yt = YouTube('https://' + 'www.youtube.com/' + call.data.split()[0])
-    bot.send_chat_action(call.message.chat.id, 'upload_audio')
-    for i in data_songs[call.message.chat.id]:
-        for j in i:
-            if j['id'] == int(call.data.split()[1]):
-                bot.send_audio(call.message.chat.id,
-                               open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
-                               title=j['title'], duration=yt.length, performer=j['name'])
+                bot.send_audio(call.message.chat.id, audio=open(yt.streams.filter(
+                                                     only_audio=True)[0].download(filename='file'), 'rb'),
+                                                     reply_markup=keyboard,  performer=j['name'],
+                                                     title=j['title'], duration=j['duration'])
                 try:
                     os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
                 except FileNotFoundError:
                     log('Error! Can\'t remove file', 'info')
-                return
-    else:
-        bot.send_audio(call.message.chat.id,
-                       open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
-                       title=yt.title, duration=yt.length, performer=yt.author)
-        try:
-            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
-        except FileNotFoundError:
-            log('Error! Can\'t remove file', 'info')
+                break
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric:\s?\d+$', call.data))
@@ -754,7 +740,6 @@ def text_handler(message: Message) -> None:
 @bot.message_handler(content_types=['text'], regexp=r'^\w+.?-.?\w.+$')  # Add answer with word to DB
 def text_handler(message: Message) -> None:
     buf = message.text.lower().split()
-    print(buf)
     if buf[0] not in ['---', 'кто-то', 'где-то', 'когда-нибудь', 'кто-нибудь', 'зачем-то']:
         word = re.findall(r'\w.+-', message.text)[0].replace('-', '').rstrip()
         answer = re.findall(r'-.\w.+', message.text)[0].replace('-', '').lstrip()
