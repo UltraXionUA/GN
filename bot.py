@@ -26,7 +26,7 @@ import re
 # <<< End import's>>
 
 bot = TeleBot(TOKEN)
-log('Bot is successful running!')
+log('Bot is successful running')
 
 Parser = Thread(target=main, name='Parser')  # Turn on parser
 Parser.start()
@@ -501,15 +501,20 @@ def callback_query(call):
                 bot.send_audio(call.message.chat.id,
                                open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
                                title=j['title'], duration=yt.length, performer=j['name'])
+                try:
+                    os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
+                except FileNotFoundError:
+                    log('Error! Can\'t remove file', 'info')
                 return
     else:
         bot.send_audio(call.message.chat.id,
                        open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
                        title=yt.title, duration=yt.length, performer=yt.author)
-    try:
-        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
-    except FileNotFoundError:
-        log('Need to remove file', 'info')
+        try:
+            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
+        except FileNotFoundError:
+            log('Error! Can\'t remove file', 'info')
+
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric:\s?\d+$', call.data))
