@@ -2,10 +2,10 @@
 """Mains file for GNBot"""
 # <<< Import's >>>
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LabeledPrice
-from telebot.types import PreCheckoutQuery
+from telebot.types import PreCheckoutQuery, ShippingQuery
 from funcs import tr_w, rend_d, hi_r, log, download_song, clear_link, get_day, get_weather_emoji
 from youtube_unlimited_search import YoutubeUnlimitedSearch
-from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, TEST_TOKEN
+from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN  # TEST_TOKEN
 from collections import defaultdict
 from datetime import datetime as dt
 from pytils.translit import slugify
@@ -22,11 +22,13 @@ import db
 import time
 import os
 import re
+
 # <<< End import's>>
 
 bot = TeleBot(TOKEN)
 log('Bot is successful running!')
-Parser = Thread(target=main, name='Parser')
+
+Parser = Thread(target=main, name='Parser')  # Turn on parser
 Parser.start()
 
 
@@ -106,10 +108,8 @@ def donate_query(call):
 
 
 def send_payment(message: Message, money) -> None:
-    local_money = None
-    if money == 'UAH':
-        if message.text.isdigit():
-            local_money = message.text + ' ' + money
+    if money == 'UAH' and message.text.isdigit():
+        local_money = message.text + ' ' + money
     else:
         local_money = money
     price = LabeledPrice('Поддержать', amount=int(local_money.split()[0]) * 100)
@@ -123,9 +123,19 @@ def send_payment(message: Message, money) -> None:
                      invoice_payload='donate-is-done')
 
 
+@bot.shipping_query_handler(func=lambda query: True)
+def shipping(shipping_query: ShippingQuery):
+    bot.answer_shipping_query(shipping_query.id, ok=True,
+                              error_message='Что-то пошло не так😔\n!'
+                                            'Попробуйте повторить операцию чуть позже')
+
+
 @bot.pre_checkout_query_handler(func=lambda query: True)
 def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
-    bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+    bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True,
+                                    error_message="Что-то пошло не так😔\n"
+                                                  "Удебитель в правельности вводимых данные "
+                                                  "и попробуйте снова через пару минут")
 
 
 @bot.message_handler(content_types=['successful_payment'])
@@ -133,9 +143,11 @@ def process_successful_payment(message: Message) -> None:
     promo = message.successful_payment
     log(f'Successful_payment\nType: {promo.invoice_payload}\nSum: {promo.total_amount}{promo.currency}')
     bot.send_message(message.chat.id, f'Платеж прошел успешно😌\n'
-                         f'{message.successful_payment.total_amount // 100} '
-                         f'{message.successful_payment.currency} были начислены на свет\n'
-                         f'Благодарим вас за поддержку проекта🥳')
+                                      f'{message.successful_payment.total_amount // 100} '
+                                      f'{message.successful_payment.currency} были начислены на свет\n'
+                                      f'Благодарим вас за поддержку проекта🥳')
+
+
 # <<< End donate >>>
 
 
@@ -160,9 +172,9 @@ def joke_handler(message: Message) -> None:
 # <<< Ru meme >>>
 @bot.message_handler(commands=['ru_meme'])  # /ru_meme
 def meme_handler(message: Message) -> None:
+    log(message, 'info')
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_photo(message.chat.id, db.random_meme())
-    log(message, 'info')
 
 
 # <<< End ru meme >>>
@@ -171,10 +183,10 @@ def meme_handler(message: Message) -> None:
 # <<< En meme >>>
 @bot.message_handler(commands=['en_meme'])  # /en_meme
 def meme_en_handler(message: Message) -> None:
+    log(message, 'info')
     bot.send_chat_action(message.chat.id, 'upload_photo')
     meme = requests.get(API['API_Meme']).json()
     bot.send_photo(message.chat.id, meme['url'])
-    log(message, 'info')
 
 
 # <<< End en meme >>>
@@ -192,6 +204,8 @@ def weather_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'typing')
     city = bot.send_message(message.chat.id, 'Введите название города✒️')
     bot.register_next_step_handler(city, show_weather)
+    time.sleep(30)
+    bot.delete_message(city.chat.id, city.message_id)
 
 
 def weather(message: Message, index: int) -> None:
@@ -199,7 +213,7 @@ def weather(message: Message, index: int) -> None:
     keyboard.add(
         InlineKeyboardButton(text="⬅️️", callback_data=f"move_to__ {index - 1 if index > 0 else 'pass'}"),
         InlineKeyboardButton(text="➡️", callback_data=f"move_to__ "
-                                f"{index + 1 if index < len(weather_data[message.chat.id]) - 1 else 'pass'}"))
+                                        f"{index + 1 if index < len(weather_data[message.chat.id]) - 1 else 'pass'}"))
     keyboard.add(InlineKeyboardButton('Погода', url='https://' +
                                                     f'darksky.net/forecast/{city_data[message.chat.id]["lat"]},'
                                                     f'{city_data[message.chat.id]["lon"]}/us12/en'))
@@ -239,8 +253,10 @@ def show_weather(message: Message) -> None:
     except JSONDecodeError:
         bot.send_message(message.chat.id, 'Не удалось найти ваш город😔')
     else:
+        if message.chat.id in weather_msg:
+            bot.delete_message(weather_msg[message.chat.id].chat.id, weather_msg[message.chat.id].message_id)
         city_data[message.chat.id] = {'city_name': res['city_name'], 'country_code': res['country_code'],
-                     'lat': res['lat'], 'lon': res['lon']}
+                                      'lat': res['lat'], 'lon': res['lon']}
         weather_data[message.chat.id] = res['data']
         weather_msg[message.chat.id] = bot.send_message(message.chat.id, 'Загрузка...')
         weather(message, 0)
@@ -255,6 +271,8 @@ def weather_query(call):
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to__\spass$', call.data))
 def pass_query(call):
     bot.answer_callback_query(call.id, '⛔️')
+
+
 # <<< End weather >>>
 
 
@@ -266,7 +284,7 @@ def detect_handler(message: Message) -> None:
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('Записать🔊', callback_data='record'),
                  InlineKeyboardButton('Напеть🎙', callback_data='sing'))
-    msg = bot.send_message(message.chat.id, 'Запишите песню которую нужно определить🔎', reply_markup=keyboard)
+    msg = bot.send_message(message.chat.id, 'Выберите что нужно определить🧐', reply_markup=keyboard)
     time.sleep(30)
     bot.delete_message(msg.chat.id, msg.message_id)
 
@@ -278,27 +296,30 @@ def callback_query(call):
         bot.answer_callback_query(call.id, 'Вы выбрали ' + 'Записать')
     else:
         bot.answer_callback_query(call.id, 'Вы выбрали ' + 'Напеть')
-    msg = bot.send_message(call.message.chat.id, 'Запишите то что нужно определить')
+    msg = bot.send_message(call.message.chat.id, 'Запишите то что нужно определить🎤')
     bot.register_next_step_handler(msg, detect_music, call.data)
 
 
-def detect_music(message: Message, type_r):
+def detect_music(message: Message, type_r) -> None:
     API['AUDD_data']['url'] = bot.get_file_url(message.voice.file_id).replace('https://' + 'api.telegram.org',
                                                                               'http://' + 'esc-ru.appspot.com/') \
-                              + '?host=api.telegram.org'
+                                                                               + '?host=api.telegram.org'
     if type_r == 'sing':
-        result = requests.post(API['AUDD'] + 'recognizeWithOffset/', data={'url': API['AUDD_data']['url'],
-                                                                           'api_token': API['AUDD_data'][
-                                                                               'api_token']}).json()
+        result = requests.post(API['AUDD'] + 'recognizeWithOffset/',
+                               data={'url': API['AUDD_data']['url'], 'api_token': API['AUDD_data']['api_token']}).json()
     else:
         result = requests.post(API['AUDD'], data=API['AUDD_data']).json()
     if result['status'] == 'success' and result['result'] is not None:
         if type_r != 'sing':
             if result['result']['deezer']:
                 keyboard = InlineKeyboardMarkup()
+                res = YoutubeUnlimitedSearch(f"{result['result']['artist']} - {result['result']['title']}",
+                                             max_results=1).get()
                 keyboard.add(InlineKeyboardButton('Текст',
                                                   callback_data=f"Lyric2: {str(result['result']['deezer']['id'])}"),
                              InlineKeyboardButton('Dezeer', url=result['result']['deezer']['link']))
+                print(res[0])
+                keyboard.add(InlineKeyboardButton('Песня', callback_data=res[0]['link']))
                 bot.send_photo(message.chat.id, result['result']['deezer']['artist']['picture_xl'],
                                caption=f"{result['result']['artist']} - {result['result']['title']}🎵",
                                reply_markup=keyboard)
@@ -313,9 +334,9 @@ def detect_music(message: Message, type_r):
 
         @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric2:\s?\d+$', call.data))
         def call_lyric(call):
-            res = requests.get(API['AUDD'] + 'findLyrics/?q=' + result['result']['artist'] + ' ' +
-                               result['result']['title']).json()
-            bot.send_message(call.message.chat.id, res['result'][0]['lyrics'])
+            res_lyric = requests.get(API['AUDD'] + 'findLyrics/?q=' + result['result']['artist'] + ' ' +
+                                     result['result']['title']).json()
+            bot.reply_to(call.message, res_lyric['result'][0]['lyrics'])
     else:
         bot.send_message(message.chat.id, 'Ничего не нашлось😔')
 
@@ -333,7 +354,7 @@ def music_handler(message: Message) -> None:
                  InlineKeyboardButton('По треку🎼', callback_data='track?q='))
     msg = bot.send_message(message.chat.id, 'Как будем искать музыку?🎧', reply_markup=keyboard)
     time.sleep(15)
-    bot.delete_message(message.chat.id, msg.message_id)
+    bot.delete_message(msg.chat.id, msg.message_id)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'artist?q=' or call.data == 'track?q=')
@@ -344,40 +365,51 @@ def callback_query(call):
     if call.data == 'artist?q=':
         bot.answer_callback_query(call.id, 'Вы выбрали поиск по артисту')
         msg = bot.send_message(call.message.chat.id, 'Введите исполнителя👤')
+        time.sleep(25)
+        bot.delete_message(msg.chat.id, msg.message_id)
     else:
         bot.answer_callback_query(call.id, 'Вы выбрали поиск по треку')
         msg = bot.send_message(call.message.chat.id, 'Введите название трека🖊')
+        time.sleep(15)
+        bot.delete_message(msg.chat.id, msg.message_id)
     bot.register_next_step_handler(msg, get_song, call.data)
 
 
 data_songs = defaultdict(list)
+song_msg = defaultdict(Message)
 
 
 def get_song(message: Message, choice: str) -> None:  # Get song
     log(message, 'info')
-    global data_songs
+    global data_songs, song_msg
     res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
     try:
         if res['data']:
             if choice == 'artist?q=':
                 songs = requests.get(res['data'][0]['tracklist'].replace('limit=50', 'limit=100')).json()
                 if songs['data']:
-                    data_songs[message.chat.id] = [{'id': i['id'], 'title': i['title'], 'name': i['contributors'][0]['name'],
-                                   'link': i['link'], 'preview': i['preview'], 'duration': i['duration']}
-                                  for i in songs['data']]
+                    data_songs[message.chat.id] = [
+                        {'id': i['id'], 'title': i['title'], 'name': i['contributors'][0]['name'],
+                         'link': i['link'], 'preview': i['preview'], 'duration': i['duration']}
+                        for i in songs['data']]
                     create_data_song(message)
                     if data_songs[message.chat.id]:
-                        bot.send_photo(message.chat.id, res['data'][0]['picture_xl'],
-                                       reply_markup=inline_keyboard(message, 0))
+                        if message.chat.id in song_msg:
+                            bot.delete_message(song_msg[message.chat.id].chat.id, song_msg[message.chat.id].message_id)
+                        song_msg[message.chat.id] = bot.send_photo(message.chat.id, res['data'][0]['picture_xl'],
+                                                                   reply_markup=inline_keyboard(message, 0))
                     else:
                         raise FileExistsError
             elif choice == 'track?q=':
                 data_songs[message.chat.id] = [{'id': i['id'], 'title': i['title'], 'name': i['artist']['name'],
-                               'link': i['link'], 'preview': i['preview'], 'duration': i['duration']}
-                              for i in res['data']]
+                                                'link': i['link'], 'preview': i['preview'], 'duration': i['duration']}
+                                               for i in res['data']]
                 create_data_song(message)
                 if data_songs[message.chat.id]:
-                    bot.send_message(message.chat.id, 'Результат поиска🔎', reply_markup=inline_keyboard(message, 0))
+                    if message.chat.id in song_msg:
+                        bot.delete_message(song_msg[message.chat.id].chat.id, song_msg[message.chat.id].message_id)
+                    song_msg[message.chat.id] = bot.send_message(message.chat.id, 'Результат поиска🔎',
+                                                                 reply_markup=inline_keyboard(message, 0))
                 else:
                     raise FileExistsError
             else:
@@ -396,6 +428,8 @@ def create_data_song(message: Message) -> None:
         if i % 5 == 0:
             list_music.append(buf.copy())
             buf.clear()
+    if buf:
+        list_music.append(buf.copy())
     data_songs[message.chat.id] = list_music.copy()
 
 
@@ -410,7 +444,7 @@ def inline_keyboard(message: Message, some_index) -> InlineKeyboardMarkup:  # Na
                              callback_data=f"move_to {some_index - 1 if some_index > 0 else 'pass'}"),
         InlineKeyboardButton(text="➡️",
                              callback_data=f"move_to "
-                                           f"{some_index + 1 if some_index < len(data_songs[message.chat.id]) - 1 else 'pass'}"))
+                             f"{some_index + 1 if some_index < len(data_songs[message.chat.id]) - 1 else 'pass'}"))
     return some_keyboard
 
 
@@ -455,7 +489,8 @@ def callback_query(call):
                 break
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^/watch\?v=\w+\s.+$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^/watch\?v=\w+\s.+$',
+                                                           call.data) or re.fullmatch(r'/watch\?v=\w+.+', call.data))
 def callback_query(call):
     global data_songs
     yt = YouTube('https://' + 'www.youtube.com/' + call.data.split()[0])
@@ -466,10 +501,15 @@ def callback_query(call):
                 bot.send_audio(call.message.chat.id,
                                open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
                                title=j['title'], duration=yt.length, performer=j['name'])
-                try:
-                    os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
-                except FileNotFoundError:
-                    log('Need to remove file', 'info')
+                return
+    else:
+        bot.send_audio(call.message.chat.id,
+                       open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
+                       title=yt.title, duration=yt.length, performer=yt.author)
+    try:
+        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
+    except FileNotFoundError:
+        log('Need to remove file', 'info')
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric:\s?\d+$', call.data))
@@ -502,7 +542,7 @@ def news_handler(message: Message) -> None:
                  InlineKeyboardButton('Общие', callback_data='News general'))
     keyboard.add(InlineKeyboardButton('Развлечения', callback_data='News entertainment'),
                  InlineKeyboardButton('Спорт', callback_data='News sports'))
-    bot.send_message(message.chat.id, '<b>Новости</b>', reply_markup=keyboard, parse_mode='HTML')
+    bot.send_message(message.chat.id, '<b>Подборка новостей</b>', reply_markup=keyboard, parse_mode='HTML')
 
 
 def main_news(message: Message, news_type: str) -> None:
@@ -511,7 +551,8 @@ def main_news(message: Message, news_type: str) -> None:
     res = requests.get(API['News']['URL'].replace('Method', f'{news_type}') + API['News']['Api_Key']).json()
     if res['status'] == 'ok':
         news[message.chat.id] = [{'title': i['title'], 'description': i['description'],
-                 'url': i['url'], 'image': i['urlToImage'], 'published': i['publishedAt']} for i in res['articles']]
+                                  'url': i['url'], 'image': i['urlToImage'], 'published': i['publishedAt']} for i in
+                                 res['articles']]
     for i in news[message.chat.id]:
         if i['image'] is not None:
             i['title'] = clear_link(i['title'])
@@ -527,34 +568,42 @@ def send_news(message: Message, index: int) -> None:
         InlineKeyboardButton(text="⬅️️",
                              callback_data=f"move_to_ {index - 1 if index > 0 else 'pass'}"),
         InlineKeyboardButton(text="➡️",
-                             callback_data=f"move_to_ {index + 1 if index < len(news[message.chat.id]) - 1 else 'pass'}"))
+                             callback_data=f"move_to_ "
+                                           f"{index + 1 if index < len(news[message.chat.id]) - 1 else 'pass'}"))
     if news[message.chat.id][index]['image'] is not None and news[message.chat.id][index]['image'] != '':
-        print(news[message.chat.id][index])
         if news[message.chat.id][index]['description'] is not None:
-            bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id, message_id=news_msg[message.chat.id].message_id,
+            bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
+                                   message_id=news_msg[message.chat.id].message_id,
                                    media=InputMediaPhoto(news[message.chat.id][index]['image'],
-                                                         caption='<b>' + news[message.chat.id][index]['title'] + '</b>\n\n' +
-                                                         news[message.chat.id][index]['description'] + '\n\n' +
-                                                         '<i>' + news[message.chat.id][index]['published'].replace('T', ' ').replace(
-                                                         'Z', '') + '</i>',
+                                                         caption='<b>' + news[message.chat.id][index][
+                                                             'title'] + '</b>\n\n' +
+                                                                 news[message.chat.id][index]['description'] + '\n\n' +
+                                                                 '<i>' + news[message.chat.id][index][
+                                                                     'published'].replace('T', ' ').replace(
+                                                             'Z', '') + '</i>',
                                                          parse_mode='HTML'),
                                    reply_markup=keyboard2)
         else:
-            bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id, message_id=news_msg[message.chat.id].message_id,
+            bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
+                                   message_id=news_msg[message.chat.id].message_id,
                                    media=InputMediaPhoto(news[message.chat.id][index]['image'],
-                                                         caption='<b>' + news[message.chat.id][index]['title'] + '</b>\n' +
-                                                         '<i>' + news[message.chat.id][index]['published'].replace('T', ' ').replace(
-                                                         'Z', '') + '</i>',
+                                                         caption='<b>' + news[message.chat.id][index][
+                                                             'title'] + '</b>\n' +
+                                                                 '<i>' + news[message.chat.id][index][
+                                                                     'published'].replace('T', ' ').replace(
+                                                             'Z', '') + '</i>',
                                                          parse_mode='HTML'),
                                    reply_markup=keyboard2)
     else:
-        send_news(message, index + 2)
+        send_news(message, index + 1)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^News\s?\w+$', call.data))
 def choice_news_query(call):
     global news_msg
     bot.delete_message(call.message.chat.id, call.message.message_id)
+    if call.message.chat.id in news_msg:
+        bot.delete_message(news_msg[call.message.chat.id].chat.id, news_msg[call.message.chat.id].message_id)
     news_msg[call.message.chat.id] = bot.send_photo(call.message.chat.id, Empty_bg)
     main_news(call.message, call.data.split()[1])
 
@@ -591,7 +640,7 @@ def youtube_pass(call):
 
 
 def send_audio(message: Message, method: str) -> None:
-    if re.fullmatch(r'^https?:\/\/.*[\r\n]*$', message.text):
+    if re.fullmatch(r'^https?://.*[\r\n]*$', message.text):
         keyboard = InlineKeyboardMarkup()
         keyboard.add(InlineKeyboardButton('YouTube', url=message.text))
         yt = YouTube(message.text)
@@ -675,11 +724,11 @@ def text_handler(message: Message) -> None:
         msg = list(message.text)
         reply_to = message.reply_to_message.from_user
         if msg[0] == '+':
-            bot.send_message(message.chat.id, f'{message.from_user.username.title()} подкинул {len(msg) * 10} к карме '
+            bot.send_message(message.chat.id, f'{message.from_user.username.title()} подкинул {len(msg) * 10} к карме😈 '
                                               f'{reply_to.username.title()}\nИтого карма: '
                                               f'{db.change_karma(reply_to, msg)}')
         else:
-            bot.send_message(message.chat.id, f'{message.from_user.username.title()} осуждает на -{len(msg) * 10} '
+            bot.send_message(message.chat.id, f'{message.from_user.username.title()} отнял от кармы -{len(msg) * 10}👿 '
                                               f'{reply_to.username.title()}\nИтого карма: '
                                               f'{db.change_karma(reply_to, msg)}')
 
@@ -790,7 +839,7 @@ second_dice: dict = {'username': None, 'dice': 0}
 @bot.message_handler(commands=['dice'])  # /dice
 def dice_handler(message: Message) -> None:
     log(message, 'info')
-    res = requests.post(f'https://api.telegram.org/bot{TOKEN}/sendDice?chat_id={message.chat.id}').json()
+    res = requests.post(f'https://' + 'api.telegram.org/bot{TOKEN}/sendDice?chat_id={message.chat.id}').json()
     t = Timer(120.0, reset_users)
     if first_dice['username'] is None:
         first_dice['username'], first_dice['dice'] = message.from_user.username, res['result']['dice']['value']
@@ -894,5 +943,5 @@ def contact_handler(message: Message) -> None:
 # <<< End answer's  >>>
 
 
-bot.polling(none_stop=True)
+bot.polling(none_stop=True,)
 time.sleep(100)
