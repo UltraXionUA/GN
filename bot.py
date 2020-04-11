@@ -516,7 +516,6 @@ def callback_query(call):
             log('Error! Can\'t remove file', 'info')
 
 
-
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric:\s?\d+$', call.data))
 def callback_query(call):
     global data_songs
@@ -820,8 +819,7 @@ def set_name(message: Message, leng: str) -> None:  # Set file name
 def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
     log(message, 'info')
     values = {'api_option': 'paste', 'api_dev_key': f"{API['PasteBin']['DevApi']}",
-              'api_paste_code': f'{code}', 'api_paste_private': '0',
-              'api_paste_name': f'{message.text}', 'api_paste_expire_date': '1H',
+              'api_paste_private': '0', 'api_paste_expire_date': '1H',
               'api_paste_format': f'{leng}', 'api_user_key': f"{API['PasteBin']['UserApi']}",
               'api_paste_name': f'{message.text}', 'api_paste_code': f'{code}'}
     data = parse.urlencode(values).encode('utf-8')
