@@ -706,7 +706,7 @@ def ffmpeg_run():
         elif i.startswith('video'):
             input_video = ffmpeg.input(i)
     input_video = ffmpeg.filter(input_video, 'fps', fps=25, round='up')
-    ffmpeg.output(input_video, input_audio, "file.mp4", preset='faster',
+    ffmpeg.output(input_video, input_audio, "file.mp4",
                   vcodec='libx264', acodec='mp3').run(overwrite_output=True)
 # <<< End YouTube >>>
 
