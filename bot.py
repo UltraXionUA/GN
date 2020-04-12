@@ -1,4 +1,4 @@
-#!/usr/bin/python3.8
+#!/home/UltraXionUA/.virtualenvs/myvirtualenv/bin/python3.8
 # -*- coding: utf-8 -*-
 """Mains file for GNBot"""
 # <<< Import's >>>
@@ -6,17 +6,18 @@ from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, I
 from telebot.types import PreCheckoutQuery, ShippingQuery
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji
 from youtube_unlimited_search import YoutubeUnlimitedSearch
-from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN  # TEST_TOKEN
+from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, TEST_TOKEN
 from collections import defaultdict
 from datetime import datetime as dt
 from pytils.translit import slugify
 from urllib import parse, request
 from json import JSONDecodeError
 from threading import Thread
-from telebot import TeleBot
+from telebot import TeleBot, logger
 from threading import Timer
 from pytube import YouTube
 from pars import main
+import logging
 import requests
 import random
 import db
@@ -26,9 +27,8 @@ import re
 
 # <<< End import's>>
 
-bot = TeleBot(TOKEN)
+bot = TeleBot(TEST_TOKEN)
 log('Bot is successful running')
-
 Parser = Thread(target=main, name='Parser')  # Turn on parser
 Parser.start()
 
@@ -811,7 +811,6 @@ def code_callback_query(call):
     global leng_msg
     bot.delete_message(leng_msg.chat.id, leng_msg.message_id)
     leng_msg = call.data
-    print(leng_msg)
     leng = call.data.replace('Code ', '')
     bot.answer_callback_query(call.id, 'Вы выбрали ' + leng)
     bot.send_chat_action(call.from_user.id, 'typing')
@@ -833,8 +832,7 @@ def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
     values = {'api_option': 'paste', 'api_dev_key': f"{API['PasteBin']['DevApi']}",
               'api_paste_code': f'{code}', 'api_paste_private': '0',
               'api_paste_name': f'{message.text}', 'api_paste_expire_date': '1H',
-              'api_paste_format': f'{leng}', 'api_user_key': f"{API['PasteBin']['UserApi']}",
-              'api_paste_name': f'{message.text}', 'api_paste_code': f'{code}'}
+              'api_paste_format': f'{leng}', 'api_user_key': f"{API['PasteBin']['UserApi']}"}
     data = parse.urlencode(values).encode('utf-8')
     req = request.Request(API['PasteBin']['URL'], data)
     with request.urlopen(req) as response:
