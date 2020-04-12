@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3.8
 # -*- coding: utf-8 -*-
 """Mains file for GNBot"""
 # <<< Import's >>>
