@@ -669,7 +669,7 @@ def send_audio(message: Message, method: str) -> None:
 def ffmpeg_run():
     input_video = ffmpeg.input("video.mp4")
     added_audio = ffmpeg.input("audio.mp4")
-    ffmpeg.output(input_video, added_audio, "file.mp4", vcodec='h264').run(overwrite_output=True)
+    ffmpeg.output(input_video, added_audio, "file.mp4", vcodec='copy', acodec='mp3').run(overwrite_output=True)
 # <<< End YouTube >>>
 
 
