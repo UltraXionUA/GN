@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Mains file for GNBot"""
 # <<< Import's >>>
@@ -747,15 +748,16 @@ def text_handler(message: Message) -> None:
         bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
 
 
-# <<< End add answer with word >>>
-
-
 # <<< Code PasteBin >>>
+leng_msg = 'None'
+
+
 @bot.message_handler(commands=['code'])  # Send url on PasteBin
 def code_handler(message: Message) -> None:
+    global leng_msg
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
-    keyboard = InlineKeyboardMarkup()
+    keyboard = InlineKeyboardMarkup(row_width=3)
     keyboard.add(InlineKeyboardButton('Bash', callback_data='Code bash'),
                  InlineKeyboardButton('HTML 5', callback_data='Code html5'),
                  InlineKeyboardButton('CSS', callback_data='Code css'))
@@ -777,14 +779,39 @@ def code_handler(message: Message) -> None:
     keyboard.add(InlineKeyboardButton('SQL', callback_data='Code sql'),
                  InlineKeyboardButton('Swift', callback_data='Code swift'),
                  InlineKeyboardButton('Rust', callback_data='Code rust'))
-    leng = bot.send_message(message.chat.id, 'Выберите нужный вам язык😈', reply_markup=keyboard)
-    time.sleep(20)
-    bot.delete_message(message.chat.id, leng.message_id)
+    keyboard.add(InlineKeyboardButton('Все доступные языки', url='https://' + 'pastebin.com/languages'))
+    keyboard.add(InlineKeyboardButton('Введите название нужного языка ниже', callback_data='Enter lang'))
+    leng_msg = bot.send_message(message.chat.id, 'Выберите нужный вам язык😈', reply_markup=keyboard)
+    bot.register_next_step_handler(leng_msg, callback_to_code)
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Enter lang$', call.data))
+def callback_query(call):
+    bot.answer_callback_query(call.id, 'Введите нужный язык ниже')
+
+
+def callback_to_code(message: Message) -> None:
+    global leng_msg
+    if type(leng_msg) == 'Message' or leng_msg == 'None':
+        return
+    else:
+        lang: [dict, None] = db.get_code(message.text)
+        if lang is not None:
+            bot.delete_message(leng_msg.chat.id, leng_msg.message_id)
+            bot.send_chat_action(message.chat.id, 'typing')
+            time.sleep(1)
+            code = bot.send_message(message.chat.id, 'Отправьте мне ваш код👾')
+            bot.register_next_step_handler(code, set_name, lang['code'])
+        else:
+            bot.send_message(message.chat.id, 'Этот язык не обнаружен в базе данных😔')
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Code\s?\w.+$', call.data))
-def callback_query(call):
-    bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
+def code_callback_query(call):
+    global leng_msg
+    bot.delete_message(leng_msg.chat.id, leng_msg.message_id)
+    leng_msg = call.data
+    print(leng_msg)
     leng = call.data.replace('Code ', '')
     bot.answer_callback_query(call.id, 'Вы выбрали ' + leng)
     bot.send_chat_action(call.from_user.id, 'typing')
@@ -804,7 +831,8 @@ def set_name(message: Message, leng: str) -> None:  # Set file name
 def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
     log(message, 'info')
     values = {'api_option': 'paste', 'api_dev_key': f"{API['PasteBin']['DevApi']}",
-              'api_paste_private': '0', 'api_paste_expire_date': '1H',
+              'api_paste_code': f'{code}', 'api_paste_private': '0',
+              'api_paste_name': f'{message.text}', 'api_paste_expire_date': '1H',
               'api_paste_format': f'{leng}', 'api_user_key': f"{API['PasteBin']['UserApi']}",
               'api_paste_name': f'{message.text}', 'api_paste_code': f'{code}'}
     data = parse.urlencode(values).encode('utf-8')

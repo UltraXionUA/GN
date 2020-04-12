@@ -110,7 +110,7 @@ def get_answer(word) -> str:  # Get random answer with word
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(
-            f'SELECT `answer` FROM Word_Answer WHERE word LIKE \'{word}\' ORDER BY RAND() LIMIT 1')
+            f'SELECT answer FROM Word_Answer WHERE word LIKE \'{word}\' ORDER BY RAND() LIMIT 1')
         result = cursor.fetchone()['answer']
     connection.close()
     logging.info("Отключение от БД")
@@ -120,12 +120,21 @@ def get_answer(word) -> str:  # Get random answer with word
 def get_all_word() -> list:  # Get all answers
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(
-            f'SELECT `word` FROM Word_Answer')
+        cursor.execute(f'SELECT `word` FROM Word_Answer')
         result = set(x['word'].lower() for x in cursor.fetchall())
     connection.close()
     logging.info("Отключение от БД")
     return list(result)
+
+
+def get_code(name: str) -> [dict, None]:  # Get all answers
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT code FROM PasteBin WHERE name LIKE \'{name}\'')
+        result = cursor.fetchone()
+    connection.close()
+    logging.info("Отключение от БД")
+    return result
 
 
 def random_meme() -> str:  # Random meme
@@ -138,7 +147,7 @@ def random_meme() -> str:  # Random meme
     return result
 
 
-def add_memes(array):  # Add memes
+def add_memes(array) -> None:  # Add memes
     connection = start_connection()
     with connection.cursor() as cursor:
         for i in array:
