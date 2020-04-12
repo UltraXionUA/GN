@@ -27,7 +27,7 @@ import re
 # <<< End import's>>
 
 bot = TeleBot(TOKEN)
-log('Bot is successful running')
+log('Bot is successful running!')
 Parser = Thread(target=main, name='Parser')  # Turn on parser
 Parser.start()
 
