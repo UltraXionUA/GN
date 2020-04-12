@@ -5,7 +5,6 @@ from random import randint
 from langdetect import detect
 from datetime import datetime as dt
 import logging
-import requests
 import re
 
 
