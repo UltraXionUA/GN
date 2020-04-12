@@ -706,7 +706,9 @@ def ffmpeg_run():
             input_audio = ffmpeg.input(i)
         elif i.startswith('video'):
             input_video = ffmpeg.input(i)
-    ffmpeg.output(input_video, input_audio, "file.mp4", vcodec='copy', acodec='mp3').run(overwrite_output=True)
+    print(input_audio, input_video)
+    ffmpeg.output(input_video, input_audio, "file.mp4", vcodec='libx264', acodec='mp3', **{'qscale:v': 4}).run(
+        overwrite_output=True)
 # <<< End YouTube >>>
 
 
@@ -1010,5 +1012,5 @@ def contact_handler(message: Message) -> None:
 # <<< End answer's  >>>
 
 
-bot.polling(none_stop=True,)
+bot.polling(none_stop=True)
 time.sleep(100)
