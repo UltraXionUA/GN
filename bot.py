@@ -6,18 +6,17 @@ from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, I
 from telebot.types import PreCheckoutQuery, ShippingQuery
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji
 from youtube_unlimited_search import YoutubeUnlimitedSearch
-from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, TEST_TOKEN
+from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN  # TEST_TOKEN
 from collections import defaultdict
 from datetime import datetime as dt
 from pytils.translit import slugify
 from urllib import parse, request
 from json import JSONDecodeError
 from threading import Thread
-from telebot import TeleBot, logger
+from telebot import TeleBot
 from threading import Timer
 from pytube import YouTube
 from pars import main
-import logging
 import requests
 import random
 import db
@@ -27,7 +26,7 @@ import re
 
 # <<< End import's>>
 
-bot = TeleBot(TEST_TOKEN)
+bot = TeleBot(TOKEN)
 log('Bot is successful running')
 Parser = Thread(target=main, name='Parser')  # Turn on parser
 Parser.start()
