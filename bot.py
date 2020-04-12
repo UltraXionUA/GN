@@ -644,8 +644,7 @@ def send_audio(message: Message, method: str) -> None:
                 bot.send_chat_action(message.chat.id, 'upload_audio')
                 bot.delete_message(message.chat.id, message.message_id)
                 bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
-                               reply_markup=keyboard, duration=yt.length,
-                               title=yt.title)
+                               reply_markup=keyboard, duration=yt.length, title=yt.title, performer=yt.author)
                 try:
                     os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
                 except FileNotFoundError:
