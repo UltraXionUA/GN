@@ -652,35 +652,46 @@ def send_audio(message: Message, method: str) -> None:
                     log('Need to remove file', 'info')
             else:
                 try:
-                    yt.streams.filter(subtype='mp4', res="480p").order_by('resolution').desc()[0].download(filename='video')
+                    print(yt.streams.filter(res="480p").order_by('resolution').desc()[0])
+                    yt.streams.filter(res="480p").order_by('resolution').desc()[0].download(
+                        filename='video')
                 except IndexError:
                     try:
-                        yt.streams.filter(subtype='mp4', res="320p").order_by('resolution').desc()[0].download(
+                        print(yt.streams.filter(res="320p").order_by('resolution').desc()[0])
+                        yt.streams.filter(res="320p").order_by('resolution').desc()[0].download(
                             filename='video')
                     except IndexError:
                         try:
-                            yt.streams.filter(subtype='mp4', res="240p").order_by('resolution').desc()[0].download(
+                            print(yt.streams.filter(res="240p").order_by('resolution').desc()[0])
+                            yt.streams.filter(res="240p").order_by('resolution').desc()[0].download(
                                 filename='video')
                         except IndexError:
                             try:
-                                yt.streams.filter(subtype='mp4', res="144p").order_by('resolution').desc()[0].download(
+                                print(yt.streams.filter(res="144p").order_by('resolution').desc()[0])
+                                yt.streams.filter(res="144p").order_by('resolution').desc()[0].download(
                                     filename='video')
                             except IndexError:
                                 bot.send_message(message.chat.id, 'Даное видео имеет слигком большой объем,'
                                                                   ' мой лимит 50МБ😔')
                 yt.streams.filter(only_audio=True)[0].download(filename='audio')
-                ffmpeg_work = Thread(target=ffmpeg_run, name='ffmpeg_work')  # Turn on parser
+                ffmpeg_work = Thread(target=ffmpeg_run, name='ffmpeg_work')
                 msg = bot.send_message(message.chat.id, 'Загрузка...')
                 ffmpeg_work.start()
                 ffmpeg_work.join()
                 bot.delete_message(message.chat.id, message.message_id)
                 bot.delete_message(msg.chat.id, msg.message_id)
+                time.sleep(5)
                 bot.send_video(message.chat.id, open('file.mp4', 'rb'),
                                duration=yt.length, reply_markup=keyboard)
                 try:
-                    os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'audio' + '.mp4'))
-                    os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'video' + '.mp4'))
-                    os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
+                    files = os.listdir(os.path.dirname(__file__))
+                    for i in files:
+                        if i.startswith('video'):
+                            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), i))
+                        elif i.startswith('audio'):
+                            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), i))
+                        elif i.startswith('file'):
+                            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), i))
                 except FileNotFoundError:
                     log('Need to remove file', 'info')
     else:
@@ -688,9 +699,14 @@ def send_audio(message: Message, method: str) -> None:
 
 
 def ffmpeg_run():
-    input_video = ffmpeg.input("video.mp4")
-    added_audio = ffmpeg.input("audio.mp4")
-    ffmpeg.output(input_video, added_audio, "file.mp4", vcodec='copy', acodec='mp3').run(overwrite_output=True)
+    files = os.listdir(os.path.dirname(__file__))
+    input_audio, input_video = None, None
+    for i in files:
+        if i.startswith('audio'):
+            input_audio = ffmpeg.input(i)
+        elif i.startswith('video'):
+            input_video = ffmpeg.input(i)
+    ffmpeg.output(input_video, input_audio, "file.mp4", vcodec='copy', acodec='mp3').run(overwrite_output=True)
 # <<< End YouTube >>>
 
 
