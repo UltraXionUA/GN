@@ -6,7 +6,7 @@ from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, I
 from telebot.types import PreCheckoutQuery, ShippingQuery
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji
 from youtube_unlimited_search import YoutubeUnlimitedSearch
-from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN  # TEST_TOKEN
+from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, TEST_TOKEN
 from collections import defaultdict
 from datetime import datetime as dt
 from pytils.translit import slugify
@@ -637,6 +637,7 @@ def send_audio(message: Message, method: str) -> None:
         yt = YouTube(message.text)
         if method == 'Audio':
             bot.send_chat_action(message.chat.id, 'upload_audio')
+            bot.delete_message(message.chat.id, message.message_id)
             bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
                            reply_markup=keyboard, duration=yt.length,
                            title=yt.title)
@@ -648,8 +649,11 @@ def send_audio(message: Message, method: str) -> None:
             yt.streams.filter(subtype='mp4').order_by('resolution').desc()[0].download(filename='video')
             yt.streams.filter(only_audio=True)[0].download(filename='audio')
             ffmpeg_work = Thread(target=ffmpeg_run, name='ffmpeg_work')  # Turn on parser
+            msg = bot.send_message(message.chat.id, 'Загрузка...')
             ffmpeg_work.start()
             ffmpeg_work.join()
+            bot.delete_message(message.chat.id, message.message_id)
+            bot.delete_message(msg.chat.id, msg.message_id)
             bot.send_video(message.chat.id, open('file.mp4', 'rb'),
                            duration=yt.length, reply_markup=keyboard)
             try:
