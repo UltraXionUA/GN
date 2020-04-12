@@ -6,7 +6,7 @@ from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, I
 from telebot.types import PreCheckoutQuery, ShippingQuery
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji
 from youtube_unlimited_search import YoutubeUnlimitedSearch
-from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, TEST_TOKEN
+from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN  # TEST_TOKEN
 from collections import defaultdict
 from datetime import datetime as dt
 from pytils.translit import slugify
@@ -27,7 +27,7 @@ import re
 
 # <<< End import's>>
 
-bot = TeleBot(TEST_TOKEN)
+bot = TeleBot(TOKEN)
 log('Bot is successful running!')
 Parser = Thread(target=main, name='Parser')  # Turn on parser
 Parser.start()
@@ -640,28 +640,24 @@ def send_audio(message: Message, method: str) -> None:
             bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
                            reply_markup=keyboard, duration=yt.length,
                            title=yt.title)
+            try:
+                os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
+            except FileNotFoundError:
+                log('Need to remove file', 'info')
         else:
             yt.streams.filter(subtype='mp4').order_by('resolution').desc()[0].download(filename='video')
             yt.streams.filter(only_audio=True)[0].download(filename='audio')
-            # merged_audio = ffmpeg.filter([input_video.video, added_audio], 'amix')
-            # ffmpeg.concat(input_video, merged_audio, v=1, a=1)
             ffmpeg_work = Thread(target=ffmpeg_run, name='ffmpeg_work')  # Turn on parser
             ffmpeg_work.start()
             ffmpeg_work.join()
             bot.send_video(message.chat.id, open('file.mp4', 'rb'),
                            duration=yt.length, reply_markup=keyboard)
-
             try:
                 os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'audio' + '.mp4'))
                 os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'video' + '.mp4'))
                 os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
             except FileNotFoundError:
                 log('Need to remove file', 'info')
-        try:
-            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
-        except FileNotFoundError:
-            log('Need to remove file', 'info')
-
     else:
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
 
@@ -669,7 +665,7 @@ def send_audio(message: Message, method: str) -> None:
 def ffmpeg_run():
     input_video = ffmpeg.input("video.mp4")
     added_audio = ffmpeg.input("audio.mp4")
-    ffmpeg.output(input_video, added_audio, "file.mp4").run()
+    ffmpeg.output(input_video, added_audio, "file.mp4", vcodec='h264').run(overwrite_output=True)
 # <<< End YouTube >>>
 
 
