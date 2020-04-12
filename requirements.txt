@@ -10,3 +10,5 @@ python-dotenv
 GitPython
 schedule
 pytils
+pytube
+youtube-unlimited-search
