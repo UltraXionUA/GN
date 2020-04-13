@@ -6,7 +6,7 @@ from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, I
 from telebot.types import PreCheckoutQuery, ShippingQuery
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
 from youtube_unlimited_search import YoutubeUnlimitedSearch
-from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, TEST_TOKEN
+from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN  # TEST_TOKEN
 from pytube import YouTube, exceptions
 from collections import defaultdict
 from datetime import datetime as dt
@@ -175,6 +175,8 @@ def create_sqcode(call) -> None:
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Read_QRCode$', call.data))
 def read_sqcode(call) -> None:
+    bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
+    bot.answer_callback_query(call.id, 'Вы выбрали считать')
     msg = bot.send_message(call.message.chat.id, 'Отправь мне QR Code или его фотографию📸')
     bot.register_next_step_handler(msg, read_text)
 
