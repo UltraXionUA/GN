@@ -686,6 +686,7 @@ def send_audio(message: Message, method: str) -> None:
                 msg = bot.send_message(message.chat.id, 'Загрузка...')
                 ffmpeg_work.start()
                 ffmpeg_work.join()
+                time.sleep(5)
                 bot.delete_message(message.chat.id, message.message_id)
                 bot.delete_message(msg.chat.id, msg.message_id)
                 bot.send_video(message.chat.id, open('file.mp4', 'rb'),
