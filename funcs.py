@@ -51,6 +51,14 @@ def get_day(data: str) -> str:
             return day
 
 
+def sec_to_time(seconds: int) -> str:
+    minutes = int(seconds / 60)
+    if minutes < 10:
+        minutes = '0' + str(minutes)
+    sec = str(int(seconds % 60))
+    return minutes + ':' + sec
+
+
 def tr_w(words) -> str:  # Define and translate
     leng_code = detect(words)
     if leng_code == 'mk':

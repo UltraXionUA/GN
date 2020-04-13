@@ -4,9 +4,10 @@
 # <<< Import's >>>
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LabeledPrice
 from telebot.types import PreCheckoutQuery, ShippingQuery
-from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji
+from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
 from youtube_unlimited_search import YoutubeUnlimitedSearch
-from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, TEST_TOKEN
+from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN  # TEST_TOKEN
+from pytube import YouTube, exceptions
 from collections import defaultdict
 from datetime import datetime as dt
 from pytils.translit import slugify
@@ -16,7 +17,6 @@ from threading import Thread
 from telebot import TeleBot
 from threading import Timer
 from urllib import error
-from pytube import YouTube
 from pars import main
 import requests
 import ffmpeg
@@ -349,7 +349,10 @@ def callback_query(call):
     bot.send_chat_action(call.message.chat.id, 'upload_audio')
     bot.send_audio(call.message.chat.id,
                    open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
-                   title=yt.title, duration=yt.length, performer=yt.author)
+                   title=yt.title, duration=yt.length, performer=yt.author,
+                   caption=f'🎧 {sec_to_time(yt.length)} '
+                           f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
+                           f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps')
     try:
         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
     except FileNotFoundError:
@@ -378,13 +381,9 @@ def callback_query(call):
     if call.data == 'artist?q=':
         bot.answer_callback_query(call.id, 'Вы выбрали поиск по артисту')
         msg = bot.send_message(call.message.chat.id, 'Введите исполнителя👤')
-        time.sleep(25)
-        bot.delete_message(msg.chat.id, msg.message_id)
     else:
         bot.answer_callback_query(call.id, 'Вы выбрали поиск по треку')
         msg = bot.send_message(call.message.chat.id, 'Введите название трека🖊')
-        time.sleep(15)
-        bot.delete_message(msg.chat.id, msg.message_id)
     bot.register_next_step_handler(msg, get_song, call.data)
 
 
@@ -496,7 +495,10 @@ def callback_query(call):
                 bot.send_audio(call.message.chat.id, audio=open(yt.streams.filter(
                                                      only_audio=True)[0].download(filename='file'), 'rb'),
                                                      reply_markup=keyboard,  performer=j['name'],
-                                                     title=j['title'], duration=j['duration'])
+                                                     title=j['title'], duration=j['duration'],
+                                                     caption=f'🎧 {sec_to_time(yt.length)} '
+                                             f'| {round(os.path.getsize("file.mp4")/1000000, 1)} MB |'
+                                             f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps')
                 try:
                     os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
                 except FileNotFoundError:
@@ -639,34 +641,41 @@ def send_audio(message: Message, method: str) -> None:
             yt = YouTube(message.text)
         except error.HTTPError:
             bot.send_message(message.chat.id, 'Не могу найти файл😔')
+        except exceptions.RegexMatchError:
+            bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
         else:
             if method == 'Audio':
                 bot.send_chat_action(message.chat.id, 'upload_audio')
                 bot.delete_message(message.chat.id, message.message_id)
-                bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
-                               reply_markup=keyboard, duration=yt.length, title=yt.title, performer=yt.author)
+                bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(
+                               filename='file'), 'rb'),
+                               reply_markup=keyboard, duration=yt.length, title=yt.title, performer=yt.author,
+                               caption=f'🎧 {sec_to_time(yt.length)} '
+                                       f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
+                                       f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps')
                 try:
                     os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
                 except FileNotFoundError:
                     log('Need to remove file', 'info')
             else:
+                resolution = None
                 try:
-                    print(yt.streams.filter(res="480p").order_by('resolution').desc()[0])
+                    resolution = '480p'
                     yt.streams.filter(res="480p").order_by('resolution').desc()[0].download(
                         filename='video')
                 except IndexError:
                     try:
-                        print(yt.streams.filter(res="320p").order_by('resolution').desc()[0])
+                        resolution = '320p'
                         yt.streams.filter(res="320p").order_by('resolution').desc()[0].download(
                             filename='video')
                     except IndexError:
                         try:
-                            print(yt.streams.filter(res="240p").order_by('resolution').desc()[0])
+                            resolution = '240p'
                             yt.streams.filter(res="240p").order_by('resolution').desc()[0].download(
                                 filename='video')
                         except IndexError:
                             try:
-                                print(yt.streams.filter(res="144p").order_by('resolution').desc()[0])
+                                resolution = '144p'
                                 yt.streams.filter(res="144p").order_by('resolution').desc()[0].download(
                                     filename='video')
                             except IndexError:
@@ -679,9 +688,12 @@ def send_audio(message: Message, method: str) -> None:
                 ffmpeg_work.join()
                 bot.delete_message(message.chat.id, message.message_id)
                 bot.delete_message(msg.chat.id, msg.message_id)
-                time.sleep(5)
                 bot.send_video(message.chat.id, open('file.mp4', 'rb'),
-                               duration=yt.length, reply_markup=keyboard)
+                               duration=yt.length, reply_markup=keyboard,
+                               caption=f'🎧 {sec_to_time(yt.length)} '
+                                       f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB '
+                                       f'| {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps '
+                                       f'| {resolution}')
                 try:
                     files = os.listdir(os.path.dirname(__file__))
                     for i in files:
