@@ -175,19 +175,26 @@ def create_sqcode(call) -> None:
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Read_QRCode$', call.data))
 def read_sqcode(call) -> None:
-    msg = bot.send_message(call.message.chat.id, 'Отправь мне QR Code или его фотографию')
+    msg = bot.send_message(call.message.chat.id, 'Отправь мне QR Code или его фотографию📸')
     bot.register_next_step_handler(msg, read_text)
 
 
 def read_text(message: Message) -> None:
     if message.content_type == 'photo':
-        pass
+        res = requests.post(API['QRCode']['Read'].replace('FILE', bot.get_file_url(message.photo[0].file_id))).json()
+        if res[0]['symbol'][0]['data'] is not None:
+            bot.send_message(message.chat.id, '<b>Полученный результат</b>📝\n' + res[0]['symbol'][0]['data'],
+                             parse_mode='HTML')
+        else:
+            bot.send_message(message.chat.id, 'QR Code не обнаружен😔')
     else:
-        bot.send_message(message.chat.id, 'Не верный формат данных')
+        bot.send_message(message.chat.id, 'Не верный формат данных😔')
 
 
 def send_qrcode(message: Message) -> None:
-    bot.send_photo(message.chat.id, requests.get(API['QRCode'].replace('DATA', message.text.replace(' ', '+'))).content)
+    bot.send_photo(message.chat.id, requests.get(API['QRCode']['Create'].replace('DATA',
+                                                                                 message.text.replace(' ',
+                                                                                                      '+'))).content)
 # <<< End QR Code >>>
 
 
