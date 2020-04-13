@@ -6,7 +6,7 @@ from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, I
 from telebot.types import PreCheckoutQuery, ShippingQuery
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
 from youtube_unlimited_search import YoutubeUnlimitedSearch
-from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN  # TEST_TOKEN
+from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, TEST_TOKEN
 from pytube import YouTube, exceptions
 from collections import defaultdict
 from datetime import datetime as dt
@@ -151,6 +151,44 @@ def process_successful_payment(message: Message) -> None:
 
 
 # <<< End donate >>>
+
+
+# <<< QR Code >>>
+@bot.message_handler(commands=['qrcode'])  # /qrcode
+def qrcode_handler(message: Message) -> None:
+    log(message, 'info')
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton('Создать', callback_data='Create_QRCode'),
+                 InlineKeyboardButton('Считать', callback_data='Read_QRCode'))
+    msg = bot.send_message(message.chat.id, 'Выберите опцию🧐', reply_markup=keyboard)
+    time.sleep(30)
+    bot.delete_message(msg.chat.id, msg.message_id)
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Create_QRCode$', call.data))
+def create_sqcode(call) -> None:
+    bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
+    bot.answer_callback_query(call.id, 'Вы выбрали создать')
+    msg = bot.send_message(call.message.chat.id, 'Введите текст или URL✒️')
+    bot.register_next_step_handler(msg, send_qrcode)
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Read_QRCode$', call.data))
+def read_sqcode(call) -> None:
+    msg = bot.send_message(call.message.chat.id, 'Отправь мне QR Code или его фотографию')
+    bot.register_next_step_handler(msg, read_text)
+
+
+def read_text(message: Message) -> None:
+    if message.content_type == 'photo':
+        pass
+    else:
+        bot.send_message(message.chat.id, 'Не верный формат данных')
+
+
+def send_qrcode(message: Message) -> None:
+    bot.send_photo(message.chat.id, requests.get(API['QRCode'].replace('DATA', message.text.replace(' ', '+'))).content)
+# <<< End QR Code >>>
 
 
 # <<< Joke >>>
