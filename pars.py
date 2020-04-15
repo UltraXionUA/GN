@@ -25,7 +25,6 @@ def get_torrents(search: str) -> list:
             if size != '0':
                 name = i.find('strong').get_text()
                 link = i.find('a').get('href')
-                time.sleep(0.5)
                 soup_link = BeautifulSoup(requests.get(link, headers=useragent).content, 'html.parser')
                 link_t = soup_link.find('div', class_='title-tor')
                 if link is not None:
