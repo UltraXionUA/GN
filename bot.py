@@ -5,7 +5,7 @@
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LabeledPrice
 from telebot.types import PreCheckoutQuery, ShippingQuery
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
-from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS, TEST_TOKEN
+from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS  # TEST_TOKEN
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from pytube import YouTube, exceptions
 from collections import defaultdict
@@ -775,6 +775,7 @@ def ffmpeg_run():
 # <<< Torrent >>>
 data_torrents = defaultdict(dict)
 torrent_msg = defaultdict(Message)
+search_msg = defaultdict(str)
 
 
 @bot.message_handler(commands=['torrent'])  # /torrents
@@ -782,12 +783,11 @@ def torrents_handler(message: Message) -> None:
     log(message, 'info')
     search = bot.send_message(message.chat.id, 'Введите ваш запрос✒️')
     bot.register_next_step_handler(search, send_urls)
-    time.sleep(30)
-    bot.delete_message(search.chat.id, search.message_id)
 
 
 def send_urls(message: Message) -> None:
     global data_torrents, torrent_msg
+    search_msg[message.chat.id] = message.text
     msg = bot.send_message(message.chat.id, 'Загрузка...')
     if message.chat.id in data_torrents:
         bot.delete_message(torrent_msg[message.chat.id].chat.id, torrent_msg[message.chat.id].message_id)
@@ -815,21 +815,19 @@ def create_data_torrents(message: Message) -> None:
 
 
 def torrent_keyboard(message: Message, index: int) -> InlineKeyboardMarkup:
-    global data_torrents, torrent_msg
+    global data_torrents, torrent_msg, search_msg
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton(text="⬅️️", callback_data=f"move_ {index - 1 if index > 0 else 'pass'}"),
                  InlineKeyboardButton(text="➡️", callback_data=f"move_ "
                                         f"{index + 1 if index < len(data_torrents[message.chat.id]) - 1 else 'pass'}"))
+    text_torrent = f'<a href="{URLS["main"]}">GTorrent.ru🇷🇺</a>\nРезультат поиска <b>{search_msg[message.chat.id]}</b>'
+    for i in data_torrents[message.chat.id][index]:
+        text_torrent += f'\n\n{i["name"]} | [{i["size"]}] \n[<i>/download_{i["link_t"]}</i>] ' \
+                        f'[<a href="{i["link"]}">раздача</a>]'
     torrent_msg[message.chat.id] = bot.edit_message_text(chat_id=torrent_msg[message.chat.id].chat.id,
                                                          message_id=torrent_msg[message.chat.id].message_id,
-                                                         text='Результат поиска🔎')
-    for i in data_torrents[message.chat.id][index]:
-        torrent_msg[message.chat.id] = bot.edit_message_text(chat_id=torrent_msg[message.chat.id].chat.id,
-                                                             message_id=torrent_msg[message.chat.id].message_id,
-                                                             text=torrent_msg[message.chat.id].text +
-                                                                  f'\n\n{i["name"]} | [{i["size"]}] \n'
-                                                                  f'[/download_{i["link"]}]',
-                                                             reply_markup=keyboard)
+                                                         text=text_torrent, reply_markup=keyboard, parse_mode='HTML',
+                                                         disable_web_page_preview=True)
 
 
 @bot.message_handler(func=lambda message: re.fullmatch(r"^/download_\w+$", message.text))  # /download_(torrent_id)

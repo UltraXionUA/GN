@@ -24,12 +24,13 @@ def get_torrents(search: str) -> list:
             size = i.find('div', class_='center col px65').get_text()
             if size != '0':
                 name = i.find('strong').get_text()
+                link = i.find('a').get('href')
                 time.sleep(0.5)
-                soup_link = BeautifulSoup(requests.get(i.find('a').get('href'), headers=useragent).content, 'html.parser')
-                link = soup_link.find('div', class_='title-tor')
+                soup_link = BeautifulSoup(requests.get(link, headers=useragent).content, 'html.parser')
+                link_t = soup_link.find('div', class_='title-tor')
                 if link is not None:
-                    link = link.find_all_next('a')[0].get('href').replace('/engine/download.php?id=', '')
-                data.append({'name': name, 'size': size, 'link': link})
+                    link_t = link_t.find_all_next('a')[0].get('href').replace('/engine/download.php?id=', '')
+                data.append({'name': name, 'size': size, 'link_t': link_t, 'link': link})
 
         return data
 
