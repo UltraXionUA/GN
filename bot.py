@@ -832,7 +832,7 @@ def torrent_keyboard(message: Message, index: int) -> InlineKeyboardMarkup:
                                                              reply_markup=keyboard)
 
 
-@bot.message_handler(func=lambda message: re.match(r"/download_\d+", message.text))  # //download_(torrent_id)
+@bot.message_handler(func=lambda message: re.fullmatch(r"/download_\w+", message.text))  # /download_(torrent_id)
 def load_handler(message: Message) -> None:
     id_torrent = message.text.split("_")[1]
     with open(f'file{id_torrent}.torrent', 'wb') as f:
