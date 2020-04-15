@@ -835,7 +835,6 @@ def torrent_keyboard(message: Message, index: int) -> InlineKeyboardMarkup:
 @bot.message_handler(func=lambda message: re.match(r"/download_\d+", message.text))  # //download_(torrent_id)
 def load_handler(message: Message) -> None:
     id_torrent = message.text.split("_")[1]
-    print(id_torrent)
     with open(f'file{id_torrent}.torrent', 'wb') as f:
         req = requests.get(URLS['load_torrent'] + id_torrent, stream=True)
         for chunk in req.iter_content(1024):  # Куски по 1 КБ
