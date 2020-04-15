@@ -5,24 +5,25 @@
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LabeledPrice
 from telebot.types import PreCheckoutQuery, ShippingQuery
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
+from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS  # TEST_TOKEN
 from youtube_unlimited_search import YoutubeUnlimitedSearch
-from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN  # TEST_TOKEN
 from pytube import YouTube, exceptions
 from collections import defaultdict
 from datetime import datetime as dt
 from pytils.translit import slugify
+from pars import main, get_torrents
 from urllib import parse, request
 from json import JSONDecodeError
+from urllib.parse import quote
 from threading import Thread
 from telebot import TeleBot
 from threading import Timer
 from urllib import error
-from pars import main
 import requests
 import ffmpeg
 import random
-import db
 import time
+import db
 import os
 import re
 
@@ -769,6 +770,93 @@ def ffmpeg_run():
     ffmpeg.output(input_video, input_audio, "file.mp4", preset='faster',
                   vcodec='libx264', acodec='mp3', **{'qscale:v': 10}).run(overwrite_output=True)
 # <<< End YouTube >>>
+
+
+# <<< Torrent >>>
+data_torrents = defaultdict(dict)
+torrent_msg = defaultdict(Message)
+
+
+@bot.message_handler(commands=['torrent'])  # /torrents
+def torrents_handler(message: Message) -> None:
+    log(message, 'info')
+    search = bot.send_message(message.chat.id, 'Введите ваш запрос✒️')
+    bot.register_next_step_handler(search, send_urls)
+    time.sleep(30)
+    bot.delete_message(search.chat.id, search.message_id)
+
+
+def send_urls(message: Message) -> None:
+    global data_torrents, torrent_msg
+    msg = bot.send_message(message.chat.id, 'Загрузка...')
+    if message.chat.id in data_torrents:
+        bot.delete_message(torrent_msg[message.chat.id].chat.id, torrent_msg[message.chat.id].message_id)
+    data_torrents[message.chat.id] = get_torrents(quote(message.text.encode('cp1251')))
+    bot.delete_message(msg.chat.id, msg.message_id)
+    if data_torrents[message.chat.id]:
+        create_data_torrents(message)
+        torrent_msg[message.chat.id] = bot.send_message(message.chat.id, 'Результаты поиска')
+        torrent_keyboard(torrent_msg[message.chat.id], 0)
+    else:
+        bot.send_message(message.chat.id, 'Ничего не нашлось')
+
+
+def create_data_torrents(message: Message) -> None:
+    global data_torrents
+    list_torrent, buf = [], []
+    for i, en in enumerate(data_torrents[message.chat.id], 1):
+        buf.append(en)
+        if i % 5 == 0:
+            list_torrent.append(buf.copy())
+            buf.clear()
+    if buf:
+        list_torrent.append(buf.copy())
+    data_torrents[message.chat.id] = list_torrent.copy()
+
+
+def torrent_keyboard(message: Message, index: int) -> InlineKeyboardMarkup:
+    global data_torrents, torrent_msg
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton(text="⬅️️", callback_data=f"move_ {index - 1 if index > 0 else 'pass'}"),
+                 InlineKeyboardButton(text="➡️", callback_data=f"move_ "
+                                        f"{index + 1 if index < len(data_torrents[message.chat.id]) - 1 else 'pass'}"))
+    torrent_msg[message.chat.id] = bot.edit_message_text(chat_id=torrent_msg[message.chat.id].chat.id,
+                                                         message_id=torrent_msg[message.chat.id].message_id,
+                                                         text='Результат поиска🔎')
+    for i in data_torrents[message.chat.id][index]:
+        torrent_msg[message.chat.id] = bot.edit_message_text(chat_id=torrent_msg[message.chat.id].chat.id,
+                                                             message_id=torrent_msg[message.chat.id].message_id,
+                                                             text=torrent_msg[message.chat.id].text +
+                                                                  f'\n\n{i["name"]} | [{i["size"]}] \n'
+                                                                  f'[/download_{i["link"]}]',
+                                                             reply_markup=keyboard)
+
+
+@bot.message_handler(func=lambda message: re.match(r"/download_\d+", message.text))  # //download_(torrent_id)
+def load_handler(message: Message) -> None:
+    id_torrent = message.text.split("_")[1]
+    print(id_torrent)
+    with open(f'file{id_torrent}.torrent', 'wb') as f:
+        req = requests.get(URLS['load_torrent'] + id_torrent, stream=True)
+        for chunk in req.iter_content(1024):  # Куски по 1 КБ
+            f.write(chunk)
+    bot.send_document(message.chat.id, open(f'file{id_torrent}.torrent', 'rb'))
+    try:
+        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file{id_torrent}.torrent'))
+    except FileNotFoundError:
+        log('Need to remove file', 'info')
+
+
+@bot.callback_query_handler(func=lambda call: call.data == 'move_ pass')
+def callback_query(call):
+    bot.answer_callback_query(call.id, '⛔️')
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_\s\d$', call.data))
+def callback_query(call):
+    bot.answer_callback_query(call.id)
+    torrent_keyboard(call.message, int(call.data.split()[1]))
+# <<< End torrent >>>
 
 
 # <<< Translate >>>

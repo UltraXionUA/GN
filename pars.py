@@ -8,6 +8,30 @@ import requests
 import re
 import schedule
 import time
+from random import choice
+
+
+def get_torrents(search: str) -> list:
+    data = []
+    agent = open('user-agents.txt').read().split('\n')
+    useragent = {'User-Agent': choice(agent)}
+    soup = BeautifulSoup(requests.get(URLS['torrent'] + search.replace(' ', '+'),
+                                      headers=useragent).content, 'html.parser')
+    list_divs = soup.find('div', id='center-block').find_all_next('div', class_='blog_brief_news')
+    if list_divs:
+        del list_divs[0]
+        for en, i in enumerate(list_divs, 1):
+            size = i.find('div', class_='center col px65').get_text()
+            if size != '0':
+                name = i.find('strong').get_text()
+                time.sleep(0.5)
+                soup_link = BeautifulSoup(requests.get(i.find('a').get('href'), headers=useragent).content, 'html.parser')
+                link = soup_link.find('div', class_='title-tor')
+                if link is not None:
+                    link = link.find_all_next('a')[0].get('href').replace('/engine/download.php?id=', '')
+                data.append({'name': name, 'size': size, 'link': link})
+
+        return data
 
 
 def parser_memes() -> None:  # Main parser
