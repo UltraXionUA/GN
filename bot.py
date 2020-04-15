@@ -5,7 +5,7 @@
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LabeledPrice
 from telebot.types import PreCheckoutQuery, ShippingQuery
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
-from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS  # TEST_TOKEN
+from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS, TEST_TOKEN
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from pytube import YouTube, exceptions
 from collections import defaultdict
