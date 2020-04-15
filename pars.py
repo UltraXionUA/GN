@@ -19,7 +19,6 @@ def get_torrents(search: str) -> list:
                                       headers=useragent).content, 'html.parser')
     list_divs = soup.find('div', id='center-block').find_all_next('div', class_='blog_brief_news')
     if list_divs:
-        print(list_divs)
         del list_divs[0]
         for en, i in enumerate(list_divs, 1):
             size = i.find('div', class_='center col px65').get_text()
