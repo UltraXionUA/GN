@@ -835,8 +835,8 @@ def torrent_keyboard(message: Message, index: int) -> InlineKeyboardMarkup:
 #     id_torrent = message.text.split("_")[1]
 #     with open(f'file{id_torrent}.torrent', 'wb') as f:
 #         req = requests.get(URLS['load_torrent'] + id_torrent, stream=True)
-#         for chunk in req.iter_content(1024):  # Куски по 1 КБ
-#             f.write(chunk)
+#         for i in req.iter_content(1024):
+#             f.write(i)
 #     bot.send_document(message.chat.id, open(f'file{id_torrent}.torrent', 'rb'))
 #     try:
 #         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file{id_torrent}.torrent'))
