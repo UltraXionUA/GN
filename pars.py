@@ -6,9 +6,9 @@ from db import add_memes
 from config import URLS
 from funcs import log
 import requests
-import re
 import schedule
 import time
+import re
 
 
 def get_torrents(search: str) -> list:

@@ -5,7 +5,7 @@
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LabeledPrice
 from telebot.types import PreCheckoutQuery, ShippingQuery
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
-from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS, TEST_TOKEN
+from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS  # TEST_TOKEN
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from pytube import YouTube, exceptions
 from collections import defaultdict
@@ -782,18 +782,15 @@ search_msg = defaultdict(str)
 def torrents_handler(message: Message) -> None:
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
-    if message.chat.type == 'private':
-        search = bot.send_message(message.chat.id, 'Введите ваш запрос✒️')
-        bot.register_next_step_handler(search, send_urls)
-    else:
-        bot.send_message(message.chat.id, 'К сожелению в группе эта функция недоступна😔\n'
-                                          'Вы можете восползоваться этой командой в личном чате с ботом 💢@GNTMBot💢')
+    search = bot.send_message(message.chat.id, 'Введите ваш запрос✒️')
+    bot.register_next_step_handler(search, send_urls)
 
 
 def send_urls(message: Message) -> None:
     global data_torrents, torrent_msg
     search_msg[message.chat.id] = message.text
     msg = bot.send_message(message.chat.id, 'Загрузка...')
+    bot.send_chat_action(message.chat.id, 'typing')
     if message.chat.id in data_torrents:
         bot.delete_message(torrent_msg[message.chat.id].chat.id, torrent_msg[message.chat.id].message_id)
     data_torrents[message.chat.id] = get_torrents(quote(message.text.encode('cp1251')))
@@ -819,7 +816,7 @@ def create_data_torrents(message: Message) -> None:
     data_torrents[message.chat.id] = list_torrent.copy()
 
 
-def torrent_keyboard(message: Message, index: int) -> InlineKeyboardMarkup:
+def torrent_keyboard(message: Message, index: int) -> None:
     global data_torrents, torrent_msg, search_msg
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton(text="⬅️️", callback_data=f"move_ {index - 1 if index > 0 else 'pass'}"),
@@ -835,8 +832,7 @@ def torrent_keyboard(message: Message, index: int) -> InlineKeyboardMarkup:
                                                          disable_web_page_preview=True)
 
 
-@bot.message_handler(func=lambda message: re.match(r'^/\w{8}_\d+$',
-                                                       str(message.text), flags=re.M))  # /download_(torrent_id)
+@bot.message_handler(func=lambda message: re.match(r'^/\w{8}_\d+$', str(message.text), flags=re.M))  # /download_torrent
 def load_handler(message: Message):
     id_torrent = message.text.split("_")[1]
     with open(f'file{id_torrent}.torrent', 'wb') as f:
@@ -855,7 +851,7 @@ def callback_query(call):
     bot.answer_callback_query(call.id, '⛔️')
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_\s\d$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_\s\d+$', call.data))
 def callback_query(call):
     bot.answer_callback_query(call.id)
     torrent_keyboard(call.message, int(call.data.split()[1]))
