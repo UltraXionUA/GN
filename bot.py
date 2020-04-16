@@ -781,8 +781,13 @@ search_msg = defaultdict(str)
 @bot.message_handler(commands=['torrent'])  # /torrents
 def torrents_handler(message: Message) -> None:
     log(message, 'info')
-    search = bot.send_message(message.chat.id, 'Введите ваш запрос✒️')
-    bot.register_next_step_handler(search, send_urls)
+    bot.send_chat_action(message.chat.id, 'typing')
+    if message.chat.type == 'private':
+        search = bot.send_message(message.chat.id, 'Введите ваш запрос✒️')
+        bot.register_next_step_handler(search, send_urls)
+    else:
+        bot.send_message(message.chat.id, 'К сожелению в группе эта функция недоступна😔\n'
+                                          'Вы можете восползоваться этой командой в личном чате с ботом 💢@GNTMBot💢')
 
 
 def send_urls(message: Message) -> None:
@@ -830,7 +835,8 @@ def torrent_keyboard(message: Message, index: int) -> InlineKeyboardMarkup:
                                                          disable_web_page_preview=True)
 
 
-@bot.message_handler(func=lambda message: re.fullmatch(r"^/download_\d+$", message.text))  # /download_(torrent_id)
+@bot.message_handler(func=lambda message: re.match(r'^/\w{8}_\d+$',
+                                                       str(message.text), flags=re.M))  # /download_(torrent_id)
 def load_handler(message: Message):
     id_torrent = message.text.split("_")[1]
     with open(f'file{id_torrent}.torrent', 'wb') as f:

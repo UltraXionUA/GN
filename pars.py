@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 """Parser file for GNBot"""
-from bs4 import BeautifulSoup
-from config import URLS
 from user_agent import generate_user_agent
+from bs4 import BeautifulSoup
 from db import add_memes
+from config import URLS
 from funcs import log
 import requests
 import re
 import schedule
 import time
-from random import choice
 
 
 def get_torrents(search: str) -> list:
