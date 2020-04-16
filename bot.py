@@ -5,13 +5,13 @@
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LabeledPrice
 from telebot.types import PreCheckoutQuery, ShippingQuery
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
-from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS  # TEST_TOKEN
+from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS, TEST_TOKEN
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from pytube import YouTube, exceptions
 from collections import defaultdict
 from datetime import datetime as dt
 from pytils.translit import slugify
-from pars import main, get_torrents
+from pars import main, get_torrents, get_books
 from urllib import parse, request
 from json import JSONDecodeError
 from urllib.parse import quote
@@ -772,6 +772,109 @@ def ffmpeg_run():
 # <<< End YouTube >>>
 
 
+# <<< Books >>>
+data_books = defaultdict(list)
+books_msg = defaultdict(Message)
+search_book_msg = defaultdict(str)
+
+
+@bot.message_handler(commands=['books'])  # /books
+def books_handler(message: Message) -> None:
+    log(message, 'info')
+    bot.send_chat_action(message.chat.id, 'typing')
+    search = bot.send_message(message.chat.id, 'Введите ваш запрос✒️')
+    bot.register_next_step_handler(search, send_books)
+
+
+def send_books(message: Message) -> None:
+    global data_books, books_msg
+    search_msg[message.chat.id] = message.text
+    msg = bot.send_message(message.chat.id, 'Загрузка...')
+    bot.send_chat_action(message.chat.id, 'typing')
+    if message.chat.id in data_torrents:
+        bot.delete_message(torrent_msg[message.chat.id].chat.id, torrent_msg[message.chat.id].message_id)
+    data_books[message.chat.id] = get_books(message.text)
+    bot.delete_message(msg.chat.id, msg.message_id)
+    if data_books[message.chat.id]:
+        create_data_books(message)
+        books_msg[message.chat.id] = bot.send_message(message.chat.id, 'Результаты поиска')
+        books_keyboard(books_msg[message.chat.id], 0)
+    else:
+        bot.send_message(message.chat.id, 'Ничего не нашлось')
+
+
+def create_data_books(message: Message) -> None:
+    global data_books
+    list_torrent, buf = [], []
+    for i, en in enumerate(data_books[message.chat.id], 1):
+        buf.append(en)
+        if i % 5 == 0:
+            list_torrent.append(buf.copy())
+            buf.clear()
+    if buf:
+        list_torrent.append(buf.copy())
+    data_books[message.chat.id] = list_torrent.copy()
+
+
+def books_keyboard(message: Message, index: int) -> None:
+    global data_books, books_msg, search_book_msg
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton(text="⬅️️", callback_data=f"move {index - 1 if index > 0 else 'pass'}"),
+                 InlineKeyboardButton(text="➡️", callback_data=f"move "
+                                        f"{index + 1 if index < len(data_books[message.chat.id]) - 1 else 'pass'}"))
+    text_t = f'<a href="{URLS["books"]["main"]}">KNIGOGO.net🇷🇺</a>\nРезультат поиска <b>' \
+             f'{search_book_msg[message.chat.id]}</b>\n\n'
+    for i in data_books[message.chat.id][index]:
+        id_book = i['ISBN'].split('-')[-2]
+        text_t += f'{i["name"]}\n{i["author"]}\n/load_{id_book}\n\n'
+    books_msg[message.chat.id] = bot.edit_message_text(chat_id=books_msg[message.chat.id].chat.id,
+                                                         message_id=books_msg[message.chat.id].message_id,
+                                                         text=text_t, reply_markup=keyboard, parse_mode='HTML',
+                                                         disable_web_page_preview=True)
+
+
+@bot.message_handler(func=lambda message: re.match(r'^/\w{4}_\d+$', str(message.text), flags=re.M))  # /load book
+def load_handler(message: Message):
+    global data_books
+    id_book = message.text.split("_")[1]
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton('fb2', callback_data=f'fb2__{id_book}'),
+                 InlineKeyboardButton('epub', callback_data=f'epub__{id_book}'))
+    keyboard.add(InlineKeyboardButton('txt', callback_data=f'txt__{id_book}'),
+                 InlineKeyboardButton('rtf', callback_data=f'rtf__{id_book}'))
+    bot.send_message(message.chat.id, '<b>В формате</b>', parse_mode='HTML', reply_markup=keyboard)
+
+
+@bot.callback_query_handler(func=lambda call: re.match(r'^\w+__\d+$', call.data))
+def callback_query(call):
+    format_book, id_book = call.data.split('__')
+    for i in data_books[call.message.chat.id]:
+        for j in i:
+            if id_book in j['ISBN'].split('-'):
+                with open(f'file{id_book}.{format_book}', 'wb') as f:
+                    req = requests.get(j[format_book], stream=True)
+                    for q in req.iter_content(1024):
+                        f.write(q)
+                bot.send_document(call.message.chat.id, open(f'file{id_book}.{format_book}', 'rb'))
+                try:
+                    os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file{id_book}.{format_book}'))
+                except FileNotFoundError:
+                    log('Need to remove file', 'info')
+                break
+
+
+@bot.callback_query_handler(func=lambda call: call.data == 'move pass')
+def callback_query(call):
+    bot.answer_callback_query(call.id, '⛔️')
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move\s\d+$', call.data))
+def callback_query(call):
+    bot.answer_callback_query(call.id)
+    books_keyboard(call.message, int(call.data.split()[1]))
+# <<< End torrent >>>
+
+
 # <<< Torrent >>>
 data_torrents = defaultdict(dict)
 torrent_msg = defaultdict(Message)
@@ -822,13 +925,13 @@ def torrent_keyboard(message: Message, index: int) -> None:
     keyboard.add(InlineKeyboardButton(text="⬅️️", callback_data=f"move_ {index - 1 if index > 0 else 'pass'}"),
                  InlineKeyboardButton(text="➡️", callback_data=f"move_ "
                                         f"{index + 1 if index < len(data_torrents[message.chat.id]) - 1 else 'pass'}"))
-    text_torrent = f'<a href="{URLS["main"]}">GTorrent.ru🇷🇺</a>\nРезультат поиска <b>{search_msg[message.chat.id]}</b>'
+    text_t = f'<a href="{URLS["torrent"]["main"]}">GTorrent.ru🇷🇺</a>\nРезультат поиска <b>{search_msg[message.chat.id]}</b>'
     for i in data_torrents[message.chat.id][index]:
-        text_torrent += f'\n\n{i["name"]} | [{i["size"]}] \n[<i>/download_{i["link_t"]}</i>] ' \
+        text_t += f'\n\n{i["name"]} | [{i["size"]}] \n[<i>/download_{i["link_t"]}</i>] ' \
                         f'[<a href="{i["link"]}">раздача</a>]'
     torrent_msg[message.chat.id] = bot.edit_message_text(chat_id=torrent_msg[message.chat.id].chat.id,
                                                          message_id=torrent_msg[message.chat.id].message_id,
-                                                         text=text_torrent, reply_markup=keyboard, parse_mode='HTML',
+                                                         text=text_t, reply_markup=keyboard, parse_mode='HTML',
                                                          disable_web_page_preview=True)
 
 
@@ -836,7 +939,7 @@ def torrent_keyboard(message: Message, index: int) -> None:
 def load_handler(message: Message):
     id_torrent = message.text.split("_")[1]
     with open(f'file{id_torrent}.torrent', 'wb') as f:
-        req = requests.get(URLS['load_torrent'] + id_torrent, stream=True)
+        req = requests.get(URLS['torrent']['download'] + id_torrent, stream=True)
         for i in req.iter_content(1024):
             f.write(i)
     bot.send_document(message.chat.id, open(f'file{id_torrent}.torrent', 'rb'))

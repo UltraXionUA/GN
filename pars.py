@@ -11,9 +11,35 @@ import time
 import re
 
 
+def get_books(search: str) -> list:
+    data = []
+    soup = BeautifulSoup(requests.get(URLS['books']['search'] + search.replace(' ', '+'),
+                                      headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+    list_divs = soup.find('div', class_='book_container').find_all_next('div', class_='book show_book')
+    if list_divs:
+        for i in list_divs:
+            buf = i.find('div', class_='book_desk2')
+            link = buf.find('a').get('href')
+            author = buf.find('span').get_text()
+            soup_load = BeautifulSoup(requests.get(link, headers={'User-Agent':
+                                                                       generate_user_agent()}).content, 'html.parser')
+            name = soup_load.find('div',
+                                  class_='lib_book_preview_col2').find_all_next('meta',
+                                                                                itemprop="name")[0].get('content')
+            isbn = soup_load.find('ul', class_='lib_book_preview_list').find_all_next('li')[-33].get_text()
+            files = soup_load.find('div', class_='lib_book_download_container').find_all_next('a')
+            txt = files[0].get('href')
+            fb2 = files[1].get('href')
+            rtf = files[2].get('href')
+            epu = files[3].get('href')
+            data.append({'name': name, 'author': author, 'link': link, 'txt': txt,
+                         'fb2': fb2, 'rtf': rtf, 'epub': epu, 'ISBN': isbn})
+    return data
+
+
 def get_torrents(search: str) -> list:
     data = []
-    soup = BeautifulSoup(requests.get(URLS['torrent'] + search.replace(' ', '+'),
+    soup = BeautifulSoup(requests.get(URLS['torrent']['search'] + search.replace(' ', '+'),
                                       headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
     list_divs = soup.find('div', id='center-block').find_all_next('div', class_='blog_brief_news')
     if list_divs:
