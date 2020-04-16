@@ -830,18 +830,18 @@ def torrent_keyboard(message: Message, index: int) -> InlineKeyboardMarkup:
                                                          disable_web_page_preview=True)
 
 
-# @bot.message_handler(func=lambda message: re.fullmatch(r"^/download_\w+$", message.text))  # /download_(torrent_id)
-# def load_handler(message: Message):
-#     id_torrent = message.text.split("_")[1]
-#     with open(f'file{id_torrent}.torrent', 'wb') as f:
-#         req = requests.get(URLS['load_torrent'] + id_torrent, stream=True)
-#         for i in req.iter_content(1024):
-#             f.write(i)
-#     bot.send_document(message.chat.id, open(f'file{id_torrent}.torrent', 'rb'))
-#     try:
-#         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file{id_torrent}.torrent'))
-#     except FileNotFoundError:
-#         log('Need to remove file', 'info')
+@bot.message_handler(func=lambda message: re.fullmatch(r"^/download_\d+$", message.text))  # /download_(torrent_id)
+def load_handler(message: Message):
+    id_torrent = message.text.split("_")[1]
+    with open(f'file{id_torrent}.torrent', 'wb') as f:
+        req = requests.get(URLS['load_torrent'] + id_torrent, stream=True)
+        for i in req.iter_content(1024):
+            f.write(i)
+    bot.send_document(message.chat.id, open(f'file{id_torrent}.torrent', 'rb'))
+    try:
+        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file{id_torrent}.torrent'))
+    except FileNotFoundError:
+        log('Need to remove file', 'info')
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'move_ pass')

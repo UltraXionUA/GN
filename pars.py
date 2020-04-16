@@ -2,6 +2,7 @@
 """Parser file for GNBot"""
 from bs4 import BeautifulSoup
 from config import URLS
+from user_agent import generate_user_agent
 from db import add_memes
 from funcs import log
 import requests
@@ -13,10 +14,8 @@ from random import choice
 
 def get_torrents(search: str) -> list:
     data = []
-    agent = open('user-agents.txt').read().split('\n')
-    useragent = {'User-Agent': choice(agent)}
     soup = BeautifulSoup(requests.get(URLS['torrent'] + search.replace(' ', '+'),
-                                      headers=useragent).content, 'html.parser')
+                                      headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
     list_divs = soup.find('div', id='center-block').find_all_next('div', class_='blog_brief_news')
     if list_divs:
         del list_divs[0]
@@ -25,11 +24,12 @@ def get_torrents(search: str) -> list:
             if size != '0':
                 name = i.find('strong').get_text()
                 link = i.find('a').get('href')
-                soup_link = BeautifulSoup(requests.get(link, headers=useragent).content, 'html.parser')
+                soup_link = BeautifulSoup(requests.get(link, headers={
+                    'User-Agent': generate_user_agent()}).content, 'html.parser')
                 link_t = soup_link.find('div', class_='title-tor')
-                if link is not None:
+                if link_t is not None:
                     link_t = link_t.find_all_next('a')[0].get('href').replace('/engine/download.php?id=', '')
-                data.append({'name': name, 'size': size, 'link_t': link_t, 'link': link})
+                    data.append({'name': name, 'size': size, 'link_t': link_t, 'link': link})
         return data
 
 
