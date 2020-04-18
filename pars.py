@@ -7,39 +7,63 @@ from config import URLS
 from funcs import log
 import requests
 import schedule
+from urllib.parse import quote
 import time
 import re
 
 
-def get_books(search: str) -> list:
+def get_torrents3(search: str) -> list:
     data = []
-    soup = BeautifulSoup(requests.get(URLS['books']['search'] + search.replace(' ', '+'),
+    soup = BeautifulSoup(requests.get(URLS['torrent3']['search'] + quote(search),
                                       headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
-    list_divs = soup.find('div', class_='book_container').find_all_next('div', class_='book show_book')
-    if list_divs:
-        for i in list_divs:
-            buf = i.find('div', class_='book_desk2')
-            link = buf.find('a').get('href')
-            author = buf.find('span').get_text()
-            soup_load = BeautifulSoup(requests.get(link, headers={'User-Agent':
-                                                                       generate_user_agent()}).content, 'html.parser')
-            name = soup_load.find('div',
-                                  class_='lib_book_preview_col2').find_all_next('meta',
-                                                                                itemprop="name")[0].get('content')
-            isbn = soup_load.find('ul', class_='lib_book_preview_list').find_all_next('li')[-33].get_text()
-            files = soup_load.find('div', class_='lib_book_download_container').find_all_next('a')
-            txt = files[0].get('href')
-            fb2 = files[1].get('href')
-            rtf = files[2].get('href')
-            epu = files[3].get('href')
-            data.append({'name': name, 'author': author, 'link': link, 'txt': txt,
-                         'fb2': fb2, 'rtf': rtf, 'epub': epu, 'ISBN': isbn})
+    list_gai = soup.find_all('tr', class_='gai')
+    list_tum = soup.find_all('tr', class_='tum')
+    if list_gai and list_tum:
+        for gai, tum in zip(list_gai, list_tum):
+            link1 = gai.find_all_next('a')
+            link2 = tum.find_all_next('a')
+            load1 = link1[0].get('href')
+            load2 = link2[0].get('href')
+            if load1 is not None and load2 is not None:
+                text1 = link1[2].get_text()
+                text2 = link2[2].get_text()
+                link1 = URLS['torrent3']['main'] + link1[2].get('href')
+                link2 = URLS['torrent3']['main'] + link2[2].get('href')
+                size1 = gai.find_all_next('td')[3].get_text()
+                size2 = tum.find_all_next('td')[3].get_text()
+                data.append({'name': text1, 'size': size1, 'link_t': load1, 'link': link1})
+                data.append({'name': text2, 'size': size2, 'link_t': load2, 'link': link2})
+    print(data)
     return data
 
 
-def get_torrents(search: str) -> list:
+def get_torrents2(search: str) -> list:
     data = []
-    soup = BeautifulSoup(requests.get(URLS['torrent']['search'] + search.replace(' ', '+'),
+    soup = BeautifulSoup(requests.get(URLS['torrent2']['search'].replace('TEXT',  search.replace(' ', '+')),
+                                      headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+    list_divs = soup.find('div', id='maincol').find_all_next('table')
+    if list_divs:
+        for i in list_divs:
+            link = i.find('a').get('href')
+            name = i.find('a').get_text()
+            if link.startswith('/'):
+                link = URLS['torrent2']['main'] + link
+            soup_link = BeautifulSoup(requests.get(link, headers={'User-Agent': generate_user_agent()}).content,
+                                      'html.parser')
+            link_t = soup_link.find('div', class_='download_torrent')
+            if link_t is not None:
+                link_t = URLS['torrent2']['main'] + link_t.find_all_next('a')[0].get('href')
+                size = soup_link.find('div',
+                                      class_='download_torrent').find_all_next('span',
+                                                                               class_='torrent-size')[0].get_text().replace(
+                                                                                      'Размер игры: ', '')
+                data.append({'name': name, 'size': size, 'link_t': link_t, 'link': link})
+    return data
+
+
+def get_torrents1(search: str) -> list:
+    data = []
+    soup = BeautifulSoup(requests.get(URLS['torrent']['search'] + quote(search.encode('cp1251')),
                                       headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
     list_divs = soup.find('div', id='center-block').find_all_next('div', class_='blog_brief_news')
     if list_divs:
