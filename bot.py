@@ -5,7 +5,7 @@
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LabeledPrice
 from telebot.types import PreCheckoutQuery, ShippingQuery
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
-from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS, TEST_TOKEN
+from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from pytube import YouTube, exceptions
 from collections import defaultdict
@@ -26,10 +26,12 @@ import os
 import re
 
 # <<< End import's>>
-
+# from config import TEST_TOKEN
 bot = TeleBot(TOKEN)
-log('Bot is successful running!')
-Parser = Thread(target=main, name='Parser')  # Turn on parser
+log('Bot is successful running!', 'info')
+
+# Turn on parser
+Parser = Thread(target=main, name='Parser')
 Parser.start()
 
 
@@ -117,7 +119,7 @@ def send_payment(message: Message, money) -> None:
     bot.send_invoice(message.chat.id, title='Поддержка',
                      description='Поддержка разработчика GNBot',
                      provider_token=PAYMENT_TOKEN, currency='uah',
-                     photo_url='https://' + 'i.redd.it/6mfq9bv5u5n31.png',
+                     photo_url=URLS['logo'],
                      photo_height=1494, photo_width=1295, photo_size=142,
                      is_flexible=False, prices=[price],
                      start_parameter='donate-programmer-gnbot',
@@ -153,29 +155,31 @@ def process_successful_payment(message: Message) -> None:
 
 
 # <<< QR Code >>>
+qr_msg = defaultdict(Message)
+
+
 @bot.message_handler(commands=['qrcode'])  # /qrcode
 def qrcode_handler(message: Message) -> None:
     log(message, 'info')
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('Создать', callback_data='Create_QRCode'),
                  InlineKeyboardButton('Считать', callback_data='Read_QRCode'))
-    msg = bot.send_message(message.chat.id, 'Выберите опцию🧐', reply_markup=keyboard)
-    time.sleep(30)
-    bot.delete_message(msg.chat.id, msg.message_id)
+    qr_msg[message.chat.id] = bot.send_message(message.chat.id, 'Выберите опцию🧐', reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Create_QRCode$', call.data))
 def create_sqcode(call) -> None:
-    bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
+    global qr_msg
     bot.answer_callback_query(call.id, 'Вы выбрали создать')
+    bot.delete_message(qr_msg[call.message.chat.id].chat.id, qr_msg[call.message.chat.id].message_id)
     msg = bot.send_message(call.message.chat.id, 'Введите текст или URL✒️')
     bot.register_next_step_handler(msg, send_qrcode)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Read_QRCode$', call.data))
 def read_sqcode(call) -> None:
-    bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
     bot.answer_callback_query(call.id, 'Вы выбрали считать')
+    bot.delete_message(qr_msg[call.message.chat.id].chat.id, qr_msg[call.message.chat.id].message_id)
     msg = bot.send_message(call.message.chat.id, 'Отправь мне QR Code или его фотографию📸')
     bot.register_next_step_handler(msg, read_text)
 
@@ -244,16 +248,14 @@ def meme_en_handler(message: Message) -> None:
 weather_data = defaultdict(dict)
 weather_msg = defaultdict(Message)
 city_data = defaultdict(dict)
+city_msg = defaultdict(Message)
 
 
 @bot.message_handler(commands=['weather'])  # /weather
 def weather_handler(message: Message) -> None:
     log(message, 'info')
-    bot.send_chat_action(message.chat.id, 'typing')
-    city = bot.send_message(message.chat.id, 'Введите название города✒️')
-    bot.register_next_step_handler(city, show_weather)
-    time.sleep(30)
-    bot.delete_message(city.chat.id, city.message_id)
+    city_msg[message.chat.id] = bot.send_message(message.chat.id, 'Введите название города✒️')
+    bot.register_next_step_handler(city_msg[message.chat.id], show_weather)
 
 
 def weather(message: Message, index: int) -> None:
@@ -265,33 +267,38 @@ def weather(message: Message, index: int) -> None:
     keyboard.add(InlineKeyboardButton('Погода', url='https://' +
                                                     f'darksky.net/forecast/{city_data[message.chat.id]["lat"]},'
                                                     f'{city_data[message.chat.id]["lon"]}/us12/en'))
-    bot.edit_message_text(chat_id=weather_msg[message.chat.id].chat.id,
-                          message_id=weather_msg[message.chat.id].message_id,
-                          text=f"<i>{weather_data[message.chat.id][index]['valid_date']} "
-                               f"{get_day(weather_data[message.chat.id][index]['valid_date'])}</i>\n"
-                               f"<b>Город {tr_w(city_data[message.chat.id]['city_name'])} "
-                               f"{city_data[message.chat.id]['country_code']}</b>🏢\n\n"
-                               f"<b>Погода</b> {weather_data[message.chat.id][index]['weather']['description']}️"
-                               f"{get_weather_emoji(str(weather_data[message.chat.id][index]['weather']['code']))}\n"
-                               f"<b>Теспература</b> {weather_data[message.chat.id][index]['low_temp']} - "
-                               f"{weather_data[message.chat.id][index]['max_temp']}°C🌡\n"
-                               f"<b>По ощушению</b> {weather_data[message.chat.id][index]['app_min_temp']} - "
-                               f"{weather_data[message.chat.id][index]['app_max_temp']}°C🌡\n"
-                               f"<b>Облачность</b> {weather_data[message.chat.id][index]['clouds']}%☁️\n"
-                               f"<b>Вероятность осадков</b> {weather_data[message.chat.id][index]['pop']}%☔️️\n"
-                               f"<b>Видимость</b> {weather_data[message.chat.id][index]['vis']} км🔭\n"
-                               f"<b>Влажность</b> {weather_data[message.chat.id][index]['rh']} %💧\n"
-                               f"<b>Атмоc. давление</b> "
-                               f"{weather_data[message.chat.id][index]['pres']} дин·см²⏲\n"
-                               f"<b>Ветер</b> {weather_data[message.chat.id][index]['wind_cdir_full']} 🧭\n"
-                               f"<b>Cкорость ветра</b> "
-                               f"{float('{:.1f}'.format(weather_data[message.chat.id][index]['wind_spd']))}"
-                               f" м\\с💨\n",
-                          reply_markup=keyboard, parse_mode='HTML')
+    try:
+        bot.edit_message_text(chat_id=weather_msg[message.chat.id].chat.id,
+                              message_id=weather_msg[message.chat.id].message_id,
+                              text=f"<i>{weather_data[message.chat.id][index]['valid_date']} "
+                                   f"{get_day(weather_data[message.chat.id][index]['valid_date'])}</i>\n"
+                                   f"<b>Город {tr_w(city_data[message.chat.id]['city_name'])} "
+                                   f"{city_data[message.chat.id]['country_code']}</b>🏢\n\n"
+                                   f"<b>Погода</b> {weather_data[message.chat.id][index]['weather']['description']}️"
+                                   f"{get_weather_emoji(str(weather_data[message.chat.id][index]['weather']['code']))}"
+                                   f"\n<b>Теспература</b> {weather_data[message.chat.id][index]['low_temp']} - "
+                                   f"{weather_data[message.chat.id][index]['max_temp']}°C🌡\n"
+                                   f"<b>По ощушению</b> {weather_data[message.chat.id][index]['app_min_temp']} - "
+                                   f"{weather_data[message.chat.id][index]['app_max_temp']}°C🌡\n"
+                                   f"<b>Облачность</b> {weather_data[message.chat.id][index]['clouds']}%☁️\n"
+                                   f"<b>Вероятность осадков</b> {weather_data[message.chat.id][index]['pop']}%☔️️\n"
+                                   f"<b>Видимость</b> {weather_data[message.chat.id][index]['vis']} км🔭\n"
+                                   f"<b>Влажность</b> {weather_data[message.chat.id][index]['rh']} %💧\n"
+                                   f"<b>Атмоc. давление</b> "
+                                   f"{weather_data[message.chat.id][index]['pres']} дин·см²⏲\n"
+                                   f"<b>Ветер</b> {weather_data[message.chat.id][index]['wind_cdir_full']} 🧭\n"
+                                   f"<b>Cкорость ветра</b> "
+                                   f"{float('{:.1f}'.format(weather_data[message.chat.id][index]['wind_spd']))}"
+                                   f" м\\с💨\n",
+                              reply_markup=keyboard, parse_mode='HTML')
+    except KeyError:
+        log('Key Error in weather', 'warning')
+        bot.send_chat_action(message.chat.id, '⛔️')
 
 
 def show_weather(message: Message) -> None:
-    global weather_msg, city_data, weather_data
+    global weather_msg, city_data, weather_data, city_msg
+    bot.delete_message(city_msg[message.chat.id].chat.id, city_msg[message.chat.id].message_id)
     if message.text.lower() == 'харьков':
         city_name = 'K' + slugify(message.text)
     else:
@@ -325,21 +332,24 @@ def pass_query(call):
 
 
 # <<< Detect music >>>
+detect_msg = defaultdict(Message)
+
+
 @bot.message_handler(commands=['detect'])  # /detect_music
 def detect_handler(message: Message) -> None:
+    global detect_msg
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('Записать🔊', callback_data='record'),
                  InlineKeyboardButton('Напеть🎙', callback_data='sing'))
-    msg = bot.send_message(message.chat.id, 'Выберите что нужно определить🧐', reply_markup=keyboard)
-    time.sleep(30)
-    bot.delete_message(msg.chat.id, msg.message_id)
+    detect_msg[message.chat.id] = bot.send_message(message.chat.id,
+                                                   'Выберите что нужно определить🧐', reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'record' or call.data == 'sing')
 def callback_query(call):
-    bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
+    bot.delete_message(detect_msg[call.message.chat.id].chat.id, detect_msg[call.message.chat.id].message_id)
     if call.data == 'record':
         bot.answer_callback_query(call.id, 'Вы выбрали ' + 'Записать')
     else:
@@ -371,13 +381,13 @@ def detect_music(message: Message, type_r) -> None:
                                caption=f"{result['result']['artist']} - {result['result']['title']}🎵",
                                reply_markup=keyboard)
             else:
-                bot.send_message(message.chat.id, f"{result['result']['artist']} - {result['result']['title']}🎵")
+                bot.send_message(message.chat.id, f"<b>{result['result']['artist']}</b>"
+                                                  f" - {result['result']['title']}🎵", parse_mode='HTML')
         else:
-            msg = bot.send_message(message.chat.id, "Результат: ")
+            msg = "<b>Результат</b> "
             for i in result['result']['list']:
-                msg = bot.edit_message_text(msg.text + f"\nСовпадение: {i['score']}%\n"
-                                                       f"{i['artist']} - {i['title']}🎵",
-                                            message.chat.id, msg.message_id)
+                msg += f"\nСовпадение: <i>{i['score']}%</i>\n{i['artist']} - {i['title']}🎵"
+            bot.send_message(message.chat.id, msg, parse_mode='HTML')
 
         @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric2:\s?\d+$', call.data))
         def call_lyric(call):
@@ -390,7 +400,6 @@ def detect_music(message: Message, type_r) -> None:
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'/watch\?v=\w+.+', call.data))
 def callback_query(call):
-    global data_songs
     yt = YouTube('https://' + 'www.youtube.com/' + call.data.split()[0])
     bot.send_chat_action(call.message.chat.id, 'upload_audio')
     bot.send_audio(call.message.chat.id,
@@ -402,11 +411,16 @@ def callback_query(call):
     try:
         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
     except FileNotFoundError:
-        log('Error! Can\'t remove file', 'info')
+        log('Error! Can\'t remove file', 'warning')
 # <<< End detect music >>>
 
 
 # <<< Music >>>
+data_songs = defaultdict(list)
+song_msg = defaultdict(Message)
+msg_song = defaultdict(Message)
+
+
 @bot.message_handler(commands=['music'])  # /music
 def music_handler(message: Message) -> None:
     log(message, 'info')
@@ -414,16 +428,12 @@ def music_handler(message: Message) -> None:
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(InlineKeyboardButton('По исполнителю🎤', callback_data='artist?q='),
                  InlineKeyboardButton('По треку🎼', callback_data='track?q='))
-    msg = bot.send_message(message.chat.id, 'Как будем искать музыку?🎧', reply_markup=keyboard)
-    time.sleep(15)
-    bot.delete_message(msg.chat.id, msg.message_id)
+    msg_song[message.chat.id] = bot.send_message(message.chat.id, 'Как будем искать музыку?🎧', reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'artist?q=' or call.data == 'track?q=')
 def callback_query(call):
-    bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
-    bot.send_chat_action(call.message.chat.id, 'typing')
-    time.sleep(1)
+    bot.delete_message(msg_song[call.message.chat.id].chat.id, msg_song[call.message.chat.id].message_id)
     if call.data == 'artist?q=':
         bot.answer_callback_query(call.id, 'Вы выбрали поиск по артисту')
         msg = bot.send_message(call.message.chat.id, 'Введите исполнителя👤')
@@ -433,12 +443,7 @@ def callback_query(call):
     bot.register_next_step_handler(msg, get_song, call.data)
 
 
-data_songs = defaultdict(list)
-song_msg = defaultdict(Message)
-
-
 def get_song(message: Message, choice: str) -> None:  # Get song
-    log(message, 'info')
     global data_songs, song_msg
     res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
     try:
@@ -494,16 +499,19 @@ def create_data_song(message: Message) -> None:
 def inline_keyboard(message: Message, some_index) -> InlineKeyboardMarkup:  # Navigation for music
     global data_songs
     some_keyboard = InlineKeyboardMarkup()
-    for songs in data_songs[message.chat.id][some_index]:
-        some_keyboard.add(InlineKeyboardButton(f"{songs['name']} - {songs['title']}",
-                                               callback_data=f"ID: {songs['id']}"))
-    some_keyboard.add(
-        InlineKeyboardButton(text="⬅️️",
-                             callback_data=f"move_to {some_index - 1 if some_index > 0 else 'pass'}"),
-        InlineKeyboardButton(text="➡️",
-                             callback_data=f"move_to "
-                             f"{some_index + 1 if some_index < len(data_songs[message.chat.id]) - 1 else 'pass'}"))
-    return some_keyboard
+    try:
+        for songs in data_songs[message.chat.id][some_index]:
+            some_keyboard.add(InlineKeyboardButton(f"{songs['name']} - {songs['title']}",
+                                                   callback_data=f"ID: {songs['id']}"))
+        some_keyboard.add(
+            InlineKeyboardButton(text="⬅️️",
+                                 callback_data=f"move_to {some_index - 1 if some_index > 0 else 'pass'}"),
+            InlineKeyboardButton(text="➡️",
+                                 callback_data=f"move_to "
+                                 f"{some_index + 1 if some_index < len(data_songs[message.chat.id]) - 1 else 'pass'}"))
+        return some_keyboard
+    except KeyError:
+        log('Key Error in music', 'warning')
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'move_to pass')
@@ -548,7 +556,7 @@ def callback_query(call):
                 try:
                     os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
                 except FileNotFoundError:
-                    log('Error! Can\'t remove file', 'info')
+                    log('Error! Can\'t remove file', 'warning')
                 break
 
 
@@ -610,32 +618,35 @@ def send_news(message: Message, index: int) -> None:
         InlineKeyboardButton(text="➡️",
                              callback_data=f"move_to_ "
                                            f"{index + 1 if index < len(news[message.chat.id]) - 1 else 'pass'}"))
-    if news[message.chat.id][index]['image'] is not None and news[message.chat.id][index]['image'] != '':
-        if news[message.chat.id][index]['description'] is not None:
-            bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
-                                   message_id=news_msg[message.chat.id].message_id,
-                                   media=InputMediaPhoto(news[message.chat.id][index]['image'],
-                                                         caption='<b>' + news[message.chat.id][index][
-                                                             'title'] + '</b>\n\n' +
-                                                                 news[message.chat.id][index]['description'] + '\n\n' +
-                                                                 '<i>' + news[message.chat.id][index][
-                                                                     'published'].replace('T', ' ').replace(
-                                                             'Z', '') + '</i>',
-                                                         parse_mode='HTML'),
-                                   reply_markup=keyboard2)
+    try:
+        if news[message.chat.id][index]['image'] is not None and news[message.chat.id][index]['image'] != '':
+            if news[message.chat.id][index]['description'] is not None:
+                bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
+                                       message_id=news_msg[message.chat.id].message_id,
+                                       media=InputMediaPhoto(news[message.chat.id][index]['image'],
+                                                             caption='<b>' + news[message.chat.id][index][
+                                                                 'title'] + '</b>\n\n' +
+                                                                     news[message.chat.id][index]['description'] +
+                                                                     '\n\n' + '<i>' + news[message.chat.id][index][
+                                                                         'published'].replace('T', ' ').replace(
+                                                                 'Z', '') + '</i>',
+                                                             parse_mode='HTML'),
+                                       reply_markup=keyboard2)
+            else:
+                bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
+                                       message_id=news_msg[message.chat.id].message_id,
+                                       media=InputMediaPhoto(news[message.chat.id][index]['image'],
+                                                             caption='<b>' + news[message.chat.id][index][
+                                                                 'title'] + '</b>\n' +
+                                                                     '<i>' + news[message.chat.id][index][
+                                                                         'published'].replace('T', ' ').replace(
+                                                                 'Z', '') + '</i>',
+                                                             parse_mode='HTML'),
+                                       reply_markup=keyboard2)
         else:
-            bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
-                                   message_id=news_msg[message.chat.id].message_id,
-                                   media=InputMediaPhoto(news[message.chat.id][index]['image'],
-                                                         caption='<b>' + news[message.chat.id][index][
-                                                             'title'] + '</b>\n' +
-                                                                 '<i>' + news[message.chat.id][index][
-                                                                     'published'].replace('T', ' ').replace(
-                                                             'Z', '') + '</i>',
-                                                         parse_mode='HTML'),
-                                   reply_markup=keyboard2)
-    else:
-        send_news(message, index + 1)
+            send_news(message, index + 1)
+    except KeyError:
+        log('Key Error in news', 'warning')
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^News\s?\w+$', call.data))
@@ -702,7 +713,7 @@ def send_audio(message: Message, method: str) -> None:
                 try:
                     os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
                 except FileNotFoundError:
-                    log('Need to remove file', 'info')
+                    log('Error! Can\'t remove file', 'warning')
             else:
                 resolution = None
                 try:
@@ -751,7 +762,7 @@ def send_audio(message: Message, method: str) -> None:
                         elif i.startswith('file'):
                             os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), i))
                 except FileNotFoundError:
-                    log('Need to remove file', 'info')
+                    log('Error! Can\'t remove file', 'warning')
     else:
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
 
@@ -775,28 +786,27 @@ data_torrents = defaultdict(dict)
 torrent_msg = defaultdict(Message)
 search_msg = defaultdict(str)
 tracker = defaultdict(str)
-msg = defaultdict(Message)
+search = defaultdict(Message)
 
 
 @bot.message_handler(commands=['torrent'])  # /torrents
 def torrents_handler(message: Message) -> None:
     log(message, 'info')
-    bot.send_chat_action(message.chat.id, 'typing')
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('Rutor.info🇷🇺', callback_data='Rutor.info'))
     keyboard.add(InlineKeyboardButton('GTorrent.ru🇷🇺', callback_data='GTorrent.ru'))
     keyboard.add(InlineKeyboardButton('Gamestracker.org🇷🇺', callback_data='Gamestracker.org'))
-    msg[message.chat.id] = bot.send_message(message.chat.id, 'Выберите платформу️', reply_markup=keyboard)
+    search[message.chat.id] = bot.send_message(message.chat.id, 'Выберите платформу️', reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'Gamestracker.org' or call.data == 'GTorrent.ru' or
                             call.data == 'Rutor.info')
 def callback_query(call):
-    global tracker, msg
-    bot.delete_message(msg[call.message.chat.id].chat.id, msg[call.message.chat.id].message_id)
+    global tracker, search
+    bot.delete_message(search[call.message.chat.id].chat.id, search[call.message.chat.id].message_id)
     tracker[call.message.chat.id] = call.data
-    search = bot.send_message(call.message.chat.id, 'Введите ваш запрос✒️')
-    bot.register_next_step_handler(search, send_urls)
+    msg = bot.send_message(call.message.chat.id, 'Введите ваш запрос✒️')
+    bot.register_next_step_handler(msg, send_urls)
 
 
 def send_urls(message: Message) -> None:
@@ -806,15 +816,15 @@ def send_urls(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'typing')
     if message.chat.id in data_torrents:
         bot.delete_message(torrent_msg[message.chat.id].chat.id, torrent_msg[message.chat.id].message_id)
-    if tracker[message.chat.id] == 'GTorrent.ru':
+    if tracker[message.chat.id] == URLS['torrent']['name']:
         data_torrents[message.chat.id] = get_torrents1(message.text)
-    elif tracker[message.chat.id] == 'Gamestracker.org':
+    elif tracker[message.chat.id] == URLS['torrent2']['name']:
         data_torrents[message.chat.id] = get_torrents2(message.text)
-    elif tracker[message.chat.id] == 'Rutor.info':
+    elif tracker[message.chat.id] == URLS['torrent3']['name']:
         data_torrents[message.chat.id] = get_torrents3(message.text)
-    bot.delete_message(msg.chat.id, msg.message_id)
     if data_torrents[message.chat.id]:
         create_data_torrents(message)
+        bot.delete_message(msg.chat.id, msg.message_id)
         torrent_msg[message.chat.id] = bot.send_message(message.chat.id, '...')
         torrent_keyboard(torrent_msg[message.chat.id], 0)
     else:
@@ -842,27 +852,30 @@ def torrent_keyboard(message: Message, index: int) -> None:
                  InlineKeyboardButton(text="➡️", callback_data=f"move_ "
                                         f"{index + 1 if index < len(data_torrents[message.chat.id]) - 1 else 'pass'}"))
     text_t = None
-    if tracker[message.chat.id] == 'GTorrent.ru':
+    if tracker[message.chat.id] == URLS['torrent']['name']:
         text_t = f'<a href="{URLS["torrent"]["main"]}">{tracker[message.chat.id]}🇷🇺</a>\nРезультат поиска <b>' \
                  f'{search_msg[message.chat.id]}</b>'
-    elif tracker[message.chat.id] == 'Gamestracker.org':
+    elif tracker[message.chat.id] == URLS['torrent2']['name']:
         text_t = f'<a href="{URLS["torrent2"]["main"]}">{tracker[message.chat.id]}🇷🇺</a>\nРезультат поиска <b>' \
                  f'{search_msg[message.chat.id]}</b>'
-    elif tracker[message.chat.id] == 'Rutor.info':
+    elif tracker[message.chat.id] == URLS['torrent3']['name']:
         text_t = f'<a href="{URLS["torrent3"]["main"]}">{tracker[message.chat.id]}🇷🇺</a>\nРезультат поиска <b>' \
                  f'{search_msg[message.chat.id]}</b>'
-    for i in data_torrents[message.chat.id][index]:
-        if tracker[message.chat.id] == 'GTorrent.ru':
-            text_t += f'\n\n{i["name"]} | [{i["size"]}] \n[<i>/download_{i["link_t"]}</i>] ' \
-                            f'[<a href="{i["link"]}">раздача</a>]'
-        elif tracker[message.chat.id] == 'Gamestracker.org':
-            link_t = i["link_t"].split('-')
-            link_t = link_t[-2] + '_' + link_t[-1]
-            text_t += f'\n\n{i["name"]} | {i["size"]} \n[<i>/download_{link_t}</i>] ' \
-                      f'[<a href="{i["link"]}">раздача</a>]'
-        elif tracker[message.chat.id] == 'Rutor.info':
-            text_t += f'\n\n{i["name"]} | [{i["size"]}] \n[<i>/download__{i["link_t"].split("/")[-1]}</i>] ' \
-                      f'[<a href="{i["link"]}">раздача</a>]'
+    try:
+        for i in data_torrents[message.chat.id][index]:
+            if tracker[message.chat.id] == 'GTorrent.ru':
+                text_t += f'\n\n{i["name"]} | [{i["size"]}] \n[<i>/download_{i["link_t"]}</i>] ' \
+                                f'[<a href="{i["link"]}">раздача</a>]'
+            elif tracker[message.chat.id] == 'Gamestracker.org':
+                link_t = i["link_t"].split('-')
+                link_t = link_t[-2] + '_' + link_t[-1]
+                text_t += f'\n\n{i["name"]} | {i["size"]} \n[<i>/download_{link_t}</i>] ' \
+                          f'[<a href="{i["link"]}">раздача</a>]'
+            elif tracker[message.chat.id] == 'Rutor.info':
+                text_t += f'\n\n{i["name"]} | [{i["size"]}] \n[<i>/download__{i["link_t"].split("/")[-1]}</i>] ' \
+                          f'[<a href="{i["link"]}">раздача</a>]'
+    except KeyError:
+        log('Key Error in torrents', 'warning')
     torrent_msg[message.chat.id] = bot.edit_message_text(chat_id=torrent_msg[message.chat.id].chat.id,
                                                          message_id=torrent_msg[message.chat.id].message_id,
                                                          text=text_t, reply_markup=keyboard, parse_mode='HTML',
@@ -885,7 +898,7 @@ def load_handler(message: Message):
                 try:
                     os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file{id_torrent}.torrent'))
                 except FileNotFoundError:
-                    log('Need to remove file', 'info')
+                    log('Error! Can\'t remove file', 'warning')
 
 
 @bot.message_handler(func=lambda message: re.match(r'^/\w{8}__\d+$', str(message.text), flags=re.M))
@@ -899,7 +912,7 @@ def load_handler(message: Message):
     try:
         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file{id_torrent}.torrent'))
     except FileNotFoundError:
-        log('Need to remove file', 'info')
+        log('Error! Can\'t remove file', 'warning')
 
 
 @bot.message_handler(func=lambda message: re.match(r'^/\w{8}_\d+$', str(message.text), flags=re.M))
@@ -913,7 +926,7 @@ def load_handler(message: Message):
     try:
         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file{id_torrent}.torrent'))
     except FileNotFoundError:
-        log('Need to remove file', 'info')
+        log('Error! Can\'t remove file', 'warning')
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'move_ pass')
@@ -1063,9 +1076,9 @@ def callback_query(call):
 
 def callback_to_code(message: Message) -> None:
     global leng_msg
-    if type(leng_msg) == 'Message' or leng_msg == 'None':
+    if type(leng_msg) == 'str':
         return
-    else:
+    elif type(leng_msg) == Message:
         lang: [dict, None] = db.get_code(message.text)
         if lang is not None:
             bot.delete_message(leng_msg.chat.id, leng_msg.message_id)
@@ -1174,12 +1187,11 @@ def text_handler(message: Message) -> None:
         elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
             dice_handler(message)
         if rend_d():
-            for i in [',', '.', '!', '?', '\'', '\"', '-']:
+            for i in [',', '.', '!', '?', '\'', '\"', '-', '_', ':', ';', '@', '(', ')', '#']:
                 text = text.replace(i, '')
             text = list(text.split(' '))
             result = [x for x in text if x in db.get_all_word()]
             if result:
-                bot.send_chat_action(message.chat.id, 'typing')
                 bot.reply_to(message, db.get_answer(random.choice(result)))
             elif rend_d():
                 bot.reply_to(message, db.get_simple_answer())
