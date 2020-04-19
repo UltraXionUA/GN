@@ -5,13 +5,13 @@
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LabeledPrice
 from telebot.types import PreCheckoutQuery, ShippingQuery
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
+from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video
 from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from pytube import YouTube, exceptions
 from collections import defaultdict
 from datetime import datetime as dt
 from pytils.translit import slugify
-from pars import main, get_torrents1, get_torrents2, get_torrents3
 from urllib import parse, request, error
 from json import JSONDecodeError
 from threading import Thread
@@ -779,6 +779,74 @@ def ffmpeg_run():
     ffmpeg.output(input_video, input_audio, "file.mp4", preset='faster',
                   vcodec='libx264', acodec='mp3', **{'qscale:v': 10}).run(overwrite_output=True)
 # <<< End YouTube >>>
+
+
+# <<< Instagram >>>
+msg_instagram = defaultdict(Message)
+
+
+@bot.message_handler(commands=['instagram'])  # /instagram
+def instagram_handler(message: Message) -> None:
+    log(message, 'info')
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton('Фото📷', callback_data='Instagram photo'),
+                 InlineKeyboardButton('Видео📹', callback_data='Instagram video'))
+    msg_instagram[message.chat.id] = bot.send_message(message.chat.id, '<b>Что вы хотите получить</b>',
+                                                      parse_mode='HTML', reply_markup=keyboard)
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'Instagram\s\w+', call.data))
+def callback_query(call):
+    bot.delete_message(msg_instagram[call.message.chat.id].chat.id, msg_instagram[call.message.chat.id].message_id)
+    msg = bot.send_message(call.message.chat.id, 'Отправьте мне ссылку✒️')
+    if call.data.split()[1] == 'video':
+        bot.answer_callback_query(call.id, 'Вы выбрали видео')
+        bot.register_next_step_handler(msg, get_video)
+    else:
+        bot.answer_callback_query(call.id, 'Вы выбрали фото')
+        bot.register_next_step_handler(msg, get_instagram_photo)
+
+
+def get_video(message: Message) -> None:
+    bot.send_chat_action(message.chat.id, 'upload_video')
+    bot.delete_message(message.chat.id, message.message_id)
+    if re.fullmatch('^https?://www.instagram.com/.+', message.text):
+        keyboard = InlineKeyboardMarkup()
+        url = re.search('^https?://www.instagram.com/p/.+/', message.text).group(0)
+        keyboard.add(InlineKeyboardButton('Instagram', url=url))
+        with open('video.mp4', 'wb') as f:
+            req = requests.get(get_instagram_video(url), stream=True)
+            for i in req.iter_content(1024):
+                f.write(i)
+        bot.send_video(message.chat.id, open('video.mp4', 'rb'), reply_markup=keyboard)
+        try:
+            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'video.mp4'))
+        except FileNotFoundError:
+            log('Error! Can\'t remove file', 'warning')
+    else:
+        bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
+
+
+def get_instagram_photo(message: Message) -> None:
+    bot.send_chat_action(message.chat.id, 'upload_video')
+    bot.delete_message(message.chat.id, message.message_id)
+    if re.fullmatch('^https?://www.instagram.com/.+', message.text):
+        keyboard = InlineKeyboardMarkup()
+        url = re.search('^https?://www.instagram.com/p/.+/', message.text).group(0)
+        keyboard.add(InlineKeyboardButton('Instagram', url=url))
+        res = requests.get(url + 'media/?size=l')
+        with open(f'file.jpg', 'wb') as f:
+            for q in res.iter_content(1024):
+                f.write(q)
+        bot.send_photo(message.chat.id, open('file.jpg', 'rb'), reply_markup=keyboard)
+        try:
+            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file.jpg'))
+        except FileNotFoundError:
+            log('Error! Can\'t remove file', 'warning')
+    else:
+        bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
+
+# <<< End Instagram >>>
 
 
 # <<< Torrent >>>

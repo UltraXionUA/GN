@@ -12,6 +12,13 @@ import time
 import re
 
 
+def get_instagram_video(link: str) -> str:
+    soup = BeautifulSoup(requests.get(link, headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+    video_link = soup.find_all('meta', property="og:video")
+    if video_link:
+        return video_link[0].get('content')
+
+
 def get_torrents3(search: str) -> list:
     data = []
     soup = BeautifulSoup(requests.get(URLS['torrent3']['search'] + quote(search),
