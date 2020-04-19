@@ -33,7 +33,6 @@ def get_torrents3(search: str) -> list:
                 size2 = tum.find_all_next('td')[3].get_text()
                 data.append({'name': text1, 'size': size1, 'link_t': load1, 'link': link1})
                 data.append({'name': text2, 'size': size2, 'link_t': load2, 'link': link2})
-    print(data)
     return data
 
 

@@ -838,7 +838,6 @@ def create_data_torrents(message: Message) -> None:
         buf.append(en)
         if i % 5 == 0:
             list_torrent.append(buf.copy())
-            print(buf)
             buf.clear()
     if buf:
         list_torrent.append(buf.copy())
