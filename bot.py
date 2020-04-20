@@ -329,7 +329,7 @@ def show_weather(message: Message) -> None:
 def weather_query(call):
     global weather_data
     if 0 < int(call.data.split()[1]) < len(weather_data[call.message.chat.id]):
-        bot.answer_callback_query(call.id, 'Вы выбрали стр. ' + call.data.split()[1])
+        bot.answer_callback_query(call.id, f'Вы выбрали стр.{str(int(call.data.split()[1]) + 1)}')
         weather(call.message, int(call.data.split()[1]))
     else:
         bot.answer_callback_query(call.id, '⛔️')
@@ -535,7 +535,7 @@ def callback_query(call):
 def callback_query(call):
     global data_songs
     if 0 < int(call.data.split()[1]) < len(data_songs[call.message.chat.id]):
-        bot.answer_callback_query(call.id)
+        bot.answer_callback_query(call.id, f'Вы выбрали стр.{str(int(call.data.split()[1]) + 1)}')
         if call.message.content_type == 'photo':
             bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                    media=InputMediaPhoto(call.message.photo[-1].file_id),
@@ -679,7 +679,7 @@ def choice_news_query(call):
 def next_news_query(call):
     global news
     if 0 < int(call.data.split()[1]) < len(news[call.message.chat.id]):
-        bot.answer_callback_query(call.id, f'Вы выбрали стр.{call.data.split()[1]}')
+        bot.answer_callback_query(call.id, f'Вы выбрали стр.{str(int(call.data.split()[1]) + 1)}')
         send_news(call.message, int(call.data.split()[1]))
     else:
         bot.answer_callback_query(call.id, '⛔️')
@@ -1036,7 +1036,7 @@ def callback_query(call):
 def callback_query(call):
     global data_torrents
     if 0 < int(call.data.split()[1]) < len(data_torrents[call.message.chat.id]):
-        bot.answer_callback_query(call.id)
+        bot.answer_callback_query(call.id, f'Вы выбрали стр.{str(int(call.data.split()[1]) + 1)}')
         torrent_keyboard(call.message, int(call.data.split()[1]))
     else:
         bot.answer_callback_query(call.id, '⛔️')
