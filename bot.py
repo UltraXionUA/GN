@@ -215,7 +215,6 @@ def joke_handler(message: Message) -> None:
     if message.chat.id not in jokes_data or len(jokes_data[message.chat.id]) == 1:
         jokes_data[message.chat.id] = db.get_all_jokes()
     joke = jokes_data[message.chat.id].pop(random.choice(range(len(jokes_data[message.chat.id]) - 1)))
-    print(len(jokes_data[message.chat.id]))
     bot.send_chat_action(message.chat.id, 'typing')
     time.sleep(1.5)
     if joke['panchline'] != 'False':
