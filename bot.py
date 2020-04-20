@@ -327,8 +327,12 @@ def show_weather(message: Message) -> None:
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to__\s\d+$', call.data))
 def weather_query(call):
-    bot.answer_callback_query(call.id, 'Вы выбрали стр. ' + call.data.split()[1])
-    weather(call.message, int(call.data.split()[1]))
+    global weather_data
+    if 0 < int(call.data.split()[1]) < len(weather_data[call.message.chat.id]):
+        bot.answer_callback_query(call.id, 'Вы выбрали стр. ' + call.data.split()[1])
+        weather(call.message, int(call.data.split()[1]))
+    else:
+        bot.answer_callback_query(call.id, '⛔️')
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to__\spass$', call.data))
@@ -529,15 +533,19 @@ def callback_query(call):
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to\s\d$', call.data))
 def callback_query(call):
-    if call.message.content_type == 'photo':
-        bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                               media=InputMediaPhoto(call.message.photo[-1].file_id),
-                               reply_markup=inline_keyboard(call.message, int(call.data.split()[1])))
+    global data_songs
+    if 0 < int(call.data.split()[1]) < len(data_songs[call.message.chat.id]):
+        bot.answer_callback_query(call.id)
+        if call.message.content_type == 'photo':
+            bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                   media=InputMediaPhoto(call.message.photo[-1].file_id),
+                                   reply_markup=inline_keyboard(call.message, int(call.data.split()[1])))
+        else:
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text=call.message.text,
+                                  reply_markup=inline_keyboard(call.message, int(call.data.split()[1])))
     else:
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                              text=call.message.text,
-                              reply_markup=inline_keyboard(call.message, int(call.data.split()[1])))
-    bot.answer_callback_query(call.id)
+        bot.answer_callback_query(call.id, '⛔️')
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^ID:\s?\d+$', call.data))
@@ -669,7 +677,12 @@ def choice_news_query(call):
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to_\s?\d+$', call.data))
 def next_news_query(call):
-    send_news(call.message, int(call.data.split()[1]))
+    global news
+    if 0 < int(call.data.split()[1]) < len(news[call.message.chat.id]):
+        bot.answer_callback_query(call.id, f'Вы выбрали стр.{call.data.split()[1]+1}')
+        send_news(call.message, int(call.data.split()[1]))
+    else:
+        bot.answer_callback_query(call.id, '⛔️')
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'move_to_ pass')
@@ -1021,8 +1034,12 @@ def callback_query(call):
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_\s\d+$', call.data))
 def callback_query(call):
-    bot.answer_callback_query(call.id)
-    torrent_keyboard(call.message, int(call.data.split()[1]))
+    global data_torrents
+    if 0 < int(call.data.split()[1]) < len(data_torrents[call.message.chat.id]):
+        bot.answer_callback_query(call.id)
+        torrent_keyboard(call.message, int(call.data.split()[1]))
+    else:
+        bot.answer_callback_query(call.id, '⛔️')
 # <<< End torrent >>>
 
 
