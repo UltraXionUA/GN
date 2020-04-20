@@ -26,8 +26,8 @@ import os
 import re
 
 # <<< End import's>>
-from config import TEST_TOKEN
-bot = TeleBot(TEST_TOKEN)
+# from config import TEST_TOKEN
+bot = TeleBot(TOKEN)
 log('Bot is successful running!', 'info')
 
 # Turn on parser
