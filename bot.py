@@ -5,7 +5,7 @@
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LabeledPrice
 from telebot.types import PreCheckoutQuery, ShippingQuery
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
-from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video
+from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video, get_instagram_photos
 from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from pytube import YouTube, exceptions
@@ -815,36 +815,40 @@ def get_video(message: Message) -> None:
         url = re.search('^https?://www.instagram.com/p/.+/', message.text).group(0)
         keyboard.add(InlineKeyboardButton('Instagram', url=url))
         with open('video.mp4', 'wb') as f:
-            req = requests.get(get_instagram_video(url), stream=True)
-            for i in req.iter_content(1024):
-                f.write(i)
-        bot.send_video(message.chat.id, open('video.mp4', 'rb'), reply_markup=keyboard)
-        try:
-            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'video.mp4'))
-        except FileNotFoundError:
-            log('Error! Can\'t remove file', 'warning')
+            data = get_instagram_video(url)
+            if data:
+                req = requests.get(data, stream=True)
+                for i in req.iter_content(1024):
+                    f.write(i)
+                bot.send_video(message.chat.id, open('video.mp4', 'rb'), reply_markup=keyboard)
+                try:
+                    os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'video.mp4'))
+                except FileNotFoundError:
+                    log('Error! Can\'t remove file', 'warning')
+            else:
+                bot.send_message(message.chat.id, 'Не поддерижвается посты с видео и фото😔')
     else:
         bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
 
 
 def get_instagram_photo(message: Message) -> None:
-    bot.send_chat_action(message.chat.id, 'upload_video')
+    bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.delete_message(message.chat.id, message.message_id)
     if re.fullmatch('^https?://www.instagram.com/.+', message.text):
         keyboard = InlineKeyboardMarkup()
         url = re.search('^https?://www.instagram.com/p/.+/', message.text).group(0)
         keyboard.add(InlineKeyboardButton('Instagram', url=url))
-        res = requests.get(url + 'media/?size=l')
-        with open(f'file.jpg', 'wb') as f:
-            for q in res.iter_content(1024):
-                f.write(q)
-        bot.send_photo(message.chat.id, open('file.jpg', 'rb'), reply_markup=keyboard)
-        try:
-            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file.jpg'))
-        except FileNotFoundError:
-            log('Error! Can\'t remove file', 'warning')
+        data = get_instagram_photos(url)
+        if data:
+            if len(data) == 1:
+                bot.send_photo(message.chat.id, data[0])
+            else:
+                bot.send_media_group(message.chat.id, [InputMediaPhoto(photo) for photo in data])
+        else:
+            bot.send_message(message.chat.id, 'По данной ссылке фотографий не найдено😔')
     else:
         bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
+
 
 # <<< End Instagram >>>
 

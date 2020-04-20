@@ -19,6 +19,19 @@ def get_instagram_video(link: str) -> str:
         return video_link[0].get('content')
 
 
+def get_instagram_photos(link: str) -> list:
+    data = []
+    res = requests.get(link + '?__a=1').json()
+    try:
+        list_photos = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
+    except KeyError:
+        data.append(res['graphql']['shortcode_media']['display_resources'][2]['src'])
+    else:
+        for i in list_photos:
+            data.append(i['node']['display_resources'][2]['src'])
+    return data
+
+
 def get_torrents3(search: str) -> list:
     data = []
     soup = BeautifulSoup(requests.get(URLS['torrent3']['search'] + quote(search),
@@ -61,8 +74,8 @@ def get_torrents2(search: str) -> list:
                 link_t = URLS['torrent2']['main'] + link_t.find_all_next('a')[0].get('href')
                 size = soup_link.find('div',
                                       class_='download_torrent').find_all_next('span',
-                                                                               class_='torrent-size')[0].get_text().replace(
-                                                                                      'Размер игры: ', '')
+                                                                               class_='torrent-size')[0].get_text()\
+                                                                                .replace('Размер игры: ', '')
                 data.append({'name': name, 'size': size, 'link_t': link_t, 'link': link})
     return data
 
