@@ -23,6 +23,15 @@ def get_joke() -> dict:  # Random Joke
     return result
 
 
+def check_user(user_id: str) -> bool:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        if cursor.execute(f'SELECT * FROM Users_GN WHERE user_id LIKE \'{user_id}\'') == 0:
+            return False
+        else:
+            return True
+
+
 def change_karma(user, action) -> dict:  # Change Karma
     connection = start_connection()
     with connection.cursor() as cursor:

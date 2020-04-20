@@ -821,7 +821,7 @@ def get_video(message: Message) -> None:
                     if data[0]['is_video'] is True:
                         bot.send_video(message.chat.id, data[0]['url'])
                     else:
-                        bot.send_message(message.chat.id, 'По ссылке нет видео')
+                        bot.send_message(message.chat.id, 'По ссылке нет видео😔')
                 else:
                     list_data = []
                     for i in data:
@@ -831,7 +831,7 @@ def get_video(message: Message) -> None:
                             list_data.append(InputMediaPhoto(i['url']))
                     bot.send_media_group(message.chat.id, list_data)
             else:
-                bot.send_message(message.chat.id, 'По ссылке ничего не обнаружено')
+                bot.send_message(message.chat.id, 'По ссылке ничего не обнаружено😔')
     else:
         bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
 
@@ -1038,9 +1038,12 @@ def trans_word(message: Message) -> None:  # Translate function
 # <<< Sticker GN >>>
 @bot.message_handler(commands=['sticker_gn'])  # /sticker_gn
 def gn_sticker_handler(message: Message) -> None:
-    bot.send_chat_action(message.chat.id, 'upload_photo')
-    bot.send_sticker(message.chat.id, db.random_gn_sticker())
-    log(message, 'info')
+    if db.check_user(message.from_user.id):
+        log(message, 'info')
+        bot.send_chat_action(message.chat.id, 'upload_photo')
+        bot.send_sticker(message.chat.id, db.random_gn_sticker())
+    else:
+        bot.send_message(message.chat.id, 'Эта функция вам недоступна😔')
 
 
 # <<< End sticker GN >>>
@@ -1049,9 +1052,9 @@ def gn_sticker_handler(message: Message) -> None:
 # <<< Sticker >>>
 @bot.message_handler(commands=['sticker'])  # /sticker
 def sticker_handler(message: Message) -> None:
+    log(message, 'info')
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_sticker(message.chat.id, db.random_sticker())
-    log(message, 'info')
 
 
 # <<< End sticker >>>
