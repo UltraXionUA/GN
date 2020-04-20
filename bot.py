@@ -679,7 +679,7 @@ def choice_news_query(call):
 def next_news_query(call):
     global news
     if 0 < int(call.data.split()[1]) < len(news[call.message.chat.id]):
-        bot.answer_callback_query(call.id, f'Вы выбрали стр.{call.data.split()[1]+1}')
+        bot.answer_callback_query(call.id, f'Вы выбрали стр.{call.data.split()[1]}')
         send_news(call.message, int(call.data.split()[1]))
     else:
         bot.answer_callback_query(call.id, '⛔️')
