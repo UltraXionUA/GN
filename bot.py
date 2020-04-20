@@ -8,15 +8,17 @@ from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoj
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video, get_instagram_photos
 from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS
 from youtube_unlimited_search import YoutubeUnlimitedSearch
+from urllib import parse, request, error
 from pytube import YouTube, exceptions
 from collections import defaultdict
 from datetime import datetime as dt
 from pytils.translit import slugify
-from urllib import parse, request, error
 from json import JSONDecodeError
+from pydub import AudioSegment
 from threading import Thread
 from telebot import TeleBot
 from threading import Timer
+import tempfile
 import requests
 import ffmpeg
 import random
@@ -226,6 +228,49 @@ def joke_handler(message: Message) -> None:
 
 
 # <<< End joke >>>
+
+
+# <<< Ogg to Mp3 >>>
+msg_mp3ogg = defaultdict(Message)
+
+
+@bot.message_handler(commands=['oggtomp3'])  # /oggtomp3
+def oggtomp3_handler(message: Message) -> None:
+    global msg_mp3ogg
+    log(message, 'info')
+    msg_mp3ogg[message.chat.id] = bot.send_message(message.chat.id, 'Запишите или отправьте аудиосообщение🎙')
+    bot.register_next_step_handler(msg_mp3ogg[message.chat.id], set_name_mp3)
+
+
+def set_name_mp3(message: Message) -> None:
+    global msg_mp3ogg
+    bot.delete_message(msg_mp3ogg[message.chat.id].chat.id, msg_mp3ogg[message.chat.id].message_id)
+    bot.delete_message(message.chat.id, message.message_id)
+    if message.content_type == 'voice':
+        file_id = message.voice.file_id
+        msg_mp3ogg[message.chat.id] = bot.send_message(message.chat.id, 'Введите имя файла✒️')
+        bot.register_next_step_handler(msg_mp3ogg[message.chat.id], send_mp3, file_id)
+    else:
+        bot.send_message(message.chat.id, 'Не верный формат данных😔')
+
+
+def send_mp3(message: Message, file_id: int) -> None:
+    global msg_mp3ogg
+    bot.send_chat_action(message.chat.id, 'upload_voice')
+    bot.delete_message(msg_mp3ogg[message.chat.id].chat.id, msg_mp3ogg[message.chat.id].message_id)
+    bot.delete_message(message.chat.id, message.message_id)
+    data = request.urlopen(bot.get_file_url(file_id)).read()
+    with tempfile.NamedTemporaryFile(delete=False) as f:
+        f.write(data)
+        AudioSegment.from_ogg(f.name).export(f'{message.text}.mp3', format='mp3')
+    bot.send_audio(message.chat.id, open(f'{message.text}.mp3', 'rb'))
+    try:
+        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'{message.text}' + '.mp3'))
+    except FileNotFoundError:
+        log('Error! Can\'t remove file', 'warning')
+
+
+# <<< End Ogg to Mp3 >>>
 
 
 # <<< Ru meme >>>
@@ -911,7 +956,6 @@ def send_urls(message: Message) -> None:
     global data_torrents, torrent_msg, tracker
     search_msg[message.chat.id] = message.text
     msg = bot.send_message(message.chat.id, 'Загрузка...')
-    bot.send_chat_action(message.chat.id, 'typing')
     if message.chat.id in data_torrents:
         bot.delete_message(torrent_msg[message.chat.id].chat.id, torrent_msg[message.chat.id].message_id)
     if tracker[message.chat.id] == URLS['torrent']['name']:
