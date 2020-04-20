@@ -14,11 +14,30 @@ def start_connection():  # Connection to DB
         log('Ошибка подключения к БД!', 'error')
 
 
-def get_joke() -> dict:  # Random Joke
+def add_user(user, connection=None) -> None:
+    if connection is None:
+        connection2 = start_connection()
+        with connection2.cursor() as cursor:
+            if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user.id}\'') == 0:
+                cursor.execute('INSERT INTO Users (`user_id`, `is_bote`, `first_name`, `last_name`, `username`) VALUE '
+                               f'(\'{int(user.id)}\', \'{str(user.is_bot)}\',\'{user.first_name}\','
+                               f'\'{user.last_name}\',\'{user.username}\');')
+                connection2.commit()
+        connection2.close()
+    else:
+        with connection.cursor() as cursor:
+            if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user.id}\'') == 0:
+                cursor.execute('INSERT INTO Users (`user_id`, `is_bote`, `first_name`, `last_name`, `username`) VALUE '
+                               f'(\'{int(user.id)}\', \'{str(user.is_bot)}\',\'{user.first_name}\','
+                               f'\'{user.last_name}\',\'{user.username}\');')
+                connection.commit()
+
+
+def get_all_jokes() -> list:  # All Joke
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute('SELECT `setup`, `panchline` FROM Joke ORDER BY RAND() LIMIT 1')
-        result = cursor.fetchone()
+        cursor.execute('SELECT `setup`, `panchline` FROM Joke')
+        result = cursor.fetchall()
     connection.close()
     return result
 
@@ -35,11 +54,7 @@ def check_user(user_id: str) -> bool:
 def change_karma(user, action) -> dict:  # Change Karma
     connection = start_connection()
     with connection.cursor() as cursor:
-        if cursor.execute(f'SELECT * FROM Users WHERE username LIKE \'{user.username}\'') == 0:
-            cursor.execute(f'INSERT INTO `Users`(`user_id`, `is_bote`, `first_name`, `last_name`, `username`) VALUES '
-                           f'(\'{user.user_id}\', \'{str(user.is_bot)}\',\'{user.first_name}\','
-                           f'\'{user.last_name}\',\'{user.username}\');')
-            connection.commit()
+        add_user(user, connection)
         cursor.execute(f'SELECT `karma` FROM `Users` WHERE `username` = \'{user.username}\';')
         karma = cursor.fetchone()['karma']
         if action[0] == '+':

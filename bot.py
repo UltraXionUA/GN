@@ -26,8 +26,8 @@ import os
 import re
 
 # <<< End import's>>
-# from config import TEST_TOKEN
-bot = TeleBot(TOKEN)
+from config import TEST_TOKEN
+bot = TeleBot(TEST_TOKEN)
 log('Bot is successful running!', 'info')
 
 # Turn on parser
@@ -39,6 +39,7 @@ Parser.start()
 @bot.message_handler(commands=['start'])  # /start
 def start_handler(message: Message) -> None:
     log(message, 'info')
+    db.add_user(message.from_user)
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Здравствуй, меня зовут GNBot🖥\n'
                                       'Я создан дабы служить верой и правдой сообществу 💎Голубой носок💎')
@@ -204,16 +205,23 @@ def send_qrcode(message: Message) -> None:
 
 
 # <<< Joke >>>
+jokes_data = defaultdict(list)
+
+
 @bot.message_handler(commands=['joke'])  # /joke
 def joke_handler(message: Message) -> None:
+    global jokes_data
     log(message, 'info')
+    if message.chat.id not in jokes_data or len(jokes_data[message.chat.id]) == 1:
+        jokes_data[message.chat.id] = db.get_all_jokes()
+    joke = jokes_data[message.chat.id].pop(random.choice(range(len(jokes_data[message.chat.id]) - 1)))
+    print(len(jokes_data[message.chat.id]))
     bot.send_chat_action(message.chat.id, 'typing')
-    time.sleep(2)
-    joke = db.get_joke()
+    time.sleep(1.5)
     if joke['panchline'] != 'False':
-        bot.send_message(message.chat.id, joke['setup'] + '🧐')
-        time.sleep(4)
-        bot.send_message(message.chat.id, joke['panchline'] + '🌚')
+        bot.send_message(message.chat.id, joke['setup'] + random.choice('🧐', '😅', '🤫'))
+        time.sleep(3.5)
+        bot.send_message(message.chat.id, joke['panchline'] + random.choice('🌚', '😅', '🤫'))
     else:
         bot.send_message(message.chat.id, joke['setup'] + '🌚')
 
@@ -811,27 +819,26 @@ def get_video(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_video')
     bot.delete_message(message.chat.id, message.message_id)
     if re.fullmatch('^https?://www.instagram.com/.+', message.text):
-        keyboard = InlineKeyboardMarkup()
         url = re.search('^https?://www.instagram.com/p/.+/', message.text).group(0)
-        keyboard.add(InlineKeyboardButton('Instagram', url=url))
-        with open('video.mp4', 'wb') as f:
-            data = get_instagram_video(url)
-            if data:
-                if len(data) == 1:
-                    if data[0]['is_video'] is True:
-                        bot.send_video(message.chat.id, data[0]['url'])
-                    else:
-                        bot.send_message(message.chat.id, 'По ссылке нет видео😔')
+        data = get_instagram_video(url)
+        if data:
+            if len(data) == 1:
+                if data[0]['is_video'] is True:
+                    keyboard = InlineKeyboardMarkup()
+                    keyboard.add(InlineKeyboardButton('Instagram', url=url))
+                    bot.send_video(message.chat.id, data[0]['url'], reply_markup=keyboard)
                 else:
-                    list_data = []
-                    for i in data:
-                        if i['is_video'] is True:
-                            list_data.append(InputMediaVideo(i['url']))
-                        else:
-                            list_data.append(InputMediaPhoto(i['url']))
-                    bot.send_media_group(message.chat.id, list_data)
+                    bot.send_message(message.chat.id, 'По ссылке нет видео😔')
             else:
-                bot.send_message(message.chat.id, 'По ссылке ничего не обнаружено😔')
+                list_data = []
+                for i in data:
+                    if i['is_video'] is True:
+                        list_data.append(InputMediaVideo(i['url']))
+                    else:
+                        list_data.append(InputMediaPhoto(i['url']))
+                bot.send_media_group(message.chat.id, list_data)
+        else:
+            bot.send_message(message.chat.id, 'По ссылке ничего не обнаружено😔')
     else:
         bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
 
@@ -846,7 +853,9 @@ def get_instagram_photo(message: Message) -> None:
         data = get_instagram_photos(url)
         if data:
             if len(data) == 1:
-                bot.send_photo(message.chat.id, data[0])
+                keyboard = InlineKeyboardMarkup()
+                keyboard.add(InlineKeyboardButton('Instagram', url=url))
+                bot.send_photo(message.chat.id, data[0], reply_markup=keyboard)
             else:
                 bot.send_media_group(message.chat.id, [InputMediaPhoto(photo) for photo in data])
         else:
@@ -1101,14 +1110,12 @@ def text_handler(message: Message) -> None:
 
 
 # <<< Add answer with word >>>
-@bot.message_handler(content_types=['text'], regexp=r'^\w+.?-.?\w.+$')  # Add answer with word to DB
+@bot.message_handler(content_types=['text'], regexp=r'^\w+\s-\s\w+$')  # Add answer with word to DB
 def text_handler(message: Message) -> None:
-    buf = message.text.lower().split()
-    if buf[0] not in ['---', 'кто-то', 'где-то', 'когда-нибудь', 'кто-нибудь', 'зачем-то']:
-        word = re.findall(r'\w.+-', message.text)[0].replace('-', '').rstrip()
-        answer = re.findall(r'-.\w.+', message.text)[0].replace('-', '').lstrip()
-        db.add_to_db(word, answer)
-        bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
+    word = re.findall(r'\w.+-', message.text)[0].replace('-', '').rstrip()
+    answer = re.findall(r'-.\w.+', message.text)[0].replace('-', '').lstrip()
+    db.add_to_db(word, answer)
+    bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
 
 
 # <<< Code PasteBin >>>
