@@ -261,10 +261,10 @@ def send_mp3(message: Message, file_id: int) -> None:
     bot.delete_message(message.chat.id, message.message_id)
     data = request.urlopen(bot.get_file_url(file_id)).read()
     with tempfile.NamedTemporaryFile(delete=False) as f:
-        from pydub.utils import which
         f.write(data)
-        AudioSegment.converter = which("ffmpeg")
-        AudioSegment.from_ogg(f.name).export(f'{message.text}.mp3', format='mp3')
+    time.sleep(1)
+    audio = AudioSegment.from_ogg(f.name)
+    audio.export(f'{message.text}.mp3', format='mp3')
     bot.send_audio(message.chat.id, open(f'{message.text}.mp3', 'rb'))
     try:
         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'{message.text}' + '.mp3'))
