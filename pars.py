@@ -12,11 +12,21 @@ import time
 import re
 
 
-def get_instagram_video(link: str) -> str:
-    soup = BeautifulSoup(requests.get(link, headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
-    video_link = soup.find_all('meta', property="og:video")
-    if video_link:
-        return video_link[0].get('content')
+def get_instagram_video(link: str) -> list:
+    data = []
+    res = requests.get(link + '?__a=1').json()
+    try:
+        list_items = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
+    except KeyError:
+        data.append({'url': res['graphql']['shortcode_media']['video_url'],
+                     'is_video': res['graphql']['shortcode_media']['is_video']})
+    else:
+        for i in list_items:
+            if i['node']['is_video'] is True:
+                data.append({'url': i['node']['video_url'], 'is_video': i['node']['is_video']})
+            else:
+                data.append({'url': i['node']['display_resources'][2]['src'], 'is_video': i['node']['is_video']})
+    return data
 
 
 def get_instagram_photos(link: str) -> list:

@@ -3,7 +3,7 @@
 """Mains file for GNBot"""
 # <<< Import's >>>
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LabeledPrice
-from telebot.types import PreCheckoutQuery, ShippingQuery
+from telebot.types import PreCheckoutQuery, ShippingQuery, InputMediaVideo
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video, get_instagram_photos
 from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS
@@ -817,16 +817,21 @@ def get_video(message: Message) -> None:
         with open('video.mp4', 'wb') as f:
             data = get_instagram_video(url)
             if data:
-                req = requests.get(data, stream=True)
-                for i in req.iter_content(1024):
-                    f.write(i)
-                bot.send_video(message.chat.id, open('video.mp4', 'rb'), reply_markup=keyboard)
-                try:
-                    os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'video.mp4'))
-                except FileNotFoundError:
-                    log('Error! Can\'t remove file', 'warning')
+                if len(data) == 1:
+                    if data[0]['is_video'] is True:
+                        bot.send_video(message.chat.id, data[0]['url'])
+                    else:
+                        bot.send_message(message.chat.id, 'По ссылке нет видео')
+                else:
+                    list_data = []
+                    for i in data:
+                        if i['is_video'] is True:
+                            list_data.append(InputMediaVideo(i['url']))
+                        else:
+                            list_data.append(InputMediaPhoto(i['url']))
+                    bot.send_media_group(message.chat.id, list_data)
             else:
-                bot.send_message(message.chat.id, 'Не поддерижвается посты с видео и фото😔')
+                bot.send_message(message.chat.id, 'По ссылке ничего не обнаружено')
     else:
         bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
 
