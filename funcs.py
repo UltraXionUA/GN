@@ -71,7 +71,7 @@ def tr_w(words) -> str:  # Define and translate
 
 
 def clear_link(string: str) -> str:  # Clear string of links
-    clear_string = re.sub(r'^https?://.*[\r\n]*|[www\.]?\w+\-?\w+\.\w.', '', string, flags=re.MULTILINE)
+    clear_string = re.sub(r'^https?://.*[\r\n]*|[www.]?\w+\-?\w+\.\w.', '', string, flags=re.MULTILINE)
     clear_string = re.sub(r'\s+', ' ', clear_string, flags=re.MULTILINE)
     clear_string = re.sub(r'(\s-\s+m)?', '', clear_string, flags=re.MULTILINE)
     return clear_string
