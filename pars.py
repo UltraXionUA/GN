@@ -15,6 +15,7 @@ import re
 def get_instagram_video(link: str) -> list:
     data = []
     res = requests.get(link + '?__a=1').json()
+    print(res)
     try:
         list_items = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
     except KeyError:

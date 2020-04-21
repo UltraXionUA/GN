@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 """Mains file for GNBot"""
 # <<< Import's >>>
-from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LabeledPrice
-from telebot.types import PreCheckoutQuery, ShippingQuery, InputMediaVideo
-from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
+from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, InputMediaVideo
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video, get_instagram_photos
-from config import TOKEN, API, Empty_bg, PAYMENT_TOKEN, URLS
+from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
 from youtube_unlimited_search import YoutubeUnlimitedSearch
+from config import TOKEN, API, Empty_bg, URLS
 from urllib import parse, request, error
 from pytube import YouTube, exceptions
 from collections import defaultdict
@@ -28,8 +27,8 @@ import os
 import re
 
 # <<< End import's>>
-# from config import TEST_TOKEN
-bot = TeleBot(TOKEN)
+from config import TEST_TOKEN
+bot = TeleBot(TEST_TOKEN)
 log('Bot is successful running!', 'info')
 
 # Turn on parser
@@ -75,86 +74,6 @@ def gif_handler(message: Message) -> None:
 
 
 # <<< End gif >>>
-
-
-# <<< Donate >>>
-@bot.message_handler(commands=['donate'])  # /donate
-def donate_handler(message: Message) -> None:
-    log(message, 'info')
-    bot.send_chat_action(message.chat.id, 'typing')
-    if message.chat.type == 'private':
-        bot.send_message(message.chat.id, 'Здесь вы можете поддержать раработчика и дать мотивацию '
-                                          'на внесение нового фунционала в <b>GNBot</b>\n'
-                                          'C уважением <i>@Ultra_Xion</i>', parse_mode='HTML')
-        if PAYMENT_TOKEN.split(':')[1] == 'LIVE':
-            keyboard = InlineKeyboardMarkup(row_width=1)
-            keyboard.add(InlineKeyboardButton('1 грн', callback_data='1 UAH'),
-                         InlineKeyboardButton('10 грн', callback_data='10 UAH'),
-                         InlineKeyboardButton('100 грн', callback_data='100 UAH'),
-                         InlineKeyboardButton('1000 грн', callback_data='1000 UAH'),
-                         InlineKeyboardButton('Своя сумма', callback_data='Своя сумма'))
-            msg = bot.send_message(message.chat.id, 'Сумма поддержки💸', reply_markup=keyboard)
-            time.sleep(20)
-            bot.delete_message(msg.chat.id, msg.message_id)
-    else:
-        bot.send_message(message.chat.id, 'К сожелению в группе эта функция недоступна😔\n'
-                                          'Что бы поддержать нас вы можете восползоваться'
-                                          'этой командой в личном чате с ботом 💢@GNTMBot💢')
-
-
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^\d+\sUAH$', call.data) or call.data == 'Своя сумма')
-def donate_query(call):
-    bot.answer_callback_query(call.id, 'Вы выбрали ' + call.data)
-    bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
-    if call.data == 'Своя сумма':
-        msg = bot.send_message(call.message.chat.id, 'Введите сумму🧐')
-        bot.register_next_step_handler(msg, send_payment, 'UAH')
-    else:
-        send_payment(call.message, call.data)
-
-
-def send_payment(message: Message, money) -> None:
-    if money == 'UAH' and message.text.isdigit():
-        local_money = message.text + ' ' + money
-    else:
-        local_money = money
-    price = LabeledPrice('Поддержать', amount=int(local_money.split()[0]) * 100)
-    bot.send_invoice(message.chat.id, title='Поддержка',
-                     description='Поддержка разработчика GNBot',
-                     provider_token=PAYMENT_TOKEN, currency='uah',
-                     photo_url=URLS['logo'],
-                     photo_height=1494, photo_width=1295, photo_size=142,
-                     is_flexible=False, prices=[price],
-                     start_parameter='donate-programmer-gnbot',
-                     invoice_payload='donate-is-done')
-
-
-@bot.shipping_query_handler(func=lambda query: True)
-def shipping(shipping_query: ShippingQuery):
-    bot.answer_shipping_query(shipping_query.id, ok=True,
-                              error_message='Что-то пошло не так😔\n!'
-                                            'Попробуйте повторить операцию чуть позже')
-
-
-@bot.pre_checkout_query_handler(func=lambda query: True)
-def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
-    bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True,
-                                    error_message="Что-то пошло не так😔\n"
-                                                  "Удебитель в правельности вводимых данные "
-                                                  "и попробуйте снова через пару минут")
-
-
-@bot.message_handler(content_types=['successful_payment'])
-def process_successful_payment(message: Message) -> None:
-    promo = message.successful_payment
-    log(f'Successful_payment\nType: {promo.invoice_payload}\nSum: {promo.total_amount}{promo.currency}')
-    bot.send_message(message.chat.id, f'Платеж прошел успешно😌\n'
-                                      f'{message.successful_payment.total_amount // 100} '
-                                      f'{message.successful_payment.currency} были начислены на свет\n'
-                                      f'Благодарим вас за поддержку проекта🥳')
-
-
-# <<< End donate >>>
 
 
 # <<< QR Code >>>
@@ -879,25 +798,29 @@ def get_video(message: Message) -> None:
     bot.delete_message(message.chat.id, message.message_id)
     if re.fullmatch('^https?://www.instagram.com/.+', message.text):
         url = re.search('^https?://www.instagram.com/p/.+/', message.text).group(0)
-        data = get_instagram_video(url)
-        if data:
-            if len(data) == 1:
-                if data[0]['is_video'] is True:
-                    keyboard = InlineKeyboardMarkup()
-                    keyboard.add(InlineKeyboardButton('Instagram', url=url))
-                    bot.send_video(message.chat.id, data[0]['url'], reply_markup=keyboard)
-                else:
-                    bot.send_message(message.chat.id, 'По ссылке нет видео😔')
-            else:
-                list_data = []
-                for i in data:
-                    if i['is_video'] is True:
-                        list_data.append(InputMediaVideo(i['url']))
-                    else:
-                        list_data.append(InputMediaPhoto(i['url']))
-                bot.send_media_group(message.chat.id, list_data)
+        try:
+            data = get_instagram_video(url)
+        except JSONDecodeError:
+            bot.send_message(message.chat.id, 'Не поддерживаются работа закрытыми аккаунтами😔')
         else:
-            bot.send_message(message.chat.id, 'По ссылке ничего не обнаружено😔')
+            if data:
+                if len(data) == 1:
+                    if data[0]['is_video'] is True:
+                        keyboard = InlineKeyboardMarkup()
+                        keyboard.add(InlineKeyboardButton('Instagram', url=url))
+                        bot.send_video(message.chat.id, data[0]['url'], reply_markup=keyboard)
+                    else:
+                        bot.send_message(message.chat.id, 'По ссылке нет видео😔')
+                else:
+                    list_data = []
+                    for i in data:
+                        if i['is_video'] is True:
+                            list_data.append(InputMediaVideo(i['url']))
+                        else:
+                            list_data.append(InputMediaPhoto(i['url']))
+                    bot.send_media_group(message.chat.id, list_data)
+            else:
+                bot.send_message(message.chat.id, 'По ссылке ничего не обнаружено😔')
     else:
         bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
 
@@ -909,16 +832,20 @@ def get_instagram_photo(message: Message) -> None:
         keyboard = InlineKeyboardMarkup()
         url = re.search('^https?://www.instagram.com/p/.+/', message.text).group(0)
         keyboard.add(InlineKeyboardButton('Instagram', url=url))
-        data = get_instagram_photos(url)
-        if data:
-            if len(data) == 1:
-                keyboard = InlineKeyboardMarkup()
-                keyboard.add(InlineKeyboardButton('Instagram', url=url))
-                bot.send_photo(message.chat.id, data[0], reply_markup=keyboard)
-            else:
-                bot.send_media_group(message.chat.id, [InputMediaPhoto(photo) for photo in data])
+        try:
+            data = get_instagram_photos(url)
+        except JSONDecodeError:
+            bot.send_message(message.chat.id, 'Не поддерживаются работа закрытыми аккаунтами😔')
         else:
-            bot.send_message(message.chat.id, 'По данной ссылке фотографий не найдено😔')
+            if data:
+                if len(data) == 1:
+                    keyboard = InlineKeyboardMarkup()
+                    keyboard.add(InlineKeyboardButton('Instagram', url=url))
+                    bot.send_photo(message.chat.id, data[0], reply_markup=keyboard)
+                else:
+                    bot.send_media_group(message.chat.id, [InputMediaPhoto(photo) for photo in data])
+            else:
+                bot.send_message(message.chat.id, 'По данной ссылке фотографий не найдено😔')
     else:
         bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
 
@@ -1142,18 +1069,21 @@ def add_sticker_handler(message: Message) -> None:
 @bot.message_handler(content_types=['text'], regexp=r'^\++$')  # Change karma
 @bot.message_handler(content_types=['text'], regexp=r'^\-+$')
 def text_handler(message: Message) -> None:
-    if message.reply_to_message:
-        log(message, 'info')
-        msg = list(message.text)
-        reply_to = message.reply_to_message.from_user
-        if msg[0] == '+':
-            bot.send_message(message.chat.id, f'{message.from_user.username.title()} подкинул {len(msg) * 10} к карме😈 '
-                                              f'{reply_to.username.title()}\nИтого карма: '
-                                              f'{db.change_karma(reply_to, msg)}')
-        else:
-            bot.send_message(message.chat.id, f'{message.from_user.username.title()} отнял от кармы -{len(msg) * 10}👿 '
-                                              f'{reply_to.username.title()}\nИтого карма: '
-                                              f'{db.change_karma(reply_to, msg)}')
+    if message.chat.type != 'private':
+        if message.reply_to_message:
+            log(message, 'info')
+            msg = list(message.text)
+            reply_to = message.reply_to_message.from_user
+            if msg[0] == '+':
+                bot.send_message(message.chat.id, f'{message.from_user.username.title()}'
+                                                  f' подкинул {len(msg) * 10} к карме😈 '
+                                                  f'{reply_to.username.title()}\nИтого карма: '
+                                                  f'{db.change_karma(reply_to, msg)}')
+            else:
+                bot.send_message(message.chat.id, f'{message.from_user.username.title()} '
+                                                  f'отнял от кармы -{len(msg) * 10}👿 '
+                                                  f'{reply_to.username.title()}\nИтого карма: '
+                                                  f'{db.change_karma(reply_to, msg)}')
 
 
 # <<< End change karma >>>
@@ -1388,3 +1318,83 @@ def contact_handler(message: Message) -> None:
 
 bot.polling(none_stop=True)
 time.sleep(100)
+
+
+# <<< Donate >>>
+# @bot.message_handler(commands=['donate'])  # /donate
+# def donate_handler(message: Message) -> None:
+#     log(message, 'info')
+#     bot.send_chat_action(message.chat.id, 'typing')
+#     if message.chat.type == 'private':
+#         bot.send_message(message.chat.id, 'Здесь вы можете поддержать разработчика и дать мотивацию '
+#                                           'на внесение нового фунционала в <b>GNBot</b>\n'
+#                                           'C уважением <i>@Ultra_Xion</i>', parse_mode='HTML')
+#         if PAYMENT_TOKEN.split(':')[1] == 'LIVE':
+#             keyboard = InlineKeyboardMarkup(row_width=1)
+#             keyboard.add(InlineKeyboardButton('1 грн', callback_data='1 UAH'),
+#                          InlineKeyboardButton('10 грн', callback_data='10 UAH'),
+#                          InlineKeyboardButton('100 грн', callback_data='100 UAH'),
+#                          InlineKeyboardButton('1000 грн', callback_data='1000 UAH'),
+#                          InlineKeyboardButton('Своя сумма', callback_data='Своя сумма'))
+#             msg = bot.send_message(message.chat.id, 'Сумма поддержки💸', reply_markup=keyboard)
+#             time.sleep(20)
+#             bot.delete_message(msg.chat.id, msg.message_id)
+#     else:
+#         bot.send_message(message.chat.id, 'К сожелению в группе эта функция недоступна😔\n'
+#                                           'Что бы поддержать нас вы можете восползоваться'
+#                                           'этой командой в личном чате с ботом 💢@GNTMBot💢')
+#
+#
+# @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^\d+\sUAH$', call.data) or call.data == 'Своя сумма')
+# def donate_query(call):
+#     bot.answer_callback_query(call.id, 'Вы выбрали ' + call.data)
+#     bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
+#     if call.data == 'Своя сумма':
+#         msg = bot.send_message(call.message.chat.id, 'Введите сумму🧐')
+#         bot.register_next_step_handler(msg, send_payment, 'UAH')
+#     else:
+#         send_payment(call.message, call.data)
+#
+#
+# def send_payment(message: Message, money) -> None:
+#     if money == 'UAH' and message.text.isdigit():
+#         local_money = message.text + ' ' + money
+#     else:
+#         local_money = money
+#     price = LabeledPrice('Поддержать', amount=int(local_money.split()[0]) * 100)
+#     bot.send_invoice(message.chat.id, title='Поддержка',
+#                      description='Поддержка разработчика GNBot',
+#                      provider_token=PAYMENT_TOKEN, currency='uah',
+#                      photo_url=URLS['logo'],
+#                      photo_height=1494, photo_width=1295, photo_size=142,
+#                      is_flexible=False, prices=[price],
+#                      start_parameter='donate-programmer-gnbot',
+#                      invoice_payload='donate-is-done')
+#
+#
+# @bot.shipping_query_handler(func=lambda query: True)
+# def shipping(shipping_query: ShippingQuery):
+#     bot.answer_shipping_query(shipping_query.id, ok=True,
+#                               error_message='Что-то пошло не так😔\n!'
+#                                             'Попробуйте повторить операцию чуть позже')
+#
+#
+# @bot.pre_checkout_query_handler(func=lambda query: True)
+# def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
+#     bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True,
+#                                     error_message="Что-то пошло не так😔\n"
+#                                                   "Удебитель в правельности вводимых данные "
+#                                                   "и попробуйте снова через пару минут")
+#
+#
+# @bot.message_handler(content_types=['successful_payment'])
+# def process_successful_payment(message: Message) -> None:
+#     promo = message.successful_payment
+#     log(f'Successful_payment\nType: {promo.invoice_payload}\nSum: {promo.total_amount}{promo.currency}')
+#     bot.send_message(message.chat.id, f'Платеж прошел успешно😌\n'
+#                                       f'{message.successful_payment.total_amount // 100} '
+#                                       f'{message.successful_payment.currency} были начислены на свет\n'
+#                                       f'Благодарим вас за поддержку проекта🥳')
+#
+
+# <<< End donate >>>
