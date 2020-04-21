@@ -28,8 +28,8 @@ import os
 import re
 
 # <<< End import's>>
-# from config import TEST_TOKEN
-bot = TeleBot(TOKEN)
+from config import TEST_TOKEN
+bot = TeleBot(TEST_TOKEN)
 log('Bot is successful running!', 'info')
 
 # Turn on parser
@@ -957,7 +957,6 @@ def callback_query(call):
 def send_urls(message: Message) -> None:
     global data_torrents, torrent_msg, tracker
     search_msg[message.chat.id] = message.text
-    msg = bot.send_message(message.chat.id, 'Загрузка...')
     if message.chat.id in data_torrents:
         bot.delete_message(torrent_msg[message.chat.id].chat.id, torrent_msg[message.chat.id].message_id)
     if tracker[message.chat.id] == URLS['torrent']['name']:
@@ -968,11 +967,10 @@ def send_urls(message: Message) -> None:
         data_torrents[message.chat.id] = get_torrents3(message.text)
     if data_torrents[message.chat.id]:
         create_data_torrents(message)
-        bot.delete_message(msg.chat.id, msg.message_id)
         torrent_msg[message.chat.id] = bot.send_message(message.chat.id, '...')
         torrent_keyboard(torrent_msg[message.chat.id], 0)
     else:
-        bot.send_message(message.chat.id, 'Ничего не нашлось')
+        data_torrents[message.chat.id] = bot.send_message(message.chat.id, 'Ничего не нашлось')
 
 
 def create_data_torrents(message: Message) -> None:
