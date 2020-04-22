@@ -56,8 +56,14 @@ def get_day(data: str) -> str:
 
 def sec_to_time(seconds: int) -> str:
     minutes = int(seconds / 60)
+    if minutes < 10:
+        minutes = '0' + str(minutes)
     sec = str(int(seconds % 60))
-    return '0' + str(minutes) if minutes < 10 else minutes + ':' + sec if sec != 0 else '00'
+    if sec < 10:
+        sec = '' + str(sec)
+    elif sec == 0:
+        sec = '00'
+    return minutes + ':' + sec
 
 
 def tr_w(words) -> str:  # Define and translate
