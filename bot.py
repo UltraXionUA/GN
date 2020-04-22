@@ -40,6 +40,8 @@ Parser.start()
 @bot.message_handler(commands=['start'])  # /start
 def start_handler(message: Message) -> None:
     log(message, 'info')
+    if message.chat.id == "-1001339129150":
+        print('yes')
     if message.chat.type == 'private':
         db.add_user(message.from_user)
     else:
