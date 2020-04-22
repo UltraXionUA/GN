@@ -53,11 +53,11 @@ def check_user(user_id: str) -> bool:
     connection = start_connection()
     with connection.cursor() as cursor:
         if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user_id}\''
-                          f'AND WHERE supergroup = \'-1001339129150\'') == 0:
+                          f'AND supergroup LIKE \'-1001339129150\'') == 0:
             return False
         else:
             print(cursor.execute(
-                f'SELECT * FROM Users WHERE user_id LIKE \'{user_id}\' AND WHERE supergroup = \'-1001339129150\';'))
+                f'SELECT * FROM Users WHERE user_id LIKE \'{user_id}\' AND supergroup LIKE \'-1001339129150\';'))
             return True
 
 
