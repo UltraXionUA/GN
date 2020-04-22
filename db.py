@@ -34,7 +34,7 @@ def add_user(user, chat=None, connection=None) -> None:
             connection.commit()
         else:
             if chat is not None:
-                cursor.execute('UPDATE Users SET supergroup = chat.id')
+                cursor.execute(f'UPDATE Users SET supergroup = {chat.id}')
                 if chat.id == "-1001339129150":
                     cursor.execute('UPDATE Users SET is_gn = \'True\'')
                 connection.commit()
