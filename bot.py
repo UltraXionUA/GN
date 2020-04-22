@@ -27,8 +27,8 @@ import os
 import re
 
 # <<< End import's>>
-# from config import TEST_TOKEN
-bot = TeleBot(TOKEN)
+from config import TEST_TOKEN
+bot = TeleBot(TEST_TOKEN)
 log('Bot is successful running!', 'info')
 
 # Turn on parser
@@ -1102,10 +1102,18 @@ def stat_handler(message: Message) -> None:
     text = '<b>Статистика:</b>\n'
     if data:
         for en, i in enumerate(data):
-            if en > 5:
+            if en == 5:
                 break
-            text += f"<i>{en + 1}.</i> {i['first_name']}" \
-                    f" {i['last_name'] if i['last_name'] != 'None' else ''} - {i['karma']}\n"
+            else:
+                medal = ''
+                if en == 0:
+                    medal = '🥇'
+                elif en == 1:
+                    medal = '🥈'
+                elif en == 2:
+                    medal = '🥉'
+                text += f"<i>{en + 1}.</i> {i['first_name']}" \
+                        f" {i['last_name'] if i['last_name'] != 'None' else ''} - {i['karma']}{medal}\n"
         stat_msg[message.chat.id] = bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=keyboard)
     else:
         bot.send_message(message.chat.id, 'Функция станет доступна когда '
