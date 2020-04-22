@@ -41,7 +41,7 @@ def add_user(user, chat=None, connection=None) -> None:
                                f'\'{user.last_name}\',\'{user.username}\');')
             connection.commit()
         else:
-            if chat is not None and cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id}'
+            if chat is not None and cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id} '
                                                                    f'AND supergroup IS NULL;') == 0:
                 cursor.execute(f'UPDATE Users SET supergroup = {chat.id} WHERE user_id LIKE {user.id};')
                 if str(chat.id) == config.GN_ID and cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id}'
