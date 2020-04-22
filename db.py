@@ -80,7 +80,7 @@ def check_user(user_id: str) -> bool:
     connection = start_connection()
     with connection.cursor() as cursor:
         if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user_id}\''
-                          f'AND supergroup LIKE \'{config.GN_ID}\'') == 0:
+                          f'AND is_gn LIKE \'True\'') == 0:
             return False
         else:
             return True
