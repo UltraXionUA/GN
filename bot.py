@@ -449,7 +449,9 @@ def get_song(message: Message, choice: str) -> None:  # Get song
                 if data_songs[message.chat.id]:
                     if message.chat.id in song_msg:
                         bot.delete_message(song_msg[message.chat.id].chat.id, song_msg[message.chat.id].message_id)
-                    song_msg[message.chat.id] = bot.send_message(message.chat.id, 'Результат поиска🔎',
+                    song_msg[message.chat.id] = bot.send_message(message.chat.id,
+                                                                 f'Результат поиска <b>{message.text}</b>🔎',
+                                                                 parse_mode='HTML',
                                                                  reply_markup=inline_keyboard(message, 0))
                 else:
                     raise FileExistsError
@@ -544,7 +546,9 @@ def callback_query(call):
                         log('Error! Can\'t remove file', 'warning')
                     break
                 else:
-                    bot.answer_callback_query(call.id, 'Не смог получить песню')
+                    bot.answer_callback_query(call.id, 'Не смог получить песню😔')
+    else:
+        bot.answer_callback_query(call.id, 'Список песен пуст, выполните поиск заново😔')
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric:\s?\d+$', call.data))
@@ -909,10 +913,10 @@ def send_urls(message: Message) -> None:
         data_torrents[message.chat.id] = get_torrents3(message.text)
     if data_torrents[message.chat.id]:
         create_data_torrents(message)
-        torrent_msg[message.chat.id] = bot.send_message(message.chat.id, '...')
+        torrent_msg[message.chat.id] = bot.send_message(message.chat.id, 'Загрузка...')
         torrent_keyboard(torrent_msg[message.chat.id], 0)
     else:
-        data_torrents[message.chat.id] = bot.send_message(message.chat.id, 'Ничего не нашлось')
+        data_torrents[message.chat.id] = bot.send_message(message.chat.id, 'Ничего не нашлось😔')
 
 
 def create_data_torrents(message: Message) -> None:
