@@ -40,6 +40,7 @@ Parser.start()
 @bot.message_handler(commands=['start'])  # /start
 def start_handler(message: Message) -> None:
     log(message, 'info')
+    print(message)
     db.add_user(message.from_user)
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Здравствуй, меня зовут GNBot🖥\n'
