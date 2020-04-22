@@ -24,8 +24,8 @@ def add_user(user, chat=None, connection=None) -> None:
                                '`username`, `is_gn`, `supergroup`) VALUE '
                                f'(\'{int(user.id)}\', \'{str(user.is_bot)}\',\'{user.first_name}\','
                                f'\'{user.last_name}\',\'{user.username}\','
-                               f' \'{str(True) if chat.id == "-1001339129150" else str(False)}\', '
-                               f'\'{chat.id}\');')
+                               f' \'{str(True) if str(chat.id) == "-1001339129150" else str(False)}\', '
+                               f'\'{str(chat.id)}\');')
             else:
                 cursor.execute('INSERT INTO Users (`user_id`, `is_bote`, `first_name`, `last_name`, '
                                '`username`) VALUE '
@@ -35,7 +35,7 @@ def add_user(user, chat=None, connection=None) -> None:
         else:
             if chat is not None:
                 cursor.execute(f'UPDATE Users SET supergroup = {chat.id} WHERE user_id LIKE {user.id}')
-                if chat.id == "-1001339129150":
+                if str(chat.id) == "-1001339129150":
                     cursor.execute(f'UPDATE Users SET is_gn = \'True\' WHERE user_id LIKE {user.id}')
                 connection.commit()
 
