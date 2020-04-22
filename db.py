@@ -47,17 +47,19 @@ def add_user(user, chat=None, connection=None) -> None:
                                f'\'{user.last_name}\',\'{user.username}\');')
             connection.commit()
         else:
-            if chat is not None and cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id} '
+            if chat is not None:
+                if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id} '
                                                                    f'AND supergroup IS NULL;') != 0:
-                cursor.execute(f'UPDATE Users SET supergroup = \'{chat.id},\' WHERE user_id LIKE {user.id};')
-                connection.commit()
-            elif chat is not None and cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id} '
-                                                                   f'AND supergroup IS NULL;') == 0:
-                cursor.execute(f'SELECT supergroup FROM Users WHERE user_id LIKE \'{user.id},\';')
-                res = cursor.fetchone()
-                cursor.execute(f'UPDATE Users SET supergroup = \'{res["supergroup"] + chat.id},\''
-                               f' WHERE user_id LIKE {user.id};')
-                connection.commit()
+                    cursor.execute(f'UPDATE Users SET supergroup = \'{chat.id},\' WHERE user_id LIKE {user.id};')
+                    connection.commit()
+                elif cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user.id}\' '
+                                                                       f'AND supergroup IS NOT NULL;') != 0:
+                    cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user.id}\';')
+                    res = cursor.fetchone()
+                    if str(chat.id) not in res['supergroup'].split(','):
+                        cursor.execute(f'UPDATE Users SET supergroup = \'{res["supergroup"] + chat.id},\''
+                                       f' WHERE user_id LIKE {user.id};')
+                        connection.commit()
             if chat is not None:
                 if str(chat.id) == config.GN_ID and cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id} '
                                                                    f'AND is_gn = \'False\';') == 0:
