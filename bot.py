@@ -514,7 +514,7 @@ def callback_query(call):
 def callback_query(call):
     global data_songs
     index = int(call.data.split()[1])
-    if 0 <= index < len(news[call.message.chat.id]):
+    if 0 <= index < len(data_songs[call.message.chat.id]):
         bot.answer_callback_query(call.id, f'Вы выбрали стр.{index + 1}')
         if call.message.content_type == 'photo':
             bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id,
