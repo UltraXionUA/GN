@@ -1098,6 +1098,8 @@ def sticker_handler(message: Message) -> None:
 # <<< Add new sticker >>>
 @bot.message_handler(content_types=['sticker'])  # Add new sticker
 def add_sticker_handler(message: Message) -> None:
+    if message.chat.type != 'private':
+        db.change_karma(message.from_user, message.chat, ['+'], 1)
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     db.add_sticker(message.sticker.file_id, message.sticker.emoji, message.sticker.set_name)
 
@@ -1166,12 +1168,12 @@ def text_handler(message: Message) -> None:
                 bot.send_message(message.chat.id, f'{message.from_user.username.title()}'
                                                   f' подкинул {len(msg) * 10} к карме😈 '
                                                   f'{reply_to.username.title()}\nИтого карма: '
-                                                  f'{db.change_karma(reply_to, message.chat, msg[0])}')
+                                                  f'{db.change_karma(reply_to, message.chat, msg, 10)}')
             else:
                 bot.send_message(message.chat.id, f'{message.from_user.username.title()} '
                                                   f'отнял от кармы -{len(msg) * 10}👿 '
                                                   f'{reply_to.username.title()}\nИтого карма: '
-                                                  f'{db.change_karma(reply_to, message.chat, msg[0])}')
+                                                  f'{db.change_karma(reply_to, message.chat, msg, 10)}')
 
 
 # <<< End change karma >>>
@@ -1333,7 +1335,7 @@ def text_handler(message: Message) -> None:
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if message.chat.type != 'private':
-        db.change_karma(message.from_user, message.chat, '+')
+        db.change_karma(message.from_user, message.chat, ['+'], 1)
     text = message.text.lower()
     if text in ['стикер', 'стикерочек', 'sticker']:
         gn_sticker_handler(message)

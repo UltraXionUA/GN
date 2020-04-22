@@ -69,20 +69,21 @@ def check_user(user_id: str) -> bool:
             return True
 
 
-def change_karma(user, chat, action) -> dict:  # Change Karma
+def change_karma(user, chat, action: list, exp: int) -> dict:  # Change Karma
     connection = start_connection()
     with connection.cursor() as cursor:
         add_user(user, chat, connection)
         cursor.execute(f'SELECT `karma` FROM `Users` WHERE `username` = \'{user.username}\';')
         karma = cursor.fetchone()['karma']
-        if action == '+':
-            karma += len(action) * 10
+        if action[0] == '+':
+            karma += len(action) * exp
         else:
-            karma -= len(action) * 10
+            karma -= len(action) * exp
         cursor.execute(f'UPDATE `Users` SET `karma` = \'{karma}\' WHERE `username` = \'{user.username}\';')
         connection.commit()
     connection.close()
     return karma
+
 
 
 def random_gn_sticker() -> str:  # Random sticker from GN
