@@ -144,7 +144,7 @@ def joke_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'typing')
     time.sleep(1.5)
     if joke['panchline'] != 'False':
-        bot.send_message(message.chat.id, joke['setup'] + random.choice(['🧐', '🤨🤔', '🤔']))
+        bot.send_message(message.chat.id, joke['setup'] + random.choice(['🧐', '🤨', '🤔']))
         time.sleep(3.5)
         bot.send_message(message.chat.id, joke['panchline'] + random.choice(['🌚', '😅', '🤫']))
     else:
