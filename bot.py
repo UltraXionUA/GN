@@ -1108,11 +1108,13 @@ def add_sticker_handler(message: Message) -> None:
 
 # <<< Stat  >>>
 stat_msg = defaultdict(Message)
+com_stat_msg = defaultdict(Message)
 
 
 @bot.message_handler(commands=['stat'])  # /stat
 def stat_handler(message: Message) -> None:
-    global stat_msg
+    global stat_msg, com_stat_msg
+    com_stat_msg[message.chat.id] = message
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if message.chat.type != 'private':
@@ -1134,7 +1136,8 @@ def stat_handler(message: Message) -> None:
                         medal = '🥉'
                     text += f"<i>{en + 1}.</i> {i['first_name']}" \
                             f" {i['last_name'] if i['last_name'] != 'None' else ''} - {i['karma']}{medal}\n"
-            stat_msg[message.chat.id] = bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=keyboard)
+            stat_msg[message.chat.id] = bot.send_message(message.chat.id, text, parse_mode='HTML',
+                                                         reply_markup=keyboard)
         else:
             bot.send_message(message.chat.id, 'Функция станет доступна когда '
                                               'пользователи вашей группы поставят друг другу \'+\'')
@@ -1144,11 +1147,14 @@ def stat_handler(message: Message) -> None:
 
 @bot.callback_query_handler(func=lambda call: call.data == 'Delete stat')
 def callback_query(call):
-    global stat_msg
-    if call.message.chat.id in stat_msg:
+    global stat_msg, com_stat_msg
+    if call.message.chat.id in stat_msg and call.message.id in com_stat_msg:
+        bot.answer_callback_query(call.id, 'Удалено')
+        bot.delete_message(com_stat_msg[call.message.chat.id].chat.id, com_stat_msg[call.message.chat.id].message_id)
         bot.delete_message(stat_msg[call.message.chat.id].chat.id, stat_msg[call.message.chat.id].message_id)
     else:
         bot.answer_callback_query(call.id, '⛔️')
+
 
 # <<< End Stat >>>
 

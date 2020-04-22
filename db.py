@@ -17,7 +17,8 @@ def start_connection():  # Connection to DB
 def get_stat(chat) -> list:
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM Users WHERE supergroup LIKE \'{chat.id}\' ORDER BY karma DESC')  # -1001339129150
+        cursor.execute(f'SELECT * FROM Users WHERE supergroup LIKE \'{chat.id}\' AND is_bote = \'False\' '
+                       f'ORDER BY karma DESC')  # -1001339129150
         res = cursor.fetchall()
     return res
 
