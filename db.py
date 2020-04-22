@@ -17,7 +17,7 @@ def start_connection():  # Connection to DB
 def get_stat(chat) -> list:
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM Users WHERE supergroup LIKE \'{chat.id}\' ORDER BY karma DESC')
+        cursor.execute(f'SELECT * FROM Users WHERE supergroup LIKE \'{chat.id}\' ORDER BY karma DESC')  # -1001339129150
         res = cursor.fetchall()
     return res
 
@@ -32,7 +32,7 @@ def add_user(user, chat=None, connection=None) -> None:
                                '`username`, `is_gn`, `supergroup`) VALUE '
                                f'(\'{int(user.id)}\', \'{str(user.is_bot)}\',\'{user.first_name}\','
                                f'\'{user.last_name}\',\'{user.username}\','
-                               f' \'{str(True) if str(chat.id) == "-1001339129150" else str(False)}\', '
+                               f' \'{str(True) if str(chat.id) == config.GN_ID else str(False)}\', '
                                f'\'{str(chat.id)}\');')
             else:
                 cursor.execute('INSERT INTO Users (`user_id`, `is_bote`, `first_name`, `last_name`, '
@@ -41,9 +41,11 @@ def add_user(user, chat=None, connection=None) -> None:
                                f'\'{user.last_name}\',\'{user.username}\');')
             connection.commit()
         else:
-            if chat is not None:
-                cursor.execute(f'UPDATE Users SET supergroup = {chat.id} WHERE user_id LIKE {user.id}')
-                if str(chat.id) == "-1001339129150":
+            if chat is not None and cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id}'
+                                                                   f'AND supergroup IS NULL;') == 0:
+                cursor.execute(f'UPDATE Users SET supergroup = {chat.id} WHERE user_id LIKE {user.id};')
+                if str(chat.id) == config.GN_ID and cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id}'
+                                                                   f'AND is_gn = \'False\';') == 0:
                     cursor.execute(f'UPDATE Users SET is_gn = \'True\' WHERE user_id LIKE {user.id}')
                 connection.commit()
 
@@ -61,7 +63,7 @@ def check_user(user_id: str) -> bool:
     connection = start_connection()
     with connection.cursor() as cursor:
         if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user_id}\''
-                          f'AND supergroup LIKE \'-1001339129150\'') == 0:
+                          f'AND supergroup LIKE \'{config.GN_ID}\'') == 0:
             return False
         else:
             return True
@@ -73,7 +75,7 @@ def change_karma(user, chat, action) -> dict:  # Change Karma
         add_user(user, chat, connection)
         cursor.execute(f'SELECT `karma` FROM `Users` WHERE `username` = \'{user.username}\';')
         karma = cursor.fetchone()['karma']
-        if action[0] == '+':
+        if action == '+':
             karma += len(action) * 10
         else:
             karma -= len(action) * 10

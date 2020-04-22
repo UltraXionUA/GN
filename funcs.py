@@ -77,8 +77,8 @@ def clear_link(string: str) -> str:  # Clear string of links
     return clear_string
 
 
-def rend_d() -> bool:  # Random True or False
-    return True if randint(1, 100) < 20 else False
+def rend_d(percent: int) -> bool:  # Random True or False
+    return True if randint(1, 100) < percent else False
 
 
 def hi_r(data: str) -> bool:  # Filter age rating

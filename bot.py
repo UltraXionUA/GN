@@ -10,7 +10,6 @@ from config import TOKEN, API, Empty_bg, URLS
 from urllib import parse, request, error
 from pytube import YouTube, exceptions
 from collections import defaultdict
-from datetime import datetime as dt
 from pytils.translit import slugify
 from json import JSONDecodeError
 from pydub import AudioSegment
@@ -40,13 +39,12 @@ Parser.start()
 @bot.message_handler(commands=['start'])  # /start
 def start_handler(message: Message) -> None:
     log(message, 'info')
-    if message.chat.type == 'private':
-        db.add_user(message.from_user)
-    else:
-        db.add_user(message.from_user, message.chat)
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Здравствуй, меня зовут GNBot🖥\n'
-                                      'Я создан дабы служить верой и правдой сообществу 💎Голубой носок💎')
+                                      'Я много функциональный и мултимедийный бот'
+                                      'Весь доступный функционал /'
+                                      'Помощь /help, связь 💢@Ultra_Xion💢')
 
 
 # <<< End start >>>
@@ -56,9 +54,11 @@ def start_handler(message: Message) -> None:
 @bot.message_handler(commands=['help'])  # /help
 def help_handler(message: Message) -> None:
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Тут должна была быть помощь🆘, но её тут не будет🌚\n'
-                                      'Если что пиши мне: 💢@Ultra_Xion💢')
+                                      'Все свои вопросы и предложения вы моежет писать мне 💢@Ultra_Xion💢'
+                                      'Почта: ultra25813@gmail.com')
 
 
 # <<< End help >>>
@@ -68,6 +68,7 @@ def help_handler(message: Message) -> None:
 @bot.message_handler(commands=['gif'])  # /gif
 def gif_handler(message: Message) -> None:
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'upload_video')
     while True:
         data = requests.get(API['API_Gif']).json()
@@ -86,6 +87,7 @@ qr_msg = defaultdict(Message)
 @bot.message_handler(commands=['qrcode'])  # /qrcode
 def qrcode_handler(message: Message) -> None:
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('Создать', callback_data='Create_QRCode'),
                  InlineKeyboardButton('Считать', callback_data='Read_QRCode'))
@@ -136,6 +138,7 @@ jokes_data = defaultdict(list)
 def joke_handler(message: Message) -> None:
     global jokes_data
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if message.chat.id not in jokes_data or len(jokes_data[message.chat.id]) == 1:
         jokes_data[message.chat.id] = db.get_all_jokes()
     joke = jokes_data[message.chat.id].pop(random.choice(range(len(jokes_data[message.chat.id]) - 1)))
@@ -160,6 +163,7 @@ msg_mp3ogg = defaultdict(Message)
 def oggtomp3_handler(message: Message) -> None:
     global msg_mp3ogg
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     msg_mp3ogg[message.chat.id] = bot.send_message(message.chat.id, 'Запишите или отправьте аудиосообщение🎙')
     bot.register_next_step_handler(msg_mp3ogg[message.chat.id], set_name_mp3)
 
@@ -201,6 +205,7 @@ def send_mp3(message: Message, file_id: int) -> None:
 @bot.message_handler(commands=['ru_meme'])  # /ru_meme
 def meme_handler(message: Message) -> None:
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_photo(message.chat.id, db.random_meme())
 
@@ -212,6 +217,7 @@ def meme_handler(message: Message) -> None:
 @bot.message_handler(commands=['en_meme'])  # /en_meme
 def meme_en_handler(message: Message) -> None:
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'upload_photo')
     meme = requests.get(API['API_Meme']).json()
     bot.send_photo(message.chat.id, meme['url'])
@@ -230,6 +236,7 @@ city_msg = defaultdict(Message)
 @bot.message_handler(commands=['weather'])  # /weather
 def weather_handler(message: Message) -> None:
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     city_msg[message.chat.id] = bot.send_message(message.chat.id, 'Введите название города✒️')
     bot.register_next_step_handler(city_msg[message.chat.id], show_weather)
 
@@ -318,6 +325,7 @@ detect_msg = defaultdict(Message)
 
 @bot.message_handler(commands=['detect'])  # /detect_music
 def detect_handler(message: Message) -> None:
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     global detect_msg
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
@@ -405,6 +413,7 @@ msg_song = defaultdict(Message)
 @bot.message_handler(commands=['music'])  # /music
 def music_handler(message: Message) -> None:
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(InlineKeyboardButton('По исполнителю🎤', callback_data='artist?q='),
@@ -577,6 +586,7 @@ news_msg = defaultdict(Message)
 @bot.message_handler(commands=['news'])  # /news
 def news_handler(message: Message) -> None:
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(InlineKeyboardButton('Технологии', callback_data='News technology'),
                  InlineKeyboardButton('Наука', callback_data='News science'))
@@ -684,6 +694,7 @@ def news_pass(call):
 @bot.message_handler(commands=['youtube'])  # /youtube
 def youtube_handler(message: Message) -> None:
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('Видео📺', callback_data='Video'),
                  InlineKeyboardButton('Аудио🎧', callback_data='Audio'))
@@ -796,6 +807,7 @@ msg_instagram = defaultdict(Message)
 @bot.message_handler(commands=['instagram'])  # /instagram
 def instagram_handler(message: Message) -> None:
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('Фото📷', callback_data='Instagram photo'),
                  InlineKeyboardButton('Видео📹', callback_data='Instagram video'))
@@ -886,6 +898,7 @@ search = defaultdict(Message)
 @bot.message_handler(commands=['torrent'])  # /torrents
 def torrents_handler(message: Message) -> None:
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('Rutor.info🇷🇺', callback_data='Rutor.info'))
     keyboard.add(InlineKeyboardButton('GTorrent.ru🇷🇺', callback_data='GTorrent.ru'))
@@ -1039,10 +1052,11 @@ def callback_query(call):
 # <<< Translate >>>
 @bot.message_handler(commands=['translate'])  # /translate
 def translate_handler(message: Message) -> None:
+    log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
     msg = bot.send_message(message.chat.id, 'Введите то что нужно перевести👁‍🗨')
     bot.register_next_step_handler(msg, trans_word)
-    log(message, 'info')
 
 
 def trans_word(message: Message) -> None:  # Translate function
@@ -1057,8 +1071,9 @@ def trans_word(message: Message) -> None:  # Translate function
 # <<< Sticker GN >>>
 @bot.message_handler(commands=['sticker_gn'])  # /sticker_gn
 def gn_sticker_handler(message: Message) -> None:
+    log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if db.check_user(message.from_user.id):
-        log(message, 'info')
         bot.send_chat_action(message.chat.id, 'upload_photo')
         bot.send_sticker(message.chat.id, db.random_gn_sticker())
     else:
@@ -1072,6 +1087,7 @@ def gn_sticker_handler(message: Message) -> None:
 @bot.message_handler(commands=['sticker'])  # /sticker
 def sticker_handler(message: Message) -> None:
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.send_sticker(message.chat.id, db.random_sticker())
 
@@ -1082,6 +1098,7 @@ def sticker_handler(message: Message) -> None:
 # <<< Add new sticker >>>
 @bot.message_handler(content_types=['sticker'])  # Add new sticker
 def add_sticker_handler(message: Message) -> None:
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     db.add_sticker(message.sticker.file_id, message.sticker.emoji, message.sticker.set_name)
 
 
@@ -1096,6 +1113,7 @@ stat_msg = defaultdict(Message)
 def stat_handler(message: Message) -> None:
     global stat_msg
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if message.chat.type != 'private':
         data = db.get_stat(message.chat)
         keyboard = InlineKeyboardMarkup()
@@ -1138,21 +1156,22 @@ def callback_query(call):
 @bot.message_handler(content_types=['text'], regexp=r'^\++$')  # Change karma
 @bot.message_handler(content_types=['text'], regexp=r'^\-+$')
 def text_handler(message: Message) -> None:
-    # if message.chat.type != 'private':
-    if message.reply_to_message:
-        log(message, 'info')
-        msg = list(message.text)
-        reply_to = message.reply_to_message.from_user
-        if msg[0] == '+':
-            bot.send_message(message.chat.id, f'{message.from_user.username.title()}'
-                                              f' подкинул {len(msg) * 10} к карме😈 '
-                                              f'{reply_to.username.title()}\nИтого карма: '
-                                              f'{db.change_karma(reply_to, message.chat, msg)}')
-        else:
-            bot.send_message(message.chat.id, f'{message.from_user.username.title()} '
-                                              f'отнял от кармы -{len(msg) * 10}👿 '
-                                              f'{reply_to.username.title()}\nИтого карма: '
-                                              f'{db.change_karma(reply_to, message.chat, msg)}')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+    if message.chat.type != 'private':
+        if message.reply_to_message:
+            log(message, 'info')
+            msg = list(message.text)
+            reply_to = message.reply_to_message.from_user
+            if msg[0] == '+':
+                bot.send_message(message.chat.id, f'{message.from_user.username.title()}'
+                                                  f' подкинул {len(msg) * 10} к карме😈 '
+                                                  f'{reply_to.username.title()}\nИтого карма: '
+                                                  f'{db.change_karma(reply_to, message.chat, msg[0])}')
+            else:
+                bot.send_message(message.chat.id, f'{message.from_user.username.title()} '
+                                                  f'отнял от кармы -{len(msg) * 10}👿 '
+                                                  f'{reply_to.username.title()}\nИтого карма: '
+                                                  f'{db.change_karma(reply_to, message.chat, msg[0])}')
 
 
 # <<< End change karma >>>
@@ -1168,15 +1187,6 @@ def text_handler(message: Message) -> None:
 # <<< End add answer >>>
 
 
-# <<< Add answer with word >>>
-@bot.message_handler(content_types=['text'], regexp=r'^\w+\s-\s\w+$')  # Add answer with word to DB
-def text_handler(message: Message) -> None:
-    word = re.findall(r'\w.+-', message.text)[0].replace('-', '').rstrip()
-    answer = re.findall(r'-.\w.+', message.text)[0].replace('-', '').lstrip()
-    db.add_to_db(word, answer)
-    bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
-
-
 # <<< Code PasteBin >>>
 leng_msg = 'None'
 
@@ -1185,6 +1195,7 @@ leng_msg = 'None'
 def code_handler(message: Message) -> None:
     global leng_msg
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
     keyboard = InlineKeyboardMarkup(row_width=3)
     keyboard.add(InlineKeyboardButton('Bash', callback_data='Code bash'),
@@ -1282,6 +1293,7 @@ second_dice: dict = {'username': None, 'dice': 0}
 @bot.message_handler(commands=['dice'])  # /dice
 def dice_handler(message: Message) -> None:
     log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     res = requests.post(f'https://' + f'api.telegram.org/bot{TOKEN}/sendDice?chat_id={message.chat.id}').json()
     t = Timer(120.0, reset_users)
     if first_dice['username'] is None:
@@ -1318,28 +1330,22 @@ def reset_users() -> None:  # Reset users for Dice game
 @bot.message_handler(content_types=['text'])  # All messages
 @bot.edited_message_handler(content_types=['text'])
 def text_handler(message: Message) -> None:
-    if dt.fromtimestamp(message.date).strftime("%Y-%m-%d-%H.%M.%S") >= dt.now().strftime("%Y-%m-%d-%H.%M.%S"):
-        log(message, 'info')
-        text = message.text.lower()
-        if text in ['стикер', 'стикерочек', 'sticker']:
-            gn_sticker_handler(message)
-        elif text in ['гифка', 'гиф', 'гифон', 'gif']:
-            gif_handler(message)
-        elif text in ['мем', 'мемас', 'мемчик', 'meme']:
-            meme_handler(message)
-        elif text in ['шутка', 'шутку', 'joke']:
-            joke_handler(message)
-        elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
-            dice_handler(message)
-        if rend_d():
-            for i in [',', '.', '!', '?', '\'', '\"', '-', '_', ':', ';', '@', '(', ')', '#']:
-                text = text.replace(i, '')
-            text = list(text.split(' '))
-            result = [x for x in text if x in db.get_all_word()]
-            if result:
-                bot.reply_to(message, db.get_answer(random.choice(result)))
-            elif rend_d():
-                bot.reply_to(message, db.get_simple_answer())
+    log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+    db.change_karma(message.from_user, message.chat, '+')
+    text = message.text.lower()
+    if text in ['стикер', 'стикерочек', 'sticker']:
+        gn_sticker_handler(message)
+    elif text in ['гифка', 'гиф', 'гифон', 'gif']:
+        gif_handler(message)
+    elif text in ['мем', 'мемас', 'мемчик', 'meme']:
+        meme_handler(message)
+    elif text in ['шутка', 'шутку', 'joke']:
+        joke_handler(message)
+    elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
+        dice_handler(message)
+    if rend_d(10):
+        bot.reply_to(message, db.get_simple_answer())
 
 
 # <<< End all message >>>
@@ -1348,7 +1354,7 @@ def text_handler(message: Message) -> None:
 # <<< Answer's  >>>
 @bot.message_handler(content_types=['voice'])  # Answer on voice
 def voice_handler(message: Message) -> None:
-    if rend_d():
+    if rend_d(25):
         bot.send_chat_action(message.chat.id, 'typing')
         bot.reply_to(message, random.choice(['Чё ты там пизданул? Повтори!', 'Писклявый голосок',
                                              'Лучше бы я это не слышал']))
@@ -1369,14 +1375,14 @@ def left_member_handler(message: Message) -> None:
 
 @bot.message_handler(content_types=['location'])  # Answer on location
 def location_handler(message: Message) -> None:
-    if rend_d():
+    if rend_d(25):
         bot.send_chat_action(message.chat.id, 'typing')
         bot.reply_to(message.chat.id, ['Скинул мусорам', 'Прикоп или магнит?', 'Ебеня какие то'])
 
 
 @bot.message_handler(content_types=['contact'])  # Answer on contact
 def contact_handler(message: Message) -> None:
-    if rend_d():
+    if rend_d(25):
         bot.send_chat_action(message.chat.id, 'typing')
         bot.reply_to(message.chat.id, random.choice(['Если мне будет одиноко и холодно я знаю куда позвонить',
                                                      'Трубку не берут', 'Сохранил']))
