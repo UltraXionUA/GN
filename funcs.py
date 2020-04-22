@@ -59,10 +59,10 @@ def sec_to_time(seconds: int) -> str:
     if minutes < 10:
         minutes = '0' + str(minutes)
     sec = int(seconds % 60)
-    if sec < 10:
-        sec = '' + str(sec)
-    elif sec == 0:
+    if sec == 0:
         sec = '00'
+    elif sec < 10:
+        sec = '0' + str(sec)
     return minutes + ':' + sec
 
 
