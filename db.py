@@ -14,22 +14,29 @@ def start_connection():  # Connection to DB
         log('Ошибка подключения к БД!', 'error')
 
 
-def add_user(user, connection=None) -> None:
+def add_user(user, chat=None, connection=None) -> None:
     if connection is None:
-        connection2 = start_connection()
-        with connection2.cursor() as cursor:
-            if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user.id}\'') == 0:
-                cursor.execute('INSERT INTO Users (`user_id`, `is_bote`, `first_name`, `last_name`, `username`) VALUE '
+        connection = start_connection()
+    with connection.cursor() as cursor:
+        if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user.id}\'') == 0:
+            if chat is not None:
+                cursor.execute('INSERT INTO Users (`user_id`, `is_bote`, `first_name`, `last_name`, '
+                               '`username`, `is_gn`, `supergroup`) VALUE '
+                               f'(\'{int(user.id)}\', \'{str(user.is_bot)}\',\'{user.first_name}\','
+                               f'\'{user.last_name}\',\'{user.username}\','
+                               f' \'{str(True) if chat.id == "-1001339129150" else str(False)}\', '
+                               f'\'{chat.id}\');')
+            else:
+                cursor.execute('INSERT INTO Users (`user_id`, `is_bote`, `first_name`, `last_name`, '
+                               '`username`) VALUE '
                                f'(\'{int(user.id)}\', \'{str(user.is_bot)}\',\'{user.first_name}\','
                                f'\'{user.last_name}\',\'{user.username}\');')
-                connection2.commit()
-        connection2.close()
-    else:
-        with connection.cursor() as cursor:
-            if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user.id}\'') == 0:
-                cursor.execute('INSERT INTO Users (`user_id`, `is_bote`, `first_name`, `last_name`, `username`) VALUE '
-                               f'(\'{int(user.id)}\', \'{str(user.is_bot)}\',\'{user.first_name}\','
-                               f'\'{user.last_name}\',\'{user.username}\');')
+            connection.commit()
+        else:
+            if chat is not None:
+                cursor.execute('UPDATE Users SET supergroup = chat.id')
+                if chat.id == "-1001339129150":
+                    cursor.execute('UPDATE Users SET is_gn = \'True\'')
                 connection.commit()
 
 
@@ -51,10 +58,10 @@ def check_user(user_id: str) -> bool:
             return True
 
 
-def change_karma(user, action) -> dict:  # Change Karma
+def change_karma(user, chat, action) -> dict:  # Change Karma
     connection = start_connection()
     with connection.cursor() as cursor:
-        add_user(user, connection)
+        add_user(user, chat, connection)
         cursor.execute(f'SELECT `karma` FROM `Users` WHERE `username` = \'{user.username}\';')
         karma = cursor.fetchone()['karma']
         if action[0] == '+':

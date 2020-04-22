@@ -27,8 +27,8 @@ import os
 import re
 
 # <<< End import's>>
-# from config import TEST_TOKEN
-bot = TeleBot(TOKEN)
+from config import TEST_TOKEN
+bot = TeleBot(TEST_TOKEN)
 log('Bot is successful running!', 'info')
 
 # Turn on parser
@@ -40,8 +40,10 @@ Parser.start()
 @bot.message_handler(commands=['start'])  # /start
 def start_handler(message: Message) -> None:
     log(message, 'info')
-    print(message)
-    db.add_user(message.from_user)
+    if message.chat.type == 'private':
+        db.add_user(message.from_user)
+    else:
+        db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Здравствуй, меня зовут GNBot🖥\n'
                                       'Я создан дабы служить верой и правдой сообществу 💎Голубой носок💎')
@@ -1090,21 +1092,21 @@ def add_sticker_handler(message: Message) -> None:
 @bot.message_handler(content_types=['text'], regexp=r'^\++$')  # Change karma
 @bot.message_handler(content_types=['text'], regexp=r'^\-+$')
 def text_handler(message: Message) -> None:
-    if message.chat.type != 'private':
-        if message.reply_to_message:
-            log(message, 'info')
-            msg = list(message.text)
-            reply_to = message.reply_to_message.from_user
-            if msg[0] == '+':
-                bot.send_message(message.chat.id, f'{message.from_user.username.title()}'
-                                                  f' подкинул {len(msg) * 10} к карме😈 '
-                                                  f'{reply_to.username.title()}\nИтого карма: '
-                                                  f'{db.change_karma(reply_to, msg)}')
-            else:
-                bot.send_message(message.chat.id, f'{message.from_user.username.title()} '
-                                                  f'отнял от кармы -{len(msg) * 10}👿 '
-                                                  f'{reply_to.username.title()}\nИтого карма: '
-                                                  f'{db.change_karma(reply_to, msg)}')
+    # if message.chat.type != 'private':
+    if message.reply_to_message:
+        log(message, 'info')
+        msg = list(message.text)
+        reply_to = message.reply_to_message.from_user
+        if msg[0] == '+':
+            bot.send_message(message.chat.id, f'{message.from_user.username.title()}'
+                                              f' подкинул {len(msg) * 10} к карме😈 '
+                                              f'{reply_to.username.title()}\nИтого карма: '
+                                              f'{db.change_karma(reply_to, message.chat, msg)}')
+        else:
+            bot.send_message(message.chat.id, f'{message.from_user.username.title()} '
+                                              f'отнял от кармы -{len(msg) * 10}👿 '
+                                              f'{reply_to.username.title()}\nИтого карма: '
+                                              f'{db.change_karma(reply_to, message.chat, msg)}')
 
 
 # <<< End change karma >>>
