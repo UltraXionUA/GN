@@ -293,9 +293,10 @@ def show_weather(message: Message) -> None:
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to__\s\d+$', call.data))
 def weather_query(call):
     global weather_data
-    if 0 < int(call.data.split()[1]) < len(weather_data[call.message.chat.id]):
-        bot.answer_callback_query(call.id, f'Вы выбрали стр.{str(int(call.data.split()[1]) + 1)}')
-        weather(call.message, int(call.data.split()[1]))
+    index = int(call.data.split()[1])
+    if 0 <= index < len(weather_data[call.message.chat.id]):
+        bot.answer_callback_query(call.id, f'Вы выбрали стр.{index + 1}')
+        weather(call.message, index)
     else:
         bot.answer_callback_query(call.id, '⛔️')
 
@@ -499,16 +500,17 @@ def callback_query(call):
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to\s\d$', call.data))
 def callback_query(call):
     global data_songs
-    if 0 < int(call.data.split()[1]) < len(data_songs[call.message.chat.id]):
-        bot.answer_callback_query(call.id, f'Вы выбрали стр.{str(int(call.data.split()[1]) + 1)}')
+    index = int(call.data.split()[1])
+    if 0 <= index < len(news[call.message.chat.id]):
+        bot.answer_callback_query(call.id, f'Вы выбрали стр.{index + 1}')
         if call.message.content_type == 'photo':
             bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                    media=InputMediaPhoto(call.message.photo[-1].file_id),
-                                   reply_markup=inline_keyboard(call.message, int(call.data.split()[1])))
+                                   reply_markup=inline_keyboard(call.message, index))
         else:
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text=call.message.text,
-                                  reply_markup=inline_keyboard(call.message, int(call.data.split()[1])))
+                                  reply_markup=inline_keyboard(call.message, index))
     else:
         bot.answer_callback_query(call.id, '⛔️')
 
@@ -600,32 +602,40 @@ def send_news(message: Message, index: int) -> None:
                              callback_data=f"move_to_ "
                                            f"{index + 1 if index < len(news[message.chat.id]) - 1 else 'pass'}"))
     try:
-        if news[message.chat.id][index]['image'] is not None and news[message.chat.id][index]['image'] != '':
-            if news[message.chat.id][index]['description'] is not None:
-                bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
-                                       message_id=news_msg[message.chat.id].message_id,
-                                       media=InputMediaPhoto(news[message.chat.id][index]['image'],
-                                                             caption='<b>' + news[message.chat.id][index][
-                                                                 'title'] + '</b>\n\n' +
-                                                                     news[message.chat.id][index]['description'] +
-                                                                     '\n\n' + '<i>' + news[message.chat.id][index][
-                                                                         'published'].replace('T', ' ').replace(
-                                                                 'Z', '') + '</i>',
-                                                             parse_mode='HTML'),
-                                       reply_markup=keyboard2)
-            else:
-                bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
-                                       message_id=news_msg[message.chat.id].message_id,
-                                       media=InputMediaPhoto(news[message.chat.id][index]['image'],
-                                                             caption='<b>' + news[message.chat.id][index][
-                                                                 'title'] + '</b>\n' +
-                                                                     '<i>' + news[message.chat.id][index][
-                                                                         'published'].replace('T', ' ').replace(
-                                                                 'Z', '') + '</i>',
-                                                             parse_mode='HTML'),
-                                       reply_markup=keyboard2)
-        else:
+        try:
+            code_img = requests.get(news[message.chat.id][index]['image']).ok
+        except requests.exceptions.ConnectionError:
             send_news(message, index + 1)
+        except requests.exceptions.MissingSchema:
+            send_news(message, index + 1)
+        else:
+            if news[message.chat.id][index]['image'] is not None and news[message.chat.id][index]['image'] != '' \
+                    and code_img is True:
+                if news[message.chat.id][index]['description'] is not None:
+                    bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
+                                           message_id=news_msg[message.chat.id].message_id,
+                                           media=InputMediaPhoto(news[message.chat.id][index]['image'],
+                                                                 caption='<b>' + news[message.chat.id][index][
+                                                                     'title'] + '</b>\n\n' +
+                                                                         news[message.chat.id][index]['description'] +
+                                                                         '\n\n' + '<i>' + news[message.chat.id][index][
+                                                                             'published'].replace('T', ' ').replace(
+                                                                     'Z', '') + '</i>',
+                                                                 parse_mode='HTML'),
+                                           reply_markup=keyboard2)
+                else:
+                    bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
+                                           message_id=news_msg[message.chat.id].message_id,
+                                           media=InputMediaPhoto(news[message.chat.id][index]['image'],
+                                                                 caption='<b>' + news[message.chat.id][index][
+                                                                     'title'] + '</b>\n' +
+                                                                         '<i>' + news[message.chat.id][index][
+                                                                             'published'].replace('T', ' ').replace(
+                                                                     'Z', '') + '</i>',
+                                                                 parse_mode='HTML'),
+                                           reply_markup=keyboard2)
+            else:
+                send_news(message, index + 1)
     except KeyError:
         log('Key Error in news', 'warning')
 
@@ -640,12 +650,13 @@ def choice_news_query(call):
     main_news(call.message, call.data.split()[1])
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to_\s?\d+$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to_\s\d+$', call.data))
 def next_news_query(call):
     global news
-    if 0 < int(call.data.split()[1]) < len(news[call.message.chat.id]):
-        bot.answer_callback_query(call.id, f'Вы выбрали стр.{str(int(call.data.split()[1]) + 1)}')
-        send_news(call.message, int(call.data.split()[1]))
+    index = int(call.data.split()[1])
+    if 0 <= index < len(news[call.message.chat.id]):
+        bot.answer_callback_query(call.id, f'Вы выбрали стр.{index + 1}')
+        send_news(call.message, index)
     else:
         bot.answer_callback_query(call.id, '⛔️')
 
@@ -660,7 +671,7 @@ def news_pass(call):
 
 # <<< YouTube >>>
 @bot.message_handler(commands=['youtube'])  # /youtube
-def youtube_music_handler(message: Message) -> None:
+def youtube_handler(message: Message) -> None:
     log(message, 'info')
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('Видео📺', callback_data='Video'),
@@ -1005,9 +1016,10 @@ def callback_query(call):
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_\s\d+$', call.data))
 def callback_query(call):
     global data_torrents
-    if 0 < int(call.data.split()[1]) < len(data_torrents[call.message.chat.id]):
-        bot.answer_callback_query(call.id, f'Вы выбрали стр.{str(int(call.data.split()[1]) + 1)}')
-        torrent_keyboard(call.message, int(call.data.split()[1]))
+    index = int(call.data.split()[1])
+    if 0 <= index < len(data_torrents[call.message.chat.id]):
+        bot.answer_callback_query(call.id, f'Вы выбрали стр.{index + 1}')
+        torrent_keyboard(call.message, index)
     else:
         bot.answer_callback_query(call.id, '⛔️')
 # <<< End torrent >>>
