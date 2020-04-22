@@ -14,6 +14,13 @@ def start_connection():  # Connection to DB
         log('Ошибка подключения к БД!', 'error')
 
 
+def get_stat(chat) -> list:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT * FROM Users WHERE supergroup LIKE \'{chat.id}\'')
+        res = cursor.fetchall()
+    return res
+
 def add_user(user, chat=None, connection=None) -> None:
     if connection is None:
         connection = start_connection()
@@ -56,8 +63,6 @@ def check_user(user_id: str) -> bool:
                           f'AND supergroup LIKE \'-1001339129150\'') == 0:
             return False
         else:
-            print(cursor.execute(
-                f'SELECT * FROM Users WHERE user_id LIKE \'{user_id}\' AND supergroup LIKE \'-1001339129150\';'))
             return True
 
 

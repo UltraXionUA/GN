@@ -1091,6 +1091,14 @@ def add_sticker_handler(message: Message) -> None:
 # <<< End add new sticker  >>>
 
 
+# <<< Stat  >>>
+@bot.message_handler(commands=['stat'])  # /stat
+def stat_handler(message: Message) -> None:
+    data = db.get_stat(message.chat)
+    print(data)
+# <<< End Stat >>>
+
+
 # <<< Change karma >>>
 @bot.message_handler(content_types=['text'], regexp=r'^\++$')  # Change karma
 @bot.message_handler(content_types=['text'], regexp=r'^\-+$')
