@@ -14,13 +14,18 @@ def start_connection():  # Connection to DB
         log('Ошибка подключения к БД!', 'error')
 
 
-def get_stat(chat) -> list:
+def get_stat(chat) -> list:  # -1001339129150
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM Users WHERE supergroup LIKE \'{chat.id}\' AND is_bote = \'False\' '
-                       f'ORDER BY karma DESC')  # -1001339129150
-        res = cursor.fetchall()
-    return res
+        cursor.execute(f'SELECT * FROM Users WHERE is_bote = \'False\' AND supergroup IS NOT NULL ORDER BY karma DESC')
+        res = list(cursor.fetchall())
+        true_res = []
+        if res:
+            for en, i in enumerate(res):
+                groups = i['supergroup'].split(',')
+                if str(chat.id) in groups:
+                    true_res.append(i)
+    return true_res
 
 
 def add_user(user, chat=None, connection=None) -> None:
@@ -34,7 +39,7 @@ def add_user(user, chat=None, connection=None) -> None:
                                f'(\'{int(user.id)}\', \'{str(user.is_bot)}\',\'{user.first_name}\','
                                f'\'{user.last_name}\',\'{user.username}\','
                                f' \'{str(True) if str(chat.id) == config.GN_ID else str(False)}\', '
-                               f'\'{str(chat.id)}\');')
+                               f'\'{str(chat.id)},\');')
             else:
                 cursor.execute('INSERT INTO Users (`user_id`, `is_bote`, `first_name`, `last_name`, '
                                '`username`) VALUE '
@@ -43,12 +48,21 @@ def add_user(user, chat=None, connection=None) -> None:
             connection.commit()
         else:
             if chat is not None and cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id} '
+                                                                   f'AND supergroup IS NULL;') != 0:
+                cursor.execute(f'UPDATE Users SET supergroup = \'{chat.id},\' WHERE user_id LIKE {user.id};')
+                connection.commit()
+            elif chat is not None and cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id} '
                                                                    f'AND supergroup IS NULL;') == 0:
-                cursor.execute(f'UPDATE Users SET supergroup = {chat.id} WHERE user_id LIKE {user.id};')
+                cursor.execute(f'SELECT supergroup FROM Users WHERE user_id LIKE \'{user.id},\';')
+                res = cursor.fetone()
+                cursor.execute(f'UPDATE Users SET supergroup = \'{res["supergroup"] + chat.id},\''
+                               f' WHERE user_id LIKE {user.id};')
+                connection.commit()
+            if chat is not None:
                 if str(chat.id) == config.GN_ID and cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id} '
                                                                    f'AND is_gn = \'False\';') == 0:
                     cursor.execute(f'UPDATE Users SET is_gn = \'True\' WHERE user_id LIKE {user.id}')
-                connection.commit()
+                    connection.commit()
 
 
 def get_all_jokes() -> list:  # All Joke
@@ -84,7 +98,6 @@ def change_karma(user, chat, action: list, exp: int) -> dict:  # Change Karma
         connection.commit()
     connection.close()
     return karma
-
 
 
 def random_gn_sticker() -> str:  # Random sticker from GN

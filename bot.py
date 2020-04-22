@@ -26,8 +26,8 @@ import os
 import re
 
 # <<< End import's>>
-# from config import TEST_TOKEN
-bot = TeleBot(TOKEN)
+from config import TEST_TOKEN
+bot = TeleBot(TEST_TOKEN)
 log('Bot is successful running!', 'info')
 
 # Turn on parser
@@ -43,7 +43,7 @@ def start_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Здравствуй, меня зовут GNBot🖥\n'
                                       'Я много функциональный и мултимедийный бот👾\n'
-                                      'Помощь /help, связь 💢@Ultra_Xion💢')
+                                      'Помощь /help\nСвязь 💢@Ultra_Xion💢')
 
 
 # <<< End start >>>
@@ -56,7 +56,7 @@ def help_handler(message: Message) -> None:
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Тут должна была быть помощь🆘, но её тут не будет🌚\n'
-                                      'Все свои вопросы и предложения вы можете писать мне 💢@Ultra_Xion💢'
+                                      'Все свои вопросы и предложения вы можете писать мне 💢@Ultra_Xion💢\n'
                                       'Почта: ultra25813@gmail.com')
 
 
@@ -1119,10 +1119,10 @@ def stat_handler(message: Message) -> None:
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if message.chat.type != 'private':
         data = db.get_stat(message.chat)
-        keyboard = InlineKeyboardMarkup()
-        keyboard.add(InlineKeyboardButton('Удалить', callback_data='Delete stat'))
-        text = '<b>Статистика:</b>\n'
         if data:
+            keyboard = InlineKeyboardMarkup()
+            keyboard.add(InlineKeyboardButton('Удалить', callback_data='Delete stat'))
+            text = '<b>Статистика:</b>\n'
             for en, i in enumerate(data):
                 if en == 5:
                     break
@@ -1138,17 +1138,14 @@ def stat_handler(message: Message) -> None:
                             f" {i['last_name'] if i['last_name'] != 'None' else ''} - {i['karma']}{medal}\n"
             stat_msg[message.chat.id] = bot.send_message(message.chat.id, text, parse_mode='HTML',
                                                          reply_markup=keyboard)
-        else:
-            bot.send_message(message.chat.id, 'Функция станет доступна когда '
-                                              'пользователи вашей группы поставят друг другу \'+\'')
     else:
-        bot.send_message(message.chat.id, 'Функция достпуна только в группах')
+        bot.send_message(message.chat.id, 'Функция достпуна только в группах😔')
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'Delete stat')
 def callback_query(call):
     global stat_msg, com_stat_msg
-    if call.message.chat.id in stat_msg and call.message.id in com_stat_msg:
+    if call.message.chat.id in stat_msg and call.message.chat.id in com_stat_msg:
         bot.answer_callback_query(call.id, 'Удалено')
         bot.delete_message(com_stat_msg[call.message.chat.id].chat.id, com_stat_msg[call.message.chat.id].message_id)
         bot.delete_message(stat_msg[call.message.chat.id].chat.id, stat_msg[call.message.chat.id].message_id)
