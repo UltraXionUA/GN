@@ -140,15 +140,6 @@ def get_simple_answer() -> str:  # Get random answer
     return result
 
 
-def add_to_db(word, answer) -> None:  # Add word and answer
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        cursor.execute(f'INSERT INTO `Word_Answer`(`word`, `answer`) VALUES (\'{word}\', \'{answer}\');')
-        connection.commit()
-    connection.close()
-    logging.info("Отключение от БД")
-
-
 def get_answer(word) -> str:  # Get random answer with word
     connection = start_connection()
     with connection.cursor() as cursor:
@@ -158,16 +149,6 @@ def get_answer(word) -> str:  # Get random answer with word
     connection.close()
     logging.info("Отключение от БД")
     return result
-
-
-def get_all_word() -> list:  # Get all answers
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        cursor.execute(f'SELECT `word` FROM Word_Answer')
-        result = set(x['word'].lower() for x in cursor.fetchall())
-    connection.close()
-    logging.info("Отключение от БД")
-    return list(result)
 
 
 def get_code(name: str) -> [dict, None]:  # Get all answers
