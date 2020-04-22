@@ -27,8 +27,8 @@ import os
 import re
 
 # <<< End import's>>
-# from config import TEST_TOKEN
-bot = TeleBot(TOKEN)
+from config import TEST_TOKEN
+bot = TeleBot(TEST_TOKEN)
 log('Bot is successful running!', 'info')
 
 # Turn on parser
@@ -40,9 +40,6 @@ Parser.start()
 @bot.message_handler(commands=['start'])  # /start
 def start_handler(message: Message) -> None:
     log(message, 'info')
-    if str(message.chat.id) == "-1001339129150":
-        print('yes')
-    print(message.chat.id)
     if message.chat.type == 'private':
         db.add_user(message.from_user)
     else:
@@ -1092,10 +1089,37 @@ def add_sticker_handler(message: Message) -> None:
 
 
 # <<< Stat  >>>
+stat_msg = defaultdict(Message)
+
+
 @bot.message_handler(commands=['stat'])  # /stat
 def stat_handler(message: Message) -> None:
+    global stat_msg
+    log(message, 'info')
     data = db.get_stat(message.chat)
-    print(data)
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton('Удалить', callback_data='Delete stat'))
+    text = '<b>Статистика:</b>\n'
+    if data:
+        for en, i in enumerate(data):
+            if en > 5:
+                break
+            text += f"<i>{en + 1}.</i> {i['first_name']}" \
+                    f" {i['last_name'] if i['last_name'] != 'None' else ''} - {i['karma']}\n"
+        stat_msg[message.chat.id] = bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=keyboard)
+    else:
+        bot.send_message(message.chat.id, 'Функция станет доступна когда '
+                                          'пользователи вашей группы поставят друг другу \'+\'')
+
+
+@bot.callback_query_handler(func=lambda call: call.data == 'Delete stat')
+def callback_query(call):
+    global stat_msg
+    if call.message.chat.id in stat_msg:
+        bot.delete_message(stat_msg[call.message.chat.id].chat.id, stat_msg[call.message.chat.id].message_id)
+    else:
+        bot.answer_callback_query(call.id, '⛔️')
+
 # <<< End Stat >>>
 
 

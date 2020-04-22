@@ -17,9 +17,10 @@ def start_connection():  # Connection to DB
 def get_stat(chat) -> list:
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM Users WHERE supergroup LIKE \'{chat.id}\'')
+        cursor.execute(f'SELECT * FROM Users WHERE supergroup LIKE \'{chat.id}\' ORDER BY karma DESC')
         res = cursor.fetchall()
     return res
+
 
 def add_user(user, chat=None, connection=None) -> None:
     if connection is None:
