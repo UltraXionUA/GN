@@ -1332,7 +1332,8 @@ def reset_users() -> None:  # Reset users for Dice game
 def text_handler(message: Message) -> None:
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    db.change_karma(message.from_user, message.chat, '+')
+    if message.chat.type != 'private':
+        db.change_karma(message.from_user, message.chat, '+')
     text = message.text.lower()
     if text in ['стикер', 'стикерочек', 'sticker']:
         gn_sticker_handler(message)
