@@ -50,8 +50,8 @@ def get_day(data: str) -> str:
     for num, day in {1: 'ПН', 2: 'ВТ', 3: 'СР', 4: 'ЧТ', 5: 'ПТ', 6: 'СБ', 7: 'ВС'}.items():
         if num == week_day:
             return day
-        else:
-            log('Wrong day of week', 'warning')
+    else:
+        log('Wrong day of week', 'warning')
 
 
 def sec_to_time(seconds: int) -> str:
