@@ -1164,8 +1164,8 @@ def callback_query(call):
 @bot.message_handler(content_types=['text'], regexp=r'^\-+$')
 def text_handler(message: Message) -> None:
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    if message.chat.type != 'private':
-        if message.reply_to_message:
+    if message.chat.type != 'private' and message.reply_to_message:
+        if message.from_user.id != message.reply_to_message.from_user.id:
             log(message, 'info')
             msg = list(message.text)
             reply_to = message.reply_to_message.from_user
