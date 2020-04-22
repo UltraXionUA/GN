@@ -1096,28 +1096,31 @@ stat_msg = defaultdict(Message)
 def stat_handler(message: Message) -> None:
     global stat_msg
     log(message, 'info')
-    data = db.get_stat(message.chat)
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton('Удалить', callback_data='Delete stat'))
-    text = '<b>Статистика:</b>\n'
-    if data:
-        for en, i in enumerate(data):
-            if en == 5:
-                break
-            else:
-                medal = ''
-                if en == 0:
-                    medal = '🥇'
-                elif en == 1:
-                    medal = '🥈'
-                elif en == 2:
-                    medal = '🥉'
-                text += f"<i>{en + 1}.</i> {i['first_name']}" \
-                        f" {i['last_name'] if i['last_name'] != 'None' else ''} - {i['karma']}{medal}\n"
-        stat_msg[message.chat.id] = bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=keyboard)
+    if message.chat.type != 'private':
+        data = db.get_stat(message.chat)
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton('Удалить', callback_data='Delete stat'))
+        text = '<b>Статистика:</b>\n'
+        if data:
+            for en, i in enumerate(data):
+                if en == 5:
+                    break
+                else:
+                    medal = ''
+                    if en == 0:
+                        medal = '🥇'
+                    elif en == 1:
+                        medal = '🥈'
+                    elif en == 2:
+                        medal = '🥉'
+                    text += f"<i>{en + 1}.</i> {i['first_name']}" \
+                            f" {i['last_name'] if i['last_name'] != 'None' else ''} - {i['karma']}{medal}\n"
+            stat_msg[message.chat.id] = bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=keyboard)
+        else:
+            bot.send_message(message.chat.id, 'Функция станет доступна когда '
+                                              'пользователи вашей группы поставят друг другу \'+\'')
     else:
-        bot.send_message(message.chat.id, 'Функция станет доступна когда '
-                                          'пользователи вашей группы поставят друг другу \'+\'')
+        bot.send_message(message.chat.id, 'Функция достпуна только в группах')
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'Delete stat')
