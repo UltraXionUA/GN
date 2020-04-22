@@ -42,8 +42,7 @@ def start_handler(message: Message) -> None:
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Здравствуй, меня зовут GNBot🖥\n'
-                                      'Я много функциональный и мултимедийный бот'
-                                      'Весь доступный функционал /'
+                                      'Я много функциональный и мултимедийный бот👾\n'
                                       'Помощь /help, связь 💢@Ultra_Xion💢')
 
 
@@ -57,7 +56,7 @@ def help_handler(message: Message) -> None:
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Тут должна была быть помощь🆘, но её тут не будет🌚\n'
-                                      'Все свои вопросы и предложения вы моежет писать мне 💢@Ultra_Xion💢'
+                                      'Все свои вопросы и предложения вы можете писать мне 💢@Ultra_Xion💢'
                                       'Почта: ultra25813@gmail.com')
 
 
