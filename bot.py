@@ -6,7 +6,7 @@
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, InputMediaVideo
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video, get_instagram_photos
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
-from config import TOKEN, API, Empty_bg, URLS, GNBot_ID, Admib_ID
+from config import TOKEN, API, Empty_bg, URLS, GNBot_ID, Admin_ID, bot
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from urllib import parse, request, error
 from pytube import YouTube, exceptions
@@ -15,7 +15,6 @@ from pytils.translit import slugify
 from json import JSONDecodeError
 from pydub import AudioSegment
 from threading import Thread
-from telebot import TeleBot
 from threading import Timer
 import tempfile
 import requests
@@ -27,8 +26,6 @@ import os
 import re
 
 # <<< End import's>>
-from config import TEST_TOKEN
-bot = TeleBot(TEST_TOKEN)
 log('Bot is successful running!', 'info')
 
 # Turn on parser memes
@@ -1210,7 +1207,7 @@ def text_handler(message: Message) -> None:
 # <<< Add answer >>>
 @bot.message_handler(content_types=['text'], regexp=r'^-\s.+')  # Add answer to DB
 def text_handler(message: Message) -> None:
-    if message.from_user.id = int(Admin_ID):
+    if message.from_user.id == int(Admin_ID):
         db.add_answer(message.text.replace('-', '').lstrip())
         bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
 
