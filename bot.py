@@ -27,8 +27,8 @@ import os
 import re
 
 # <<< End import's>>
-# from config import TEST_TOKEN
-bot = TeleBot(TOKEN)
+from config import TEST_TOKEN
+bot = TeleBot(TEST_TOKEN)
 log('Bot is successful running!', 'info')
 
 # Turn on parser memes
@@ -203,12 +203,19 @@ def send_mp3(message: Message, file_id: int) -> None:
 
 
 # <<< Ru meme >>>
+meme_data = defaultdict(list)
+
+
 @bot.message_handler(commands=['ru_meme'])  # /ru_meme
 def meme_handler(message: Message) -> None:
+    global meme_data
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+    if message.chat.id not in meme_data or len(meme_data[message.chat.id]) == 1:
+        meme_data[message.chat.id] = db.get_all_memes()
+    meme = meme_data[message.chat.id].pop(random.choice(range(len(meme_data[message.chat.id]) - 1)))
     bot.send_chat_action(message.chat.id, 'upload_photo')
-    bot.send_photo(message.chat.id, db.random_meme())
+    bot.send_photo(message.chat.id, meme['url'])
 
 
 # <<< End ru meme >>>
@@ -1159,32 +1166,49 @@ def callback_query(call):
 
 
 # <<< Change karma >>>
-@bot.message_handler(content_types=['text'], regexp=r'^\++$')  # Change karma
-@bot.message_handler(content_types=['text'], regexp=r'^\-+$')
+time_to_change = defaultdict(bool)
+msg_from_user = defaultdict(Message)
+
+
+@bot.message_handler(content_types=['text'], regexp=r'^\+{1,5}')  # Change karma
+@bot.message_handler(content_types=['text'], regexp=r'^\-{1,5}')
 def text_handler(message: Message) -> None:
+    def set_true() -> None:
+        time_to_change[message.from_user.id] = True
+    global time_to_change, msg_from_user
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    if message.chat.type != 'private' and message.reply_to_message:
+    if message.from_user.id not in time_to_change:
+        time_to_change[message.from_user.id] = True
+    if message.chat.type == 'private' and message.reply_to_message:
         if message.from_user.id != message.reply_to_message.from_user.id:
-            log(message, 'info')
-            msg = list(message.text)
-            reply_to = message.reply_to_message.from_user
-            if msg[0] == '+':
-                bot.send_message(message.chat.id, f'{message.from_user.username.title()}'
-                                                  f' подкинул {len(msg) * 10} к карме😈 '
-                                                  f'{reply_to.username.title()}\nИтого карма: '
-                                                  f'{db.change_karma(reply_to, message.chat, msg, 10)}')
+            if time_to_change[message.from_user.id]:
+                log(message, 'info')
+                time_to_change[message.from_user.id] = False
+                msg_from_user[message.from_user.id] = message
+                msg = list(message.text)
+                reply_to = message.reply_to_message.from_user
+                if msg[0] == '+':
+                    bot.send_message(message.chat.id, f'{message.from_user.username.title()}'
+                                                      f' подкинул {len(msg) * 10} к карме😈 '
+                                                      f'{reply_to.username.title()}\nИтого карма: '
+                                                      f'{db.change_karma(reply_to, message.chat, msg, 10)}')
+                else:
+                    bot.send_message(message.chat.id, f'{message.from_user.username.title()} '
+                                                      f'отнял от кармы -{len(msg) * 10}👿 '
+                                                      f'{reply_to.username.title()}\nИтого карма: '
+                                                      f'{db.change_karma(reply_to, message.chat, msg, 10)}')
+                Timer(30.0, set_true).run()
             else:
-                bot.send_message(message.chat.id, f'{message.from_user.username.title()} '
-                                                  f'отнял от кармы -{len(msg) * 10}👿 '
-                                                  f'{reply_to.username.title()}\nИтого карма: '
-                                                  f'{db.change_karma(reply_to, message.chat, msg, 10)}')
+                bot.send_message(message.chat.id, 'Операция доступна один раз в 30 секунд😔\nПожалуйста ожидайте')
+        else:
+            bot.send_message(message.chat.id, 'Нельзя менять карму самому себе😔')
 
 
 # <<< End change karma >>>
 
 
 # <<< Add answer >>>
-@bot.message_handler(content_types=['text'], regexp=r'^-.+$')  # Add answer to DB
+@bot.message_handler(content_types=['text'], regexp=r'^-\s.+$')  # Add answer to DB
 def text_handler(message: Message) -> None:
     db.add_answer(message.text.replace('-', '').lstrip())
     bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
@@ -1333,6 +1357,9 @@ def reset_users() -> None:  # Reset users for Dice game
 
 
 # <<< All message >>>
+data_answers = defaultdict(list)
+
+
 @bot.message_handler(content_types=['text'])
 @bot.edited_message_handler(content_types=['text'])
 def text_handler(message: Message) -> None:
@@ -1347,16 +1374,20 @@ def text_handler(message: Message) -> None:
         gif_handler(message)
     elif text in ['мем', 'мемас', 'мемчик', 'meme']:
         meme_handler(message)
-    elif text in ['шутка', 'шутку', 'joke']:
+    elif text in ['шутка', 'шутку', 'joke', 'joke']:
         joke_handler(message)
     elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
         dice_handler(message)
-    if message.chat.type != 'private':
+    if message.chat.type == 'private':
+        if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
+            data_answers[message.chat.id] = db.get_all_answers()
         if message.reply_to_message is not None:
             if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(50):
-                bot.reply_to(message, db.get_simple_answer())
+                answer = data_answers[message.chat.id].pop(random.choice(range(len(data_answers[message.chat.id]) - 1)))
+                bot.reply_to(message, answer['answer'])
         elif rend_d(10):
-            bot.reply_to(message, db.get_simple_answer())
+            answer = data_answers[message.chat.id].pop(random.choice(range(len(data_answers[message.chat.id]) - 1)))
+            bot.reply_to(message, answer['answer'])
 
 
 # <<< End all message >>>

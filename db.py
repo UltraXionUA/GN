@@ -3,7 +3,6 @@
 from funcs import log
 import config
 import pymysql
-import logging
 
 
 def start_connection():  # Connection to DB
@@ -108,7 +107,6 @@ def random_gn_sticker() -> str:  # Random sticker from GN
         cursor.execute('SELECT `item_id` FROM Stickers_gn ORDER BY RAND() LIMIT 1')
         result = cursor.fetchone()['item_id']
     connection.close()
-    logging.info("Отключение от БД")
     return result
 
 
@@ -123,7 +121,6 @@ def add_sticker(item_id, emoji, name) -> None:  # Add sticker
                            f'\'{emoji}\',\'{name}\');')
             connection.commit()
     connection.close()
-    logging.info("Отключение от БД")
 
 
 def random_sticker() -> str:  # Random sticker
@@ -132,7 +129,6 @@ def random_sticker() -> str:  # Random sticker
         cursor.execute('SELECT `item_id` FROM Stickers ORDER BY RAND() LIMIT 1')
         result = cursor.fetchone()['item_id']
     connection.close()
-    logging.info("Отключение от БД")
     return result
 
 
@@ -142,17 +138,15 @@ def add_answer(answer) -> None:  # Add answer
         cursor.execute(f'INSERT INTO `Answer`(`answer`) VALUES (\'{answer}\');')
         connection.commit()
     connection.close()
-    logging.info("Отключение от БД")
 
 
-def get_simple_answer() -> str:  # Get random answer
+def get_all_answers() -> list:  # Get random answer
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(
-            f'SELECT `answer` FROM Answer ORDER BY RAND() LIMIT 1')
-        result = cursor.fetchone()['answer']
+            f'SELECT answer FROM Answer;')
+        result = cursor.fetchall()
     connection.close()
-    logging.info("Отключение от БД")
     return result
 
 
@@ -163,7 +157,6 @@ def get_answer(word) -> str:  # Get random answer with word
             f'SELECT answer FROM Word_Answer WHERE word LIKE \'{word}\' ORDER BY RAND() LIMIT 1')
         result = cursor.fetchone()['answer']
     connection.close()
-    logging.info("Отключение от БД")
     return result
 
 
@@ -173,17 +166,15 @@ def get_code(name: str) -> [dict, None]:  # Get all answers
         cursor.execute(f'SELECT code FROM PasteBin WHERE name LIKE \'{name}\'')
         result = cursor.fetchone()
     connection.close()
-    logging.info("Отключение от БД")
     return result
 
 
-def random_meme() -> str:  # Random meme
+def get_all_memes() -> list:  # Random meme
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute('SELECT `url` FROM Memes ORDER BY RAND() LIMIT 1')  # Выполнить команду запроса.
-        result = cursor.fetchone()['url']
+        cursor.execute('SELECT `url` FROM Memes;')  # Выполнить команду запроса.
+        result = cursor.fetchall()
     connection.close()
-    logging.info("Отключение от БД")
     return result
 
 
@@ -195,7 +186,6 @@ def add_memes(array) -> None:  # Add memes
                 cursor.execute(f'INSERT INTO `Memes`(`url`) VALUES (\'{i}\');')
                 connection.commit()
     connection.close()
-    logging.info("Отключение от БД")
 
 
 # def add_gn_sticker(item_id, emoji, name):  # Add stickers from GN
