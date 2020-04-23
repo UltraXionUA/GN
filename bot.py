@@ -834,31 +834,38 @@ def callback_query(call):
 def get_video(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_video')
     bot.delete_message(message.chat.id, message.message_id)
-    if re.fullmatch('^https?://www.instagram.com/.+', message.text):
-        url = re.search('^https?://www.instagram.com/p/.+/', message.text).group(0)
-        try:
-            data = get_instagram_video(url)
-        except JSONDecodeError:
-            bot.send_message(message.chat.id, 'Не поддерживаются работа закрытыми аккаунтами😔')
-        else:
-            if data:
-                if len(data) == 1:
-                    if data[0]['is_video'] is True:
-                        keyboard = InlineKeyboardMarkup()
-                        keyboard.add(InlineKeyboardButton('Instagram', url=url))
-                        bot.send_video(message.chat.id, data[0]['url'], reply_markup=keyboard)
-                    else:
-                        bot.send_message(message.chat.id, 'По ссылке нет видео😔')
-                else:
-                    list_data = []
-                    for i in data:
-                        if i['is_video'] is True:
-                            list_data.append(InputMediaVideo(i['url']))
-                        else:
-                            list_data.append(InputMediaPhoto(i['url']))
-                    bot.send_media_group(message.chat.id, list_data)
+    if re.fullmatch(r'^https?://www.instagram.com/.+', message.text):
+        url = None
+        if re.match(r'^https?://www.instagram.com/p/.+', message.text):
+            url = re.search('^https?://www.instagram.com/p/.+/', message.text).group(0)
+        if re.match(r'^https?://www.instagram.com/tv/.+', message.text):
+            url = re.search('^https?://www.instagram.com/tv/.+/', message.text).group(0)
+        if url is not None:
+            try:
+                data = get_instagram_video(url)
+            except JSONDecodeError:
+                bot.send_message(message.chat.id, 'Не поддерживаются работа закрытыми аккаунтами😔')
             else:
-                bot.send_message(message.chat.id, 'По ссылке ничего не обнаружено😔')
+                if data:
+                    if len(data) == 1:
+                        if data[0]['is_video'] is True:
+                            keyboard = InlineKeyboardMarkup()
+                            keyboard.add(InlineKeyboardButton('Instagram', url=url))
+                            bot.send_video(message.chat.id, data[0]['url'], reply_markup=keyboard)
+                        else:
+                            bot.send_message(message.chat.id, 'По ссылке нет видео😔')
+                    else:
+                        list_data = []
+                        for i in data:
+                            if i['is_video'] is True:
+                                list_data.append(InputMediaVideo(i['url']))
+                            else:
+                                list_data.append(InputMediaPhoto(i['url']))
+                        bot.send_media_group(message.chat.id, list_data)
+                else:
+                    bot.send_message(message.chat.id, 'По ссылке ничего не обнаружено😔')
+        else:
+            bot.send_message(message.chat.id, 'Не смог получить данные😔')
     else:
         bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
 
