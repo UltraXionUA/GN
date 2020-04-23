@@ -26,8 +26,8 @@ import os
 import re
 
 # <<< End import's>>
-from config import TEST_TOKEN
-bot = TeleBot(TEST_TOKEN)
+# from config import TEST_TOKEN
+bot = TeleBot(TOKEN)
 log('Bot is successful running!', 'info')
 
 # Turn on parser
@@ -1349,7 +1349,6 @@ def text_handler(message: Message) -> None:
         joke_handler(message)
     elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
         dice_handler(message)
-    print(message.reply_to_message)
     if message.reply_to_message is not None:
         if message.reply_to_message.from_user.id == GNBot_ID and rend_d(50):
             bot.reply_to(message, db.get_simple_answer())
