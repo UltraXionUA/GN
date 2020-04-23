@@ -1378,11 +1378,11 @@ def text_handler(message: Message) -> None:
         joke_handler(message)
     elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
         dice_handler(message)
-    if message.chat.type == 'private':
+    if message.chat.type == 'private' and message.chat.id != GNBot_ID:
         if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
             data_answers[message.chat.id] = db.get_all_answers()
         if message.reply_to_message is not None:
-            if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(50):
+            if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(40):
                 answer = data_answers[message.chat.id].pop(random.choice(range(len(data_answers[message.chat.id]) - 1)))
                 bot.reply_to(message, answer['answer'])
         elif rend_d(10):
