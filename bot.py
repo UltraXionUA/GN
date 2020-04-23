@@ -1,4 +1,5 @@
 #!/home/UltraXionUA/.virtualenvs/myvirtualenv/bin/python3.8
+#!chmod +x /home/UltraXionUA/GN/bot.py
 # -*- coding: utf-8 -*-
 """Mains file for GNBot"""
 # <<< Import's >>>
@@ -26,11 +27,11 @@ import os
 import re
 
 # <<< End import's>>
-# from config import TEST_TOKEN
-bot = TeleBot(TOKEN)
+from config import TEST_TOKEN
+bot = TeleBot(TEST_TOKEN)
 log('Bot is successful running!', 'info')
 
-# Turn on parser
+# Turn on parser memes
 Parser = Thread(target=main, name='Parser')
 Parser.start()
 
@@ -56,6 +57,7 @@ def help_handler(message: Message) -> None:
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Тут должна была быть помощь🆘, но её тут не будет🌚\n'
+                                      'Список всех команд можно увидить введя \'\\\'\n'
                                       'Все свои вопросы и предложения вы можете писать мне 💢@Ultra_Xion💢\n'
                                       'Почта: ultra25813@gmail.com')
 
@@ -1351,7 +1353,7 @@ def text_handler(message: Message) -> None:
         dice_handler(message)
     if message.chat.type != 'private':
         if message.reply_to_message is not None:
-            if message.reply_to_message.from_user.id == GNBot_ID and rend_d(50):
+            if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(50):
                 bot.reply_to(message, db.get_simple_answer())
         elif rend_d(10):
             bot.reply_to(message, db.get_simple_answer())
