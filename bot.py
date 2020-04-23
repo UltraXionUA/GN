@@ -834,13 +834,10 @@ def callback_query(call):
 def get_video(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_video')
     bot.delete_message(message.chat.id, message.message_id)
-    if re.fullmatch(r'^https?://www.instagram.com/.+', message.text):
-        url = None
-        if re.match(r'^https?://www.instagram.com/p/.+', message.text):
-            url = re.search('^https?://www.instagram.com/p/.+/', message.text).group(0)
-        elif re.match(r'^https?://www.instagram.com/tv/.+', message.text):
-            url = re.search('^https?://www.instagram.com/tv/.+/', message.text).group(0)
+    if re.match(r'^https?://(www.)?instagram.com/\w+/.+', message.text):
+        url = re.search(r'^https?://(www.)?instagram.com/\w+/.+/', message.text)
         if url is not None:
+            url = url.group(0)
             try:
                 data = get_instagram_video(url)
             except JSONDecodeError:
@@ -873,13 +870,10 @@ def get_video(message: Message) -> None:
 def get_instagram_photo(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.delete_message(message.chat.id, message.message_id)
-    if re.fullmatch('^https?://www.instagram.com/.+', message.text):
-        url = None
-        if re.match(r'^https?://www.instagram.com/p/.+', message.text):
-            url = re.search('^https?://www.instagram.com/p/.+/', message.text).group(0)
-        elif re.match(r'^https?://www.instagram.com/tv/.+', message.text):
-            url = re.search('^https?://www.instagram.com/tv/.+/', message.text).group(0)
+    if re.match(r'^https?://(www.)?instagram.com/\w+/.+', message.text):
+        url = re.search(r'^https?://(www.)?instagram.com/\w+/.+/', message.text)
         if url is not None:
+            url = url.group(0)
             try:
                 data = get_instagram_photos(url)
             except JSONDecodeError:
