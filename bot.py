@@ -3,9 +3,10 @@
 """Mains file for GNBot"""
 # <<< Import's >>>
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, InputMediaVideo
+from telebot.types import LabeledPrice, PreCheckoutQuery, ShippingQuery
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video, get_instagram_photos
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time, clear_date
-from config import TOKEN, API, Empty_bg, URLS, GNBot_ID, Admin_ID, bot
+from config import TOKEN, API, Empty_bg, URLS, GNBot_ID, Admin_ID, bot, PAYMENT_TOKEN
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from urllib import parse, request, error
 from pytube import YouTube, exceptions
@@ -40,7 +41,7 @@ def start_handler(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Здравствуй, меня зовут GNBot🖥\n'
                                       'Я много функциональный и мултимедийный бот👾\n'
-                                      'Помощь /help\nСвязь 💢@Ultra_Xion💢')
+                                      'Помощь /help')
 
 
 # <<< End start >>>
@@ -55,6 +56,7 @@ def help_handler(message: Message) -> None:
     bot.send_message(message.chat.id, 'Тут должна была быть помощь🆘, но её тут не будет🌚\n'
                                       'Список всех команд можно увидить введя \'\\\'\n'
                                       'Все свои вопросы и предложения вы можете писать мне 💢@Ultra_Xion💢\n'
+                                      'Если вы нашли баг или ошибку просьба сообщить мне\n'
                                       'Почта: ultra25813@gmail.com')
 
 
@@ -230,6 +232,91 @@ def meme_en_handler(message: Message) -> None:
 
 
 # <<< End en meme >>>
+
+
+# <<< Donate >>>
+@bot.message_handler(commands=['donate'])  # /donate
+def donate_handler(message: Message) -> None:
+    log(message, 'info')
+    bot.send_chat_action(message.chat.id, 'typing')
+    if message.chat.type == 'private':
+        bot.send_message(message.chat.id, '<b>К сожеление функция не доработана</b>😔\n'
+                                          'Если вы хотите поддержать проект, '
+                                          'вы можете превести желаемую сумму на карту\n'
+                                          '<b>MonoBank:</b> <i>5375 4141 1577 0850</i>\n'
+                                          '<b>C уважением <i>@Ultra_Xion</i></b>', parse_mode='HTML')
+        # bot.send_message(message.chat.id, 'Здесь вы можете поддержать разработчика и дать мотивацию '
+        #                                   'на внесение нового фунционала в <b>GNBot</b>\n'
+        #                                   'C уважением <i>@Ultra_Xion</i>', parse_mode='HTML')
+        # if PAYMENT_TOKEN.split(':')[1] == 'LIVE':
+        #     keyboard = InlineKeyboardMarkup(row_width=1)
+        #     keyboard.add(InlineKeyboardButton('1 грн', callback_data='1 UAH'),
+        #                  InlineKeyboardButton('10 грн', callback_data='10 UAH'),
+        #                  InlineKeyboardButton('100 грн', callback_data='100 UAH'),
+        #                  InlineKeyboardButton('1000 грн', callback_data='1000 UAH'),
+        #                  InlineKeyboardButton('Своя сумма', callback_data='Своя сумма'))
+        #     msg = bot.send_message(message.chat.id, 'Сумма поддержки💸', reply_markup=keyboard)
+        #     time.sleep(20)
+        #     bot.delete_message(msg.chat.id, msg.message_id)
+    else:
+        bot.send_message(message.chat.id, 'К сожелению в группе эта функция недоступна😔\n'
+                                          'Что бы поддержать нас вы можете восползоваться'
+                                          'этой командой в личном чате с ботом 💢@GNTMBot💢')
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^\d+\sUAH$', call.data) or call.data == 'Своя сумма')
+def donate_query(call):
+    bot.answer_callback_query(call.id, 'Вы выбрали ' + call.data)
+    bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
+    if call.data == 'Своя сумма':
+        msg = bot.send_message(call.message.chat.id, 'Введите сумму🧐')
+        bot.register_next_step_handler(msg, send_payment, 'UAH')
+    else:
+        send_payment(call.message, call.data)
+
+
+def send_payment(message: Message, money) -> None:
+    if money == 'UAH' and message.text.isdigit():
+        local_money = message.text + ' ' + money
+    else:
+        local_money = money
+    price = LabeledPrice('Поддержать', amount=int(local_money.split()[0]) * 100)
+    bot.send_invoice(message.chat.id, title='Поддержка',
+                     description='Поддержка разработчика GNBot',
+                     provider_token=PAYMENT_TOKEN, currency='uah',
+                     photo_url=URLS['logo'],
+                     photo_height=1494, photo_width=1295, photo_size=142,
+                     is_flexible=False, prices=[price],
+                     start_parameter='donate-programmer-gnbot',
+                     invoice_payload='donate-is-done')
+
+
+@bot.shipping_query_handler(func=lambda query: True)
+def shipping(shipping_query: ShippingQuery):
+    bot.answer_shipping_query(shipping_query.id, ok=True,
+                              error_message='Что-то пошло не так😔\n!'
+                                            'Попробуйте повторить операцию чуть позже')
+
+
+@bot.pre_checkout_query_handler(func=lambda query: True)
+def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
+    bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True,
+                                    error_message="Что-то пошло не так😔\n"
+                                                  "Удебитель в правельности вводимых данные "
+                                                  "и попробуйте снова через пару минут")
+
+
+@bot.message_handler(content_types=['successful_payment'])
+def process_successful_payment(message: Message) -> None:
+    promo = message.successful_payment
+    log(f'Successful_payment\nType: {promo.invoice_payload}\nSum: {promo.total_amount}{promo.currency}')
+    bot.send_message(message.chat.id, f'Платеж прошел успешно😌\n'
+                                      f'{message.successful_payment.total_amount // 100} '
+                                      f'{message.successful_payment.currency} были начислены на свет\n'
+                                      f'Благодарим вас за поддержку проекта🥳')
+
+
+# <<< End donate >>>
 
 
 # <<< Weather >>>
@@ -664,16 +751,16 @@ def send_news(message: Message, index: int) -> None:
                 bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
                                        message_id=news_msg[message.chat.id].message_id,
                                        media=InputMediaPhoto(news[message.chat.id][index]['image'],
-                                       caption=f"<b>{news[message.chat.id][index]['title']}</b>\n\n"
-                                                 f"{news[message.chat.id][index]['description']}\n\n<i>"
-                                                   f"{clear_date(news[message.chat.id][index]['published'])}</i>",
+                                       caption=f"<b>{news[message.chat.id][index]['title']}</b>"
+                                               f"\n\n{news[message.chat.id][index]['description']}"
+                                               f"\n\n<i>{clear_date(news[message.chat.id][index]['published'])}</i>",
                                        parse_mode='HTML'), reply_markup=keyboard2)
             else:
                 bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
                                        message_id=news_msg[message.chat.id].message_id,
                                        media=InputMediaPhoto(news[message.chat.id][index]['image'],
                                        caption=f"<b>{news[message.chat.id][index]['title']}</b>\n<i>"
-                                                 f"{clear_date(news[message.chat.id][index]['published'])}</i>",
+                                               f"{clear_date(news[message.chat.id][index]['published'])}</i>",
                                        parse_mode='HTML'), reply_markup=keyboard2)
     except KeyError:
         log('Key Error in news', 'warning')
@@ -1419,35 +1506,68 @@ def text_handler(message: Message) -> None:
 @bot.message_handler(content_types=['voice'])  # Answer on voice
 def voice_handler(message: Message) -> None:
     if rend_d(25):
-        bot.send_chat_action(message.chat.id, 'typing')
         bot.reply_to(message, random.choice(['Чё ты там пизданул? Повтори!', 'Писклявый голосок',
                                              'Лучше бы я это не слышал']))
 
 
 @bot.message_handler(content_types=['new_chat_members'])  # Answer on new member
 def new_member_handler(message: Message) -> None:
-    bot.send_chat_action(message.chat.id, 'typing')
-    bot.send_message(message.chat.id, random.choice(['Опа чирик! Вечер в хату', 'Приветствую тебя',
-                                                     'Алоха друг мой!']))
+    if db.check_ban_user(message.new_chat_member.id):
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton('Кикнуть🥊', callback_data=f'Kick '
+                                                                   f'{message.chat.id} {message.new_chat_member.id}'),
+                     InlineKeyboardButton('Забанить🚫', callback_data=f'Ban '
+                                                                    f'{message.chat.id} {message.new_chat_member.id}'),
+                     InlineKeyboardButton('Замутить❌', callback_data=f'Mute '
+                                                                      f'{message.chat.id} {message.new_chat_member.id}')
+                     )
+        msg = bot.send_message(message.chat.id, random.choice(['Опа чирик! Вечер в хату', 'Приветствую тебя',
+                                                         'Алоха друг мой!']), reply_markup=keyboard)
+
+        time.sleep(120)
+        bot.delete_message(msg.chat.id, msg.message_id)
+    else:
+        bot.kick_chat_member(message.chat.id, message.new_chat_member.id)
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Kick\s.?\w+\s.?\w+$', call.data))
+def code_callback_query(call):
+    bot.answer_callback_query(call.id, 'Пользователь кикнут')
+    chat = call.data.split()[1]
+    user = call.data.split()[2]
+    bot.kick_chat_member(chat, user)
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Ban\s.?\w+\s.?\w+$', call.data))
+def code_callback_query(call):
+    bot.answer_callback_query(call.id, 'Пользователь забанен')
+    chat = call.data.split()[1]
+    user = call.data.split()[2]
+    db.ban_user(user)
+    bot.kick_chat_member(chat, user)
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Mute\s.?\w+\s.?\w+$', call.data))
+def code_callback_query(call):
+    bot.answer_callback_query(call.id, 'Пользователь замучен')
+    chat = call.data.split()[1]
+    user = call.data.split()[2]
 
 
 @bot.message_handler(content_types=['left_chat_member'])  # Answer on left group
 def left_member_handler(message: Message) -> None:
-    bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, random.choice(['Слился падло(', 'Буенос мучачес пидрилас', 'Прощай любовь моя']))
 
 
 @bot.message_handler(content_types=['location'])  # Answer on location
 def location_handler(message: Message) -> None:
     if rend_d(25):
-        bot.send_chat_action(message.chat.id, 'typing')
         bot.reply_to(message.chat.id, ['Скинул мусорам', 'Прикоп или магнит?', 'Ебеня какие то'])
 
 
 @bot.message_handler(content_types=['contact'])  # Answer on contact
 def contact_handler(message: Message) -> None:
     if rend_d(25):
-        bot.send_chat_action(message.chat.id, 'typing')
         bot.reply_to(message.chat.id, random.choice(['Если мне будет одиноко и холодно я знаю куда позвонить',
                                                      'Трубку не берут', 'Сохранил']))
 
@@ -1456,83 +1576,3 @@ def contact_handler(message: Message) -> None:
 
 
 bot.polling(none_stop=True)
-time.sleep(100)
-
-# <<< Donate >>>
-# @bot.message_handler(commands=['donate'])  # /donate
-# def donate_handler(message: Message) -> None:
-#     log(message, 'info')
-#     bot.send_chat_action(message.chat.id, 'typing')
-#     if message.chat.type == 'private':
-#         bot.send_message(message.chat.id, 'Здесь вы можете поддержать разработчика и дать мотивацию '
-#                                           'на внесение нового фунционала в <b>GNBot</b>\n'
-#                                           'C уважением <i>@Ultra_Xion</i>', parse_mode='HTML')
-#         if PAYMENT_TOKEN.split(':')[1] == 'LIVE':
-#             keyboard = InlineKeyboardMarkup(row_width=1)
-#             keyboard.add(InlineKeyboardButton('1 грн', callback_data='1 UAH'),
-#                          InlineKeyboardButton('10 грн', callback_data='10 UAH'),
-#                          InlineKeyboardButton('100 грн', callback_data='100 UAH'),
-#                          InlineKeyboardButton('1000 грн', callback_data='1000 UAH'),
-#                          InlineKeyboardButton('Своя сумма', callback_data='Своя сумма'))
-#             msg = bot.send_message(message.chat.id, 'Сумма поддержки💸', reply_markup=keyboard)
-#             time.sleep(20)
-#             bot.delete_message(msg.chat.id, msg.message_id)
-#     else:
-#         bot.send_message(message.chat.id, 'К сожелению в группе эта функция недоступна😔\n'
-#                                           'Что бы поддержать нас вы можете восползоваться'
-#                                           'этой командой в личном чате с ботом 💢@GNTMBot💢')
-#
-#
-# @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^\d+\sUAH$', call.data) or call.data == 'Своя сумма')
-# def donate_query(call):
-#     bot.answer_callback_query(call.id, 'Вы выбрали ' + call.data)
-#     bot.edit_message_text(call.message.text, call.message.chat.id, call.message.message_id)
-#     if call.data == 'Своя сумма':
-#         msg = bot.send_message(call.message.chat.id, 'Введите сумму🧐')
-#         bot.register_next_step_handler(msg, send_payment, 'UAH')
-#     else:
-#         send_payment(call.message, call.data)
-#
-#
-# def send_payment(message: Message, money) -> None:
-#     if money == 'UAH' and message.text.isdigit():
-#         local_money = message.text + ' ' + money
-#     else:
-#         local_money = money
-#     price = LabeledPrice('Поддержать', amount=int(local_money.split()[0]) * 100)
-#     bot.send_invoice(message.chat.id, title='Поддержка',
-#                      description='Поддержка разработчика GNBot',
-#                      provider_token=PAYMENT_TOKEN, currency='uah',
-#                      photo_url=URLS['logo'],
-#                      photo_height=1494, photo_width=1295, photo_size=142,
-#                      is_flexible=False, prices=[price],
-#                      start_parameter='donate-programmer-gnbot',
-#                      invoice_payload='donate-is-done')
-#
-#
-# @bot.shipping_query_handler(func=lambda query: True)
-# def shipping(shipping_query: ShippingQuery):
-#     bot.answer_shipping_query(shipping_query.id, ok=True,
-#                               error_message='Что-то пошло не так😔\n!'
-#                                             'Попробуйте повторить операцию чуть позже')
-#
-#
-# @bot.pre_checkout_query_handler(func=lambda query: True)
-# def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
-#     bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True,
-#                                     error_message="Что-то пошло не так😔\n"
-#                                                   "Удебитель в правельности вводимых данные "
-#                                                   "и попробуйте снова через пару минут")
-#
-#
-# @bot.message_handler(content_types=['successful_payment'])
-# def process_successful_payment(message: Message) -> None:
-#     promo = message.successful_payment
-#     log(f'Successful_payment\nType: {promo.invoice_payload}\nSum: {promo.total_amount}{promo.currency}')
-#     bot.send_message(message.chat.id, f'Платеж прошел успешно😌\n'
-#                                       f'{message.successful_payment.total_amount // 100} '
-#                                       f'{message.successful_payment.currency} были начислены на свет\n'
-#                                       f'Благодарим вас за поддержку проекта🥳')
-#
-
-# <<< End donate >>>

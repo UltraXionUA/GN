@@ -140,6 +140,24 @@ def add_answer(answer) -> None:  # Add answer
     connection.close()
 
 
+def ban_user(user: str) -> None:  # Ban user
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'INSERT INTO `BlackList` (`user_id`) VALUES (\'{user}\');')
+        connection.commit()
+    connection.close()
+
+
+def check_ban_user(user: str) -> None:  # Ban user
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        if cursor.execute(f'SELECT * FROM `BlackList` WHERE user_id LIKE \'{user}\';') == 0:
+            return True
+        else:
+            return False
+    connection.close()
+
+
 def get_all_answers() -> list:  # Get random answer
     connection = start_connection()
     with connection.cursor() as cursor:
