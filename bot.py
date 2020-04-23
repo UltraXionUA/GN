@@ -1,5 +1,4 @@
 #!/home/UltraXionUA/.virtualenvs/myvirtualenv/bin/python3.8
-#!chmod +x /home/UltraXionUA/GN/bot.py
 # -*- coding: utf-8 -*-
 """Mains file for GNBot"""
 # <<< Import's >>>
