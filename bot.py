@@ -6,8 +6,8 @@
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, InputMediaVideo
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video, get_instagram_photos
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
+from config import TOKEN, API, Empty_bg, URLS, GNBot_ID, Admib_ID
 from youtube_unlimited_search import YoutubeUnlimitedSearch
-from config import TOKEN, API, Empty_bg, URLS, GNBot_ID
 from urllib import parse, request, error
 from pytube import YouTube, exceptions
 from collections import defaultdict
@@ -27,8 +27,8 @@ import os
 import re
 
 # <<< End import's>>
-# from config import TEST_TOKEN
-bot = TeleBot(TOKEN)
+from config import TEST_TOKEN
+bot = TeleBot(TEST_TOKEN)
 log('Bot is successful running!', 'info')
 
 # Turn on parser memes
@@ -1170,8 +1170,8 @@ time_to_change = defaultdict(bool)
 msg_from_user = defaultdict(Message)
 
 
-@bot.message_handler(content_types=['text'], regexp=r'^\+{1,5}')  # Change karma
-@bot.message_handler(content_types=['text'], regexp=r'^\-{1,5}')
+@bot.message_handler(content_types=['text'], regexp=r'^\+{1,5}$')  # Change karma
+@bot.message_handler(content_types=['text'], regexp=r'^\-{1,5}$')
 def text_handler(message: Message) -> None:
     def set_true() -> None:
         time_to_change[message.from_user.id] = True
@@ -1208,10 +1208,11 @@ def text_handler(message: Message) -> None:
 
 
 # <<< Add answer >>>
-@bot.message_handler(content_types=['text'], regexp=r'^-\s.+$')  # Add answer to DB
+@bot.message_handler(content_types=['text'], regexp=r'^-\s.+')  # Add answer to DB
 def text_handler(message: Message) -> None:
-    db.add_answer(message.text.replace('-', '').lstrip())
-    bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
+    if message.from_user.id = int(Admin_ID):
+        db.add_answer(message.text.replace('-', '').lstrip())
+        bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
 
 
 # <<< End add answer >>>
@@ -1378,7 +1379,7 @@ def text_handler(message: Message) -> None:
         joke_handler(message)
     elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
         dice_handler(message)
-    if message.chat.type != 'private' and message.chat.id != GNBot_ID:
+    if message.chat.type != 'private' and message.from_user.id != int(GNBot_ID):
         if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
             data_answers[message.chat.id] = db.get_all_answers()
         if message.reply_to_message is not None:
