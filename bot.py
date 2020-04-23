@@ -6,7 +6,7 @@ from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, I
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video, get_instagram_photos
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
 from youtube_unlimited_search import YoutubeUnlimitedSearch
-from config import TOKEN, API, Empty_bg, URLS
+from config import TOKEN, API, Empty_bg, URLS, GNBot_ID
 from urllib import parse, request, error
 from pytube import YouTube, exceptions
 from collections import defaultdict
@@ -26,8 +26,8 @@ import os
 import re
 
 # <<< End import's>>
-# from config import TEST_TOKEN
-bot = TeleBot(TOKEN)
+from config import TEST_TOKEN
+bot = TeleBot(TEST_TOKEN)
 log('Bot is successful running!', 'info')
 
 # Turn on parser
@@ -1331,7 +1331,7 @@ def reset_users() -> None:  # Reset users for Dice game
 
 
 # <<< All message >>>
-@bot.message_handler(content_types=['text'])  # All messages
+@bot.message_handler(content_types=['text'])
 @bot.edited_message_handler(content_types=['text'])
 def text_handler(message: Message) -> None:
     log(message, 'info')
@@ -1349,7 +1349,11 @@ def text_handler(message: Message) -> None:
         joke_handler(message)
     elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
         dice_handler(message)
-    if rend_d(10):
+    print(message.reply_to_message)
+    if message.reply_to_message is not None:
+        if message.reply_to_message.from_user.id == GNBot_ID and rend_d(50):
+            bot.reply_to(message, db.get_simple_answer())
+    elif rend_d(10):
         bot.reply_to(message, db.get_simple_answer())
 
 
