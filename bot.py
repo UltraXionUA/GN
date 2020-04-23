@@ -838,7 +838,7 @@ def get_video(message: Message) -> None:
         url = None
         if re.match(r'^https?://www.instagram.com/p/.+', message.text):
             url = re.search('^https?://www.instagram.com/p/.+/', message.text).group(0)
-        if re.match(r'^https?://www.instagram.com/tv/.+', message.text):
+        elif re.match(r'^https?://www.instagram.com/tv/.+', message.text):
             url = re.search('^https?://www.instagram.com/tv/.+/', message.text).group(0)
         if url is not None:
             try:
@@ -874,23 +874,28 @@ def get_instagram_photo(message: Message) -> None:
     bot.send_chat_action(message.chat.id, 'upload_photo')
     bot.delete_message(message.chat.id, message.message_id)
     if re.fullmatch('^https?://www.instagram.com/.+', message.text):
-        keyboard = InlineKeyboardMarkup()
-        url = re.search('^https?://www.instagram.com/p/.+/', message.text).group(0)
-        keyboard.add(InlineKeyboardButton('Instagram', url=url))
-        try:
-            data = get_instagram_photos(url)
-        except JSONDecodeError:
-            bot.send_message(message.chat.id, 'Не поддерживаются работа закрытыми аккаунтами😔')
-        else:
-            if data:
-                if len(data) == 1:
-                    keyboard = InlineKeyboardMarkup()
-                    keyboard.add(InlineKeyboardButton('Instagram', url=url))
-                    bot.send_photo(message.chat.id, data[0], reply_markup=keyboard)
-                else:
-                    bot.send_media_group(message.chat.id, [InputMediaPhoto(photo) for photo in data])
+        url = None
+        if re.match(r'^https?://www.instagram.com/p/.+', message.text):
+            url = re.search('^https?://www.instagram.com/p/.+/', message.text).group(0)
+        elif re.match(r'^https?://www.instagram.com/tv/.+', message.text):
+            url = re.search('^https?://www.instagram.com/tv/.+/', message.text).group(0)
+        if url is not None:
+            try:
+                data = get_instagram_photos(url)
+            except JSONDecodeError:
+                bot.send_message(message.chat.id, 'Не поддерживаются работа закрытыми аккаунтами😔')
             else:
-                bot.send_message(message.chat.id, 'По данной ссылке фотографий не найдено😔')
+                if data:
+                    if len(data) == 1:
+                        keyboard = InlineKeyboardMarkup()
+                        keyboard.add(InlineKeyboardButton('Instagram', url=url))
+                        bot.send_photo(message.chat.id, data[0], reply_markup=keyboard)
+                    else:
+                        bot.send_media_group(message.chat.id, [InputMediaPhoto(photo) for photo in data])
+                else:
+                    bot.send_message(message.chat.id, 'По данной ссылке фотографий не найдено😔')
+        else:
+            bot.send_message(message.chat.id, 'Не смог получить данные😔')
     else:
         bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
 
