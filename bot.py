@@ -4,7 +4,7 @@
 # <<< Import's >>>
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, InputMediaVideo
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video, get_instagram_photos
-from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time
+from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time, clear_date
 from config import TOKEN, API, Empty_bg, URLS, GNBot_ID, Admin_ID, bot
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from urllib import parse, request, error
@@ -124,6 +124,8 @@ def send_qrcode(message: Message) -> None:
     bot.send_photo(message.chat.id, requests.get(API['QRCode']['Create'].replace('DATA',
                                                                                  message.text.replace(' ',
                                                                                                       '+'))).content)
+
+
 # <<< End QR Code >>>
 
 
@@ -250,7 +252,7 @@ def weather(message: Message, index: int) -> None:
     keyboard.add(
         InlineKeyboardButton(text="⬅️️", callback_data=f"move_to__ {index - 1 if index > 0 else 'pass'}"),
         InlineKeyboardButton(text="➡️", callback_data=f"move_to__ "
-                                        f"{index + 1 if index < len(weather_data[message.chat.id]) - 1 else 'pass'}"))
+                             f"{index + 1 if index < len(weather_data[message.chat.id]) - 1 else 'pass'}"))
     keyboard.add(InlineKeyboardButton('Погода', url='https://' +
                                                     f'darksky.net/forecast/{city_data[message.chat.id]["lat"]},'
                                                     f'{city_data[message.chat.id]["lon"]}/us12/en'))
@@ -354,7 +356,7 @@ def callback_query(call):
 def detect_music(message: Message, type_r) -> None:
     API['AUDD_data']['url'] = bot.get_file_url(message.voice.file_id).replace('https://' + 'api.telegram.org',
                                                                               'http://' + 'esc-ru.appspot.com/') \
-                                                                               + '?host=api.telegram.org'
+                              + '?host=api.telegram.org'
     if type_r == 'sing':
         result = requests.post(API['AUDD'] + 'recognizeWithOffset/',
                                data={'url': API['AUDD_data']['url'], 'api_token': API['AUDD_data']['api_token']}).json()
@@ -405,6 +407,8 @@ def callback_query(call):
         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
     except FileNotFoundError:
         log('Error! Can\'t remove file', 'warning')
+
+
 # <<< End detect music >>>
 
 
@@ -500,10 +504,8 @@ def inline_keyboard(message: Message, some_index) -> InlineKeyboardMarkup:  # Na
             some_keyboard.add(InlineKeyboardButton(f"{songs['name']} - {songs['title']}",
                                                    callback_data=f"ID: {songs['id']}"))
         some_keyboard.add(
-            InlineKeyboardButton(text="⬅️️",
-                                 callback_data=f"move_to {some_index - 1 if some_index > 0 else 'pass'}"),
-            InlineKeyboardButton(text="➡️",
-                                 callback_data=f"move_to "
+            InlineKeyboardButton(text="⬅️️", callback_data=f"move_to {some_index - 1 if some_index > 0 else 'pass'}"),
+            InlineKeyboardButton(text="➡️", callback_data=f"move_to "
                                  f"{some_index + 1 if some_index < len(data_songs[message.chat.id]) - 1 else 'pass'}"))
         return some_keyboard
     except KeyError:
@@ -549,13 +551,13 @@ def callback_query(call):
                                  InlineKeyboardButton('Dezeer', url=j['link']))
                     bot.send_chat_action(call.message.chat.id, 'upload_audio')
                     bot.send_audio(call.message.chat.id, audio=open(yt.streams.filter(
-                                                         only_audio=True)[0].download(filename='file'), 'rb'),
-                                                         reply_markup=keyboard,  performer=j['name'],
-                                                         title=j['title'], duration=j['duration'],
-                                                         caption=f'🎧 {sec_to_time(yt.length)} '
-                                                 f'| {round(os.path.getsize("file.mp4")/1000000, 1)} MB |'
-                                                 f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")}'
-                                                                 f' Kbps')
+                        only_audio=True)[0].download(filename='file'), 'rb'),
+                                   reply_markup=keyboard, performer=j['name'],
+                                   title=j['title'], duration=j['duration'],
+                                   caption=f'🎧 {sec_to_time(yt.length)} '
+                                           f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
+                                           f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")}'
+                                           f' Kbps')
                     try:
                         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
                     except FileNotFoundError:
@@ -619,48 +621,60 @@ def main_news(message: Message, news_type: str) -> None:
 
 def send_news(message: Message, index: int) -> None:
     keyboard2 = InlineKeyboardMarkup()
-    keyboard2.add(InlineKeyboardButton('Читать', url=news[message.chat.id][index]['url']))
+    try:
+        code_url = requests.get(news[message.chat.id][index]['url']).ok
+    except requests.exceptions.ConnectionError:
+        send_news(message, index + 1)
+    except requests.exceptions.MissingSchema:
+        send_news(message, index + 1)
+    except IndexError:
+        log('Index Error in news', 'warning')
+    else:
+        if code_url is True:
+            keyboard2.add(InlineKeyboardButton('Читать', url=news[message.chat.id][index]['url']))
+        else:
+            send_news(message, index + 1)
     keyboard2.add(
-        InlineKeyboardButton(text="⬅️️",
-                             callback_data=f"move_to_ {index - 1 if index > 0 else 'pass'}"),
-        InlineKeyboardButton(text="➡️",
-                             callback_data=f"move_to_ "
-                                           f"{index + 1 if index < len(news[message.chat.id]) - 1 else 'pass'}"))
+        InlineKeyboardButton(text="⬅️️", callback_data=f"move_to_ {index - 1 if index > 0 else 'pass'}"),
+        InlineKeyboardButton(text="➡️", callback_data=f"move_to_ "
+                                                f"{index + 1 if index < len(news[message.chat.id]) - 1 else 'pass'}"))
     try:
         try:
+            if news[message.chat.id][index]['title'] == news[message.chat.id][index + 1]['title']:
+                send_news(message, index + 1)
             code_img = requests.get(news[message.chat.id][index]['image']).ok
+            if news[message.chat.id][index]['image'] is not None and news[message.chat.id][index]['image'] != '' \
+                    and code_img is True:
+                req = request.Request(news[message.chat.id][index]['image'], method='HEAD')
+                f = request.urlopen(req)
+                if int(f.headers['Content-Length']) > 5242880:
+                    send_news(message, index + 1)
+            else:
+                send_news(message, index + 1)
         except requests.exceptions.ConnectionError:
             send_news(message, index + 1)
         except requests.exceptions.MissingSchema:
             send_news(message, index + 1)
+        except error.URLError:
+            send_news(message, index + 1)
+        except IndexError:
+            log('Index Error in news', 'warning')
         else:
-            if news[message.chat.id][index]['image'] is not None and news[message.chat.id][index]['image'] != '' \
-                    and code_img is True:
-                if news[message.chat.id][index]['description'] is not None:
-                    bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
-                                           message_id=news_msg[message.chat.id].message_id,
-                                           media=InputMediaPhoto(news[message.chat.id][index]['image'],
-                                                                 caption='<b>' + news[message.chat.id][index][
-                                                                     'title'] + '</b>\n\n' +
-                                                                         news[message.chat.id][index]['description'] +
-                                                                         '\n\n' + '<i>' + news[message.chat.id][index][
-                                                                             'published'].replace('T', ' ').replace(
-                                                                     'Z', '') + '</i>',
-                                                                 parse_mode='HTML'),
-                                           reply_markup=keyboard2)
-                else:
-                    bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
-                                           message_id=news_msg[message.chat.id].message_id,
-                                           media=InputMediaPhoto(news[message.chat.id][index]['image'],
-                                                                 caption='<b>' + news[message.chat.id][index][
-                                                                     'title'] + '</b>\n' +
-                                                                         '<i>' + news[message.chat.id][index][
-                                                                             'published'].replace('T', ' ').replace(
-                                                                     'Z', '') + '</i>',
-                                                                 parse_mode='HTML'),
-                                           reply_markup=keyboard2)
+            if news[message.chat.id][index]['description'] is not None:
+                bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
+                                       message_id=news_msg[message.chat.id].message_id,
+                                       media=InputMediaPhoto(news[message.chat.id][index]['image'],
+                                       caption=f"<b>{news[message.chat.id][index]['title']}</b>\n\n"
+                                                 f"{news[message.chat.id][index]['description']}\n\n<i>"
+                                                   f"{clear_date(news[message.chat.id][index]['published'])}</i>",
+                                       parse_mode='HTML'), reply_markup=keyboard2)
             else:
-                send_news(message, index + 1)
+                bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
+                                       message_id=news_msg[message.chat.id].message_id,
+                                       media=InputMediaPhoto(news[message.chat.id][index]['image'],
+                                       caption=f"<b>{news[message.chat.id][index]['title']}</b>\n<i>"
+                                                 f"{clear_date(news[message.chat.id][index]['published'])}</i>",
+                                       parse_mode='HTML'), reply_markup=keyboard2)
     except KeyError:
         log('Key Error in news', 'warning')
 
@@ -679,7 +693,7 @@ def choice_news_query(call):
 def next_news_query(call):
     global news
     index = int(call.data.split()[1])
-    if 0 <= index < len(news[call.message.chat.id]):
+    if 0 <= index < len(news[call.message.chat.id]) - 1:
         bot.answer_callback_query(call.id, f'Вы выбрали стр.{index + 1}')
         send_news(call.message, index)
     else:
@@ -728,7 +742,7 @@ def send_audio(message: Message, method: str) -> None:
                 bot.send_chat_action(message.chat.id, 'upload_audio')
                 bot.delete_message(message.chat.id, message.message_id)
                 bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(
-                               filename='file'), 'rb'),
+                    filename='file'), 'rb'),
                                reply_markup=keyboard, duration=yt.length, title=yt.title, performer=yt.author,
                                caption=f'🎧 {sec_to_time(yt.length)} '
                                        f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
@@ -801,6 +815,8 @@ def ffmpeg_run():
     input_video = ffmpeg.filter(input_video, 'fps', fps=25, round='up')
     ffmpeg.output(input_video, input_audio, "file.mp4", preset='faster',
                   vcodec='libx264', acodec='mp3', **{'qscale:v': 10}).run(overwrite_output=True)
+
+
 # <<< End YouTube >>>
 
 
@@ -917,7 +933,7 @@ def torrents_handler(message: Message) -> None:
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'Gamestracker.org' or call.data == 'GTorrent.ru' or
-                            call.data == 'Rutor.info')
+                                              call.data == 'Rutor.info')
 def callback_query(call):
     global tracker, search
     bot.delete_message(search[call.message.chat.id].chat.id, search[call.message.chat.id].message_id)
@@ -963,7 +979,7 @@ def torrent_keyboard(message: Message, index: int) -> None:
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton(text="⬅️️", callback_data=f"move_ {index - 1 if index > 0 else 'pass'}"),
                  InlineKeyboardButton(text="➡️", callback_data=f"move_ "
-                                        f"{index + 1 if index < len(data_torrents[message.chat.id]) - 1 else 'pass'}"))
+                                      f"{index + 1 if index < len(data_torrents[message.chat.id]) - 1 else 'pass'}"))
     text_t = None
     if tracker[message.chat.id] == URLS['torrent']['name']:
         text_t = f'<a href="{URLS["torrent"]["main"]}">{tracker[message.chat.id]}🇷🇺</a>\nРезультат поиска <b>' \
@@ -978,7 +994,7 @@ def torrent_keyboard(message: Message, index: int) -> None:
         for i in data_torrents[message.chat.id][index]:
             if tracker[message.chat.id] == 'GTorrent.ru':
                 text_t += f'\n\n{i["name"]} | [{i["size"]}] \n[<i>/download_{i["link_t"]}</i>] ' \
-                                f'[<a href="{i["link"]}">раздача</a>]'
+                          f'[<a href="{i["link"]}">раздача</a>]'
             elif tracker[message.chat.id] == 'Gamestracker.org':
                 link_t = i["link_t"].split('-')
                 link_t = link_t[-2] + '_' + link_t[-1]
@@ -1056,6 +1072,8 @@ def callback_query(call):
         torrent_keyboard(call.message, index)
     else:
         bot.answer_callback_query(call.id, '⛔️')
+
+
 # <<< End torrent >>>
 
 
@@ -1177,6 +1195,7 @@ msg_from_user = defaultdict(Message)
 def text_handler(message: Message) -> None:
     def set_true() -> None:
         time_to_change[message.from_user.id] = True
+
     global time_to_change, msg_from_user
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if message.from_user.id not in time_to_change:
@@ -1438,7 +1457,6 @@ def contact_handler(message: Message) -> None:
 
 bot.polling(none_stop=True)
 time.sleep(100)
-
 
 # <<< Donate >>>
 # @bot.message_handler(commands=['donate'])  # /donate

@@ -78,7 +78,14 @@ def clear_link(string: str) -> str:  # Clear string of links
     clear_string = re.sub(r'https?://.*[\r\n]*|[www.]?\w+\-?\w+\.\w.', '', string, flags=re.MULTILINE)
     clear_string = re.sub(r'\s+', ' ', clear_string, flags=re.MULTILINE)
     clear_string = re.sub(r'(\s-\s+m)?', '', clear_string, flags=re.MULTILINE)
+    clear_string = re.sub(r'&\w+;', ' ', clear_string, flags=re.MULTILINE)
     return clear_string
+
+
+def clear_date(string: str) -> str:
+    date = re.sub('T', ' ', string)
+    date = re.sub('Z', '', date)
+    return date
 
 
 def rend_d(percent: int) -> bool:  # Random True or False
@@ -87,4 +94,3 @@ def rend_d(percent: int) -> bool:  # Random True or False
 
 def hi_r(data: str) -> bool:  # Filter age rating
     return True if data == 'r' or 'pg-13' or 'pg' else False
-
