@@ -1179,7 +1179,7 @@ def text_handler(message: Message) -> None:
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if message.from_user.id not in time_to_change:
         time_to_change[message.from_user.id] = True
-    if message.chat.type == 'private' and message.reply_to_message:
+    if message.chat.type != 'private' and message.reply_to_message:
         if message.from_user.id != message.reply_to_message.from_user.id:
             if time_to_change[message.from_user.id]:
                 log(message, 'info')
@@ -1378,7 +1378,7 @@ def text_handler(message: Message) -> None:
         joke_handler(message)
     elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
         dice_handler(message)
-    if message.chat.type == 'private' and message.chat.id != GNBot_ID:
+    if message.chat.type != 'private' and message.chat.id != GNBot_ID:
         if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
             data_answers[message.chat.id] = db.get_all_answers()
         if message.reply_to_message is not None:
