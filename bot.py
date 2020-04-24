@@ -1,7 +1,8 @@
 #!/home/UltraXionUA/.virtualenvs/myvirtualenv/bin/python3.8
 # -*- coding: utf-8 -*-
 """Mains file for GNBot"""
-# <<< Import's >>>
+# <<< Import's >>
+
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, InputMediaVideo
 from telebot.types import LabeledPrice, PreCheckoutQuery, ShippingQuery
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video, get_instagram_photos
@@ -1430,18 +1431,22 @@ second_dice: dict = {'username': None, 'dice': 0}
 
 
 @bot.message_handler(commands=['dice'])  # /dice
+@bot.message_handler(content_types=['dice'])
 def dice_handler(message: Message) -> None:
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    res = requests.post(f'https://' + f'api.telegram.org/bot{TOKEN}/sendDice?chat_id={message.chat.id}').json()
-    t = Timer(120.0, reset_users)
+    if message.content_type != 'dice':
+        res = bot.send_dice(message.chat.id)
+    else:
+        res = message
+    t = Timer(60.0, reset_users)
     if first_dice['username'] is None:
-        first_dice['username'], first_dice['dice'] = message.from_user.username, res['result']['dice']['value']
+        first_dice['username'], first_dice['dice'] = message.from_user.username, res.dice.value
         t.start()
     elif second_dice['username'] is None:
-        second_dice['username'], second_dice['dice'] = message.from_user.username, res['result']['dice']['value']
-        t.cancel()
+        second_dice['username'], second_dice['dice'] = message.from_user.username, res.dice.value
         if first_dice['username'] != second_dice['username']:
+            t.cancel()
             bot.send_chat_action(message.chat.id, 'typing')
             time.sleep(4)
             if first_dice['dice'] > second_dice['dice']:
@@ -1452,7 +1457,12 @@ def dice_handler(message: Message) -> None:
                                                   f'{first_dice["username"].title()}🥈')
             else:
                 bot.send_message(message.chat.id, 'Победила дружба🤝')
-        reset_users()
+            reset_users()
+        else:
+            first_dice['username'], first_dice['dice'] = message.from_user.first_name, res.dice.value
+            t.cancel()
+            t.start()
+
 
 
 def reset_users() -> None:  # Reset users for Dice game
