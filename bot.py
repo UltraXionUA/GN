@@ -1465,6 +1465,73 @@ def reset_users() -> None:  # Reset users for Dice game
 # <<< End dice game >>>
 
 
+# <<< Admin menu >>>
+@bot.message_handler(content_types=['text'], regexp=r'!ban')  # Add answer to DB
+def text_handler(message: Message) -> None:
+    ban(message)
+
+
+def ban(message: Message, chat=None, user=None):
+    for i in bot.get_chat_administrators(message.chat.id):
+        if i.user.id == message.from_user.id:
+            if message.reply_to_message and chat is None and user is None:
+                db.ban_user(message.reply_to_message.from_user.id)
+                bot.kick_chat_member(message.chat.id, message.reply_to_message.from_user.id)
+                bot.send_message(message.chat.id, 'Пользователь забанен😈')
+                return
+            else:
+                db.ban_user(user)
+                bot.kick_chat_member(chat, user)
+                return
+    else:
+        bot.send_message(message.chat.id, 'У вас недостаточно прав для этого')
+
+
+@bot.message_handler(content_types=['text'], regexp=r'!mute\s\d+')  # Add answer to DB
+def text_handler(message: Message) -> None:
+    mute(message, message.text.split()[1])
+
+
+def mute(message: Message, time_mute=30, chat=None, user=None):
+    for i in bot.get_chat_administrators(message.chat.id):
+        if i.user.id == message.from_user.id:
+            if message.reply_to_message and chat is None and user is None:
+                bot.restrict_chat_member(message.chat.id, message.reply_to_message.from_user.id,
+                                         until_date=time.time() + int(time_mute) * 60, can_send_messages=False,
+                                         can_send_other_messages=False, can_send_media_messages=False)
+                bot.send_message(message.chat.id, f'Пользователь замучен на {time_mute} мин🤐')
+                return
+            else:
+                bot.restrict_chat_member(chat, user,  until_date=time.time() + int(time_mute) * 60,
+                                         can_send_messages=False,
+                                         can_send_other_messages=False, can_send_media_messages=False)
+                return
+    else:
+        bot.send_message(message.chat.id, 'У вас недостаточно прав для этого')
+
+
+@bot.message_handler(content_types=['text'], regexp=r'!kick')  # Add answer to DB
+def text_handler(message: Message) -> None:
+    kick(message)
+
+
+def kick(message: Message, chat=None, user=None):
+    for i in bot.get_chat_administrators(message.chat.id):
+        if i.user.id == message.from_user.id:
+            if message.reply_to_message and chat is None and user is None:
+                bot.kick_chat_member(message.chat.id, message.reply_to_message.from_user.id)
+                bot.send_message(message.chat.id, f'Пользователь кикнут😈')
+                return
+            else:
+                bot.kick_chat_member(chat, user)
+                return
+    else:
+        bot.send_message(message.chat.id, 'У вас недостаточно прав для этого')
+
+
+# <<< End admin menu >>>
+
+
 # <<< All message >>>
 data_answers = defaultdict(list)
 
@@ -1527,31 +1594,26 @@ def new_member_handler(message: Message) -> None:
         time.sleep(120)
         bot.delete_message(msg.chat.id, msg.message_id)
     else:
+        bot.send_message(message.chat.id, 'Добавленный пользователь в чёрном списке')
         bot.kick_chat_member(message.chat.id, message.new_chat_member.id)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Kick\s.?\w+\s.?\w+$', call.data))
 def code_callback_query(call):
     bot.answer_callback_query(call.id, 'Пользователь кикнут')
-    chat = call.data.split()[1]
-    user = call.data.split()[2]
-    bot.kick_chat_member(chat, user)
+    kick(call.message, call.data.split()[1], call.data.split()[2])
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Ban\s.?\w+\s.?\w+$', call.data))
 def code_callback_query(call):
-    bot.answer_callback_query(call.id, 'Пользователь забанен')
-    chat = call.data.split()[1]
-    user = call.data.split()[2]
-    db.ban_user(user)
-    bot.kick_chat_member(chat, user)
+    bot.answer_callback_query(call.id, 'Пользователь забанен навсегда')
+    ban(call.message, call.data.split()[1], call.data.split()[2])
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Mute\s.?\w+\s.?\w+$', call.data))
 def code_callback_query(call):
-    bot.answer_callback_query(call.id, 'Пользователь замучен')
-    chat = call.data.split()[1]
-    user = call.data.split()[2]
+    bot.answer_callback_query(call.id, 'Пользователь замучен на 30 минут')
+    mute(call.message, call.data.split()[1], call.data.split()[2])
 
 
 @bot.message_handler(content_types=['left_chat_member'])  # Answer on left group
@@ -1570,7 +1632,6 @@ def contact_handler(message: Message) -> None:
     if rend_d(25):
         bot.reply_to(message.chat.id, random.choice(['Если мне будет одиноко и холодно я знаю куда позвонить',
                                                      'Трубку не берут', 'Сохранил']))
-
 
 # <<< End answer's  >>>
 

@@ -56,7 +56,7 @@ def add_user(user, chat=None, connection=None) -> None:
                     cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user.id}\';')
                     res = cursor.fetchone()
                     if str(chat.id) not in res['supergroup'].split(','):
-                        cursor.execute(f'UPDATE Users SET supergroup = \'{res["supergroup"] + chat.id},\''
+                        cursor.execute(f'UPDATE Users SET supergroup = \'{res["supergroup"] + str(chat.id)},\''
                                        f' WHERE user_id LIKE {user.id};')
                         connection.commit()
             if chat is not None:
