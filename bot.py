@@ -1603,7 +1603,7 @@ def text_handler(message: Message) -> None:
             if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(40):
                 answer = data_answers[message.chat.id].pop(random.choice(range(len(data_answers[message.chat.id]) - 1)))
                 bot.reply_to(message, answer['answer'])
-        elif rend_d(10):
+        elif rend_d(5):
             answer = data_answers[message.chat.id].pop(random.choice(range(len(data_answers[message.chat.id]) - 1)))
             bot.reply_to(message, answer['answer'])
 
