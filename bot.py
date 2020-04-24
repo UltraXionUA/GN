@@ -1466,13 +1466,25 @@ def reset_users() -> None:  # Reset users for Dice game
 
 
 # <<< Admin menu >>>
-@bot.message_handler(content_types=['text'], regexp=r'!ban')  # Add answer to DB
+@bot.message_handler(content_types=['text'], regexp=r'^!ban')  # Add answer to DB
 def text_handler(message: Message) -> None:
     log(message, 'info')
-    ban(message)
+    if message.chat.type != 'private':
+        ban(message)
+    else:
+        bot.send_message(message.chat.id, 'Функция достпна только в группах😔')
 
 
 def ban(message: Message, chat=None, user=None):
+    for i in bot.get_chat_administrators(message.chat.id):
+        if message.reply_to_message:
+            if i.user.id == message.reply_to_message.from_user.id:
+                bot.send_message(message.chat.id, 'Нельзя замутить администратора😔')
+                return
+        elif user is not None:
+            if str(i.user.id) == user:
+                bot.send_message(message.chat.id, 'Нельзя замутить администратора😔')
+                return
     for i in bot.get_chat_administrators(message.chat.id):
         if i.user.id == message.from_user.id:
             if message.reply_to_message and chat is None and user is None:
@@ -1482,19 +1494,32 @@ def ban(message: Message, chat=None, user=None):
                 return
             else:
                 db.ban_user(user)
+                bot.send_message(message.chat.id, f'Пользователь забанен навсегда😈')
                 bot.kick_chat_member(chat, user)
                 return
     else:
         bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
 
 
-@bot.message_handler(content_types=['text'], regexp=r'!mute\s\d+')  # Add answer to DB
+@bot.message_handler(content_types=['text'], regexp=r'^!mute\s\d+')  # Add answer to DB
 def text_handler(message: Message) -> None:
     log(message, 'info')
-    mute(message, message.text.split()[1])
+    if message.chat.type != 'private':
+        mute(message, message.text.split()[1])
+    else:
+        bot.send_message(message.chat.id, 'Функция достпна только в группах😔')
 
 
 def mute(message: Message, time_mute=30, chat=None, user=None):
+    for i in bot.get_chat_administrators(message.chat.id):
+        if message.reply_to_message:
+            if i.user.id == message.reply_to_message.from_user.id:
+                bot.send_message(message.chat.id, 'Нельзя замутить администратора😔')
+                return
+        elif user is not None:
+            if str(i.user.id) == user:
+                bot.send_message(message.chat.id, 'Нельзя замутить администратора😔')
+                return
     for i in bot.get_chat_administrators(message.chat.id):
         if i.user.id == message.from_user.id:
             if message.reply_to_message and chat is None and user is None:
@@ -1507,18 +1532,31 @@ def mute(message: Message, time_mute=30, chat=None, user=None):
                 bot.restrict_chat_member(chat, user,  until_date=time.time() + int(time_mute) * 60,
                                          can_send_messages=False,
                                          can_send_other_messages=False, can_send_media_messages=False)
+                bot.send_message(message.chat.id, f'Пользователь замучен на {time_mute} мин🤐')
                 return
     else:
         bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
 
 
-@bot.message_handler(content_types=['text'], regexp=r'!kick')  # Add answer to DB
+@bot.message_handler(content_types=['text'], regexp=r'^!kick')  # Add answer to DB
 def text_handler(message: Message) -> None:
     log(message, 'info')
-    kick(message)
+    if message.chat.type != 'private':
+        kick(message)
+    else:
+        bot.send_message(message.chat.id, 'Функция достпна только в группах😔')
 
 
 def kick(message: Message, chat=None, user=None):
+    for i in bot.get_chat_administrators(message.chat.id):
+        if message.reply_to_message:
+            if i.user.id == message.reply_to_message.from_user.id:
+                bot.send_message(message.chat.id, 'Нельзя замутить администратора😔')
+                return
+        elif user is not None:
+            if str(i.user.id) == user:
+                bot.send_message(message.chat.id, 'Нельзя замутить администратора😔')
+                return
     for i in bot.get_chat_administrators(message.chat.id):
         if i.user.id == message.from_user.id:
             if message.reply_to_message and chat is None and user is None:
@@ -1527,6 +1565,7 @@ def kick(message: Message, chat=None, user=None):
                 return
             else:
                 bot.kick_chat_member(chat, user)
+                bot.send_message(message.chat.id, f'Пользователь кикнут😈')
                 return
     else:
         bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
@@ -1616,7 +1655,7 @@ def code_callback_query(call):
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Mute\s.?\w+\s.?\w+$', call.data))
 def code_callback_query(call):
     bot.answer_callback_query(call.id, 'Пользователь замучен на 30 минут')
-    mute(call.message, call.data.split()[1], call.data.split()[2])
+    mute(call.message, 1, call.data.split()[1], call.data.split()[2])
 
 
 @bot.message_handler(content_types=['left_chat_member'])  # Answer on left group
