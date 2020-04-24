@@ -40,9 +40,9 @@ def start_handler(message: Message) -> None:
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
-    bot.send_message(message.chat.id, 'Здравствуй, меня зовут GNBot🖥\n'
+    bot.send_message(message.chat.id, 'Здравствуй, меня зовут <b>GNBot</b>🖥\n'
                                       'Я много функциональный и мултимедийный бот👾\n'
-                                      'Помощь /help')
+                                      '<b>Помощь</b> <i>/help</i>', parse_mode='HTML')
 
 
 # <<< End start >>>
@@ -54,11 +54,11 @@ def help_handler(message: Message) -> None:
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
-    bot.send_message(message.chat.id, 'Тут должна была быть помощь🆘, но её тут не будет🌚\n'
-                                      'Список всех команд можно увидить введя \'\\\'\n'
-                                      'Все свои вопросы и предложения вы можете писать мне 💢@Ultra_Xion💢\n'
-                                      'Если вы нашли баг или ошибку просьба сообщить мне\n'
-                                      'Почта: ultra25813@gmail.com')
+    bot.send_message(message.chat.id, '<b>Тут должна была быть помощь</b>🆘, но её тут не будет🌚\n'
+                                      'Список всех команд можно увидить введя \"\\\"\n'
+                                      'Все свои вопросы и предложения вы можете писать мне 💢<b>@Ultra_Xion</b>💢\n'
+                                      'Если вы нашли баг или ошибку просьба сообщить\n'
+                                      '<b>Почта:</b> <i>ultra25813@gmail.com</i>', parse_mode='HTML')
 
 
 # <<< End help >>>
@@ -262,7 +262,8 @@ def donate_handler(message: Message) -> None:
     else:
         bot.send_message(message.chat.id, 'К сожелению в группе эта функция недоступна😔\n'
                                           'Что бы поддержать нас вы можете восползоваться'
-                                          'этой командой в личном чате с ботом 💢@GNTMBot💢')
+                                          'этой командой в личном чате с ботом 💢<b>@GNTMBot</b>💢',
+                         parse_mode='HTML')
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^\d+\sUAH$', call.data) or call.data == 'Своя сумма')
@@ -531,44 +532,48 @@ def callback_query(call):
 
 def get_song(message: Message, choice: str) -> None:  # Get song
     global data_songs, song_msg
-    res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
-    try:
-        if res['data']:
-            if choice == 'artist?q=':
-                songs = requests.get(res['data'][0]['tracklist'].replace('limit=50', 'limit=100')).json()
-                if songs['data']:
-                    data_songs[message.chat.id] = [
-                        {'id': i['id'], 'title': i['title'], 'name': i['contributors'][0]['name'],
-                         'link': i['link'], 'preview': i['preview'], 'duration': i['duration']}
-                        for i in songs['data']]
+    if message.content_type != 'text':
+        bot.send_message(message.chat.id, 'Не верный формат данных😔')
+    else:
+        res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
+        try:
+            if res['data']:
+                if choice == 'artist?q=':
+                    songs = requests.get(res['data'][0]['tracklist'].replace('limit=50', 'limit=100')).json()
+                    if songs['data']:
+                        data_songs[message.chat.id] = [
+                            {'id': i['id'], 'title': i['title'], 'name': i['contributors'][0]['name'],
+                             'link': i['link'], 'preview': i['preview'], 'duration': i['duration']}
+                            for i in songs['data']]
+                        create_data_song(message)
+                        if data_songs[message.chat.id]:
+                            if message.chat.id in song_msg:
+                                bot.delete_message(song_msg[message.chat.id].chat.id,
+                                                   song_msg[message.chat.id].message_id)
+                            song_msg[message.chat.id] = bot.send_photo(message.chat.id, res['data'][0]['picture_xl'],
+                                                                       reply_markup=inline_keyboard(message, 0))
+                        else:
+                            raise FileExistsError
+                elif choice == 'track?q=':
+                    data_songs[message.chat.id] = [{'id': i['id'], 'title': i['title'], 'name': i['artist']['name'],
+                                                    'link': i['link'], 'preview': i['preview'],
+                                                    'duration': i['duration']} for i in res['data']]
                     create_data_song(message)
                     if data_songs[message.chat.id]:
                         if message.chat.id in song_msg:
                             bot.delete_message(song_msg[message.chat.id].chat.id, song_msg[message.chat.id].message_id)
-                        song_msg[message.chat.id] = bot.send_photo(message.chat.id, res['data'][0]['picture_xl'],
-                                                                   reply_markup=inline_keyboard(message, 0))
+                        song_msg[message.chat.id] = bot.send_message(message.chat.id,
+                                                                     f'Результат поиска <b>{message.text}</b>🔎',
+                                                                     parse_mode='HTML',
+                                                                     reply_markup=inline_keyboard(message, 0))
                     else:
                         raise FileExistsError
-            elif choice == 'track?q=':
-                data_songs[message.chat.id] = [{'id': i['id'], 'title': i['title'], 'name': i['artist']['name'],
-                                                'link': i['link'], 'preview': i['preview'], 'duration': i['duration']}
-                                               for i in res['data']]
-                create_data_song(message)
-                if data_songs[message.chat.id]:
-                    if message.chat.id in song_msg:
-                        bot.delete_message(song_msg[message.chat.id].chat.id, song_msg[message.chat.id].message_id)
-                    song_msg[message.chat.id] = bot.send_message(message.chat.id,
-                                                                 f'Результат поиска <b>{message.text}</b>🔎',
-                                                                 parse_mode='HTML',
-                                                                 reply_markup=inline_keyboard(message, 0))
                 else:
                     raise FileExistsError
             else:
                 raise FileExistsError
-        else:
-            raise FileExistsError
-    except FileExistsError:
-        bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
+        except FileExistsError:
+            bot.send_message(message.chat.id, 'К сожеления ничего не нашлось😔')
 
 
 def create_data_song(message: Message) -> None:
@@ -1336,7 +1341,6 @@ def code_handler(message: Message) -> None:
     global leng_msg
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    bot.send_chat_action(message.chat.id, 'typing')
     keyboard = InlineKeyboardMarkup(row_width=3)
     keyboard.add(InlineKeyboardButton('Bash', callback_data='Code bash'),
                  InlineKeyboardButton('HTML 5', callback_data='Code html5'),
@@ -1430,7 +1434,8 @@ first_dice: dict = {'username': None, 'dice': 0}
 second_dice: dict = {'username': None, 'dice': 0}
 
 
-@bot.message_handler(commands=['dice'])  # /dice
+@bot.message_handler(commands=['dice'])  # /dice and /darts
+@bot.message_handler(commands=['darts'])
 @bot.message_handler(content_types=['dice'])
 def dice_handler(message: Message) -> None:
     log(message, 'info')
@@ -1464,7 +1469,6 @@ def dice_handler(message: Message) -> None:
             t.start()
 
 
-
 def reset_users() -> None:  # Reset users for Dice game
     first_dice['username'] = None
     first_dice['dice'] = 0
@@ -1476,7 +1480,7 @@ def reset_users() -> None:  # Reset users for Dice game
 
 
 # <<< Admin menu >>>
-@bot.message_handler(content_types=['text'], regexp=r'^!ban')  # Add answer to DB
+@bot.message_handler(content_types=['text'], regexp=r'^!ban$')  # Add answer to DB
 def text_handler(message: Message) -> None:
     log(message, 'info')
     if message.chat.type != 'private':
@@ -1488,10 +1492,16 @@ def text_handler(message: Message) -> None:
 def ban(message: Message, chat=None, user=None):
     for i in bot.get_chat_administrators(message.chat.id):
         if message.reply_to_message:
+            if message.reply_to_message.from_user.id == message.from_user.id:
+                bot.send_message(message.chat.id, 'Нельзя забанить самого себя😔')
+                return
             if i.user.id == message.reply_to_message.from_user.id:
                 bot.send_message(message.chat.id, 'Нельзя забанить администратора😔')
                 return
         elif user is not None:
+            if user == str(message.from_user.id):
+                bot.send_message(message.chat.id, 'Нельзя забанить самого себя😔')
+                return
             if str(i.user.id) == user:
                 bot.send_message(message.chat.id, 'Нельзя забанить администратора😔')
                 return
@@ -1500,7 +1510,7 @@ def ban(message: Message, chat=None, user=None):
             if message.reply_to_message and chat is None and user is None:
                 db.ban_user(message.reply_to_message.from_user.id)
                 bot.kick_chat_member(message.chat.id, message.reply_to_message.from_user.id)
-                bot.send_message(message.chat.id, 'Пользователь забанен😈')
+                bot.send_message(message.chat.id, 'Пользователь забанен навсегда😈')
                 return
             else:
                 db.ban_user(user)
@@ -1511,7 +1521,7 @@ def ban(message: Message, chat=None, user=None):
         bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
 
 
-@bot.message_handler(content_types=['text'], regexp=r'^!mute\s\d+')  # Add answer to DB
+@bot.message_handler(content_types=['text'], regexp=r'^!mute\s\d+$')  # Add answer to DB
 def text_handler(message: Message) -> None:
     log(message, 'info')
     if message.chat.type != 'private':
@@ -1523,10 +1533,16 @@ def text_handler(message: Message) -> None:
 def mute(message: Message, time_mute=30, chat=None, user=None):
     for i in bot.get_chat_administrators(message.chat.id):
         if message.reply_to_message:
+            if message.reply_to_message.from_user.id == message.from_user.id:
+                bot.send_message(message.chat.id, 'Нельзя замутить самого себя😔')
+                return
             if i.user.id == message.reply_to_message.from_user.id:
                 bot.send_message(message.chat.id, 'Нельзя замутить администратора😔')
                 return
         elif user is not None:
+            if user == str(message.from_user.id):
+                bot.send_message(message.chat.id, 'Нельзя замутить самого себя😔')
+                return
             if str(i.user.id) == user:
                 bot.send_message(message.chat.id, 'Нельзя замутить администратора😔')
                 return
@@ -1548,7 +1564,7 @@ def mute(message: Message, time_mute=30, chat=None, user=None):
         bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
 
 
-@bot.message_handler(content_types=['text'], regexp=r'^!kick')  # Add answer to DB
+@bot.message_handler(content_types=['text'], regexp=r'^!kick$')  # Add answer to DB
 def text_handler(message: Message) -> None:
     log(message, 'info')
     if message.chat.type != 'private':
@@ -1560,10 +1576,16 @@ def text_handler(message: Message) -> None:
 def kick(message: Message, chat=None, user=None):
     for i in bot.get_chat_administrators(message.chat.id):
         if message.reply_to_message:
+            if message.reply_to_message.from_user.id == message.from_user.id:
+                bot.send_message(message.chat.id, 'Нельзя кикнуть самого себя😔')
+                return
             if i.user.id == message.reply_to_message.from_user.id:
                 bot.send_message(message.chat.id, 'Нельзя кикнуть администратора😔')
                 return
         elif user is not None:
+            if user == str(message.from_user.id):
+                bot.send_message(message.chat.id, 'Нельзя кикнуть самого себя😔')
+                return
             if str(i.user.id) == user:
                 bot.send_message(message.chat.id, 'Нельзя кикнуть администратора😔')
                 return
@@ -1606,7 +1628,7 @@ def text_handler(message: Message) -> None:
         joke_handler(message)
     elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
         dice_handler(message)
-    if message.chat.type != 'private' and message.from_user.id != int(GNBot_ID):
+    if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
         if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
             data_answers[message.chat.id] = db.get_all_answers()
         if message.reply_to_message is not None:
@@ -1622,13 +1644,6 @@ def text_handler(message: Message) -> None:
 
 
 # <<< Answer's  >>>
-@bot.message_handler(content_types=['voice'])  # Answer on voice
-def voice_handler(message: Message) -> None:
-    if rend_d(25):
-        bot.reply_to(message, random.choice(['Чё ты там пизданул? Повтори!', 'Писклявый голосок',
-                                             'Лучше бы я это не слышал']))
-
-
 @bot.message_handler(content_types=['new_chat_members'])  # Answer on new member
 def new_member_handler(message: Message) -> None:
     if db.check_ban_user(message.new_chat_member.id):
@@ -1641,7 +1656,10 @@ def new_member_handler(message: Message) -> None:
                                                                       f'{message.chat.id} {message.new_chat_member.id}')
                      )
         msg = bot.send_message(message.chat.id, random.choice(['Опа чирик! Вечер в хату', 'Приветствую тебя',
-                                                         'Алоха друг мой!']), reply_markup=keyboard)
+                                                          'Алоха друг мой!', 'Ну привет)', 'Хело май френд',
+                                                          'Рады вас видеть господин', 'В наших рядах поплнение',
+                                                          'Новобранец!', 'Рядовой!', 'Дратути']),
+                               reply_markup=keyboard)
 
         time.sleep(120)
         bot.delete_message(msg.chat.id, msg.message_id)
@@ -1665,25 +1683,43 @@ def code_callback_query(call):
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Mute\s.?\w+\s.?\w+$', call.data))
 def code_callback_query(call):
     bot.answer_callback_query(call.id, 'Пользователь замучен на 30 минут')
-    mute(call.message, 1, call.data.split()[1], call.data.split()[2])
+    mute(call.message, 30, call.data.split()[1], call.data.split()[2])
 
 
 @bot.message_handler(content_types=['left_chat_member'])  # Answer on left group
 def left_member_handler(message: Message) -> None:
-    bot.send_message(message.chat.id, random.choice(['Слился падло(', 'Буенос мучачес пидрилас', 'Прощай любовь моя']))
+    bot.send_message(message.chat.id, random.choice(['Слился падло(', 'Буенос мучачес пидрилас', 'Прощай любовь моя',
+                                                     'Аривидерчи', 'Слава богу он ушел',
+                                                     'Без него тут будет куда приятнее',
+                                                     'Ну, теперь можно начинать весилится', 'Он был такой душный',
+                                                     'Это пойдет всем на пользу', 'Что не делается все к лучшему']))
+
+
+@bot.message_handler(content_types=['voice'])  # Answer on voice
+def voice_handler(message: Message) -> None:
+    if rend_d(30) and message.chat.type != 'private':
+        bot.reply_to(message, random.choice(['Чё ты там пизданул? Повтори!', 'Писклявый голосок',
+                                             'Лучше бы я это не слышал', 'Лучше бы я этого не слышал',
+                                             'Голос пушка', 'Ты что в пещере?']))
 
 
 @bot.message_handler(content_types=['location'])  # Answer on location
 def location_handler(message: Message) -> None:
-    if rend_d(25):
-        bot.reply_to(message.chat.id, ['Скинул мусорам', 'Прикоп или магнит?', 'Ебеня какие то'])
+    if rend_d(30) and message.chat.type != 'private':
+        bot.reply_to(message.chat.id, ['Скинул мусорам', 'Прикоп или магнит?', 'Ебеня какие то',
+                                       'Та ну нафиг, я туда не поеду', 'Это ты там живешь? Сочувствую',
+                                       'Ой ну и местечко для сходочки вы выбрали...',
+                                       'Я бы туда не поехал будь я даже пьян',
+                                       'Дебри', 'Так так, вижу степи и болото'])
 
 
 @bot.message_handler(content_types=['contact'])  # Answer on contact
 def contact_handler(message: Message) -> None:
-    if rend_d(25):
+    if rend_d(30) and message.chat.type != 'private':
         bot.reply_to(message.chat.id, random.choice(['Если мне будет одиноко и холодно я знаю куда позвонить',
-                                                     'Трубку не берут', 'Сохранил']))
+                                                     'Трубку не берут', 'Сохранил', 'А мой запишешь?',
+                                                     'Наберу тебя вечерком)', 'Разошлю его всем знакомым',
+                                                     'Продам в DarkNet']))
 
 # <<< End answer's  >>>
 
