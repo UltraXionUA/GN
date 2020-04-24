@@ -1468,6 +1468,7 @@ def reset_users() -> None:  # Reset users for Dice game
 # <<< Admin menu >>>
 @bot.message_handler(content_types=['text'], regexp=r'!ban')  # Add answer to DB
 def text_handler(message: Message) -> None:
+    log(message, 'info')
     ban(message)
 
 
@@ -1484,11 +1485,12 @@ def ban(message: Message, chat=None, user=None):
                 bot.kick_chat_member(chat, user)
                 return
     else:
-        bot.send_message(message.chat.id, 'У вас недостаточно прав для этого')
+        bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
 
 
 @bot.message_handler(content_types=['text'], regexp=r'!mute\s\d+')  # Add answer to DB
 def text_handler(message: Message) -> None:
+    log(message, 'info')
     mute(message, message.text.split()[1])
 
 
@@ -1507,11 +1509,12 @@ def mute(message: Message, time_mute=30, chat=None, user=None):
                                          can_send_other_messages=False, can_send_media_messages=False)
                 return
     else:
-        bot.send_message(message.chat.id, 'У вас недостаточно прав для этого')
+        bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
 
 
 @bot.message_handler(content_types=['text'], regexp=r'!kick')  # Add answer to DB
 def text_handler(message: Message) -> None:
+    log(message, 'info')
     kick(message)
 
 
@@ -1526,7 +1529,7 @@ def kick(message: Message, chat=None, user=None):
                 bot.kick_chat_member(chat, user)
                 return
     else:
-        bot.send_message(message.chat.id, 'У вас недостаточно прав для этого')
+        bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
 
 
 # <<< End admin menu >>>
