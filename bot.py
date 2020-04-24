@@ -1479,11 +1479,11 @@ def ban(message: Message, chat=None, user=None):
     for i in bot.get_chat_administrators(message.chat.id):
         if message.reply_to_message:
             if i.user.id == message.reply_to_message.from_user.id:
-                bot.send_message(message.chat.id, 'Нельзя замутить администратора😔')
+                bot.send_message(message.chat.id, 'Нельзя забанить администратора😔')
                 return
         elif user is not None:
             if str(i.user.id) == user:
-                bot.send_message(message.chat.id, 'Нельзя замутить администратора😔')
+                bot.send_message(message.chat.id, 'Нельзя забанить администратора😔')
                 return
     for i in bot.get_chat_administrators(message.chat.id):
         if i.user.id == message.from_user.id:
@@ -1551,11 +1551,11 @@ def kick(message: Message, chat=None, user=None):
     for i in bot.get_chat_administrators(message.chat.id):
         if message.reply_to_message:
             if i.user.id == message.reply_to_message.from_user.id:
-                bot.send_message(message.chat.id, 'Нельзя замутить администратора😔')
+                bot.send_message(message.chat.id, 'Нельзя кикнуть администратора😔')
                 return
         elif user is not None:
             if str(i.user.id) == user:
-                bot.send_message(message.chat.id, 'Нельзя замутить администратора😔')
+                bot.send_message(message.chat.id, 'Нельзя кикнуть администратора😔')
                 return
     for i in bot.get_chat_administrators(message.chat.id):
         if i.user.id == message.from_user.id:
