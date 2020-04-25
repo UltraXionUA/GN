@@ -55,7 +55,7 @@ def help_handler(message: Message) -> None:
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, '<b>Тут должна была быть помощь</b>🆘, но её тут не будет🌚\n'
-                                      'Список всех команд можно увидить введя \"\\\"\n'
+                                      'Список всех команд можно увидить введя <b>\" </b>\\<b> \"</b>\n'
                                       'Все свои вопросы и предложения вы можете писать мне 💢<b>@Ultra_Xion</b>💢\n'
                                       'Если вы нашли баг или ошибку просьба сообщить\n'
                                       '<b>Почта:</b> <i>ultra25813@gmail.com</i>', parse_mode='HTML')
@@ -184,20 +184,23 @@ def set_name_mp3(message: Message) -> None:
 
 def send_mp3(message: Message, file_id: int) -> None:
     global msg_mp3ogg
-    bot.send_chat_action(message.chat.id, 'upload_voice')
-    bot.delete_message(msg_mp3ogg[message.chat.id].chat.id, msg_mp3ogg[message.chat.id].message_id)
-    bot.delete_message(message.chat.id, message.message_id)
-    data = request.urlopen(bot.get_file_url(file_id)).read()
-    with tempfile.NamedTemporaryFile(delete=False) as f:
-        f.write(data)
-    time.sleep(1)
-    audio = AudioSegment.from_ogg(f.name)
-    audio.export(f'{message.text}.mp3', format='mp3')
-    bot.send_audio(message.chat.id, open(f'{message.text}.mp3', 'rb'))
-    try:
-        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'{message.text}' + '.mp3'))
-    except FileNotFoundError:
-        log('Error! Can\'t remove file', 'warning')
+    if message.content_type != 'text':
+        bot.send_message(message.chat.id, 'Не верный формат данных😔')
+    else:
+        bot.send_chat_action(message.chat.id, 'upload_voice')
+        bot.delete_message(msg_mp3ogg[message.chat.id].chat.id, msg_mp3ogg[message.chat.id].message_id)
+        bot.delete_message(message.chat.id, message.message_id)
+        data = request.urlopen(bot.get_file_url(file_id)).read()
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            f.write(data)
+        time.sleep(1)
+        audio = AudioSegment.from_ogg(f.name)
+        audio.export(f'{message.text}.mp3', format='mp3')
+        bot.send_audio(message.chat.id, open(f'{message.text}.mp3', 'rb'))
+        try:
+            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'{message.text}' + '.mp3'))
+        except FileNotFoundError:
+            log('Error! Can\'t remove file', 'warning')
 
 
 # <<< End Ogg to Mp3 >>>
@@ -337,41 +340,44 @@ def weather_handler(message: Message) -> None:
 
 
 def weather(message: Message, index: int) -> None:
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(
-        InlineKeyboardButton(text="⬅️️", callback_data=f"move_to__ {index - 1 if index > 0 else 'pass'}"),
-        InlineKeyboardButton(text="➡️", callback_data=f"move_to__ "
-                             f"{index + 1 if index < len(weather_data[message.chat.id]) - 1 else 'pass'}"))
-    keyboard.add(InlineKeyboardButton('Погода', url='https://' +
-                                                    f'darksky.net/forecast/{city_data[message.chat.id]["lat"]},'
-                                                    f'{city_data[message.chat.id]["lon"]}/us12/en'))
-    try:
-        bot.edit_message_text(chat_id=weather_msg[message.chat.id].chat.id,
-                              message_id=weather_msg[message.chat.id].message_id,
-                              text=f"<i>{weather_data[message.chat.id][index]['valid_date']} "
-                                   f"{get_day(weather_data[message.chat.id][index]['valid_date'])}</i>\n"
-                                   f"<b>Город {tr_w(city_data[message.chat.id]['city_name'])} "
-                                   f"{city_data[message.chat.id]['country_code']}</b>🏢\n\n"
-                                   f"<b>Погода</b> {weather_data[message.chat.id][index]['weather']['description']}️"
-                                   f"{get_weather_emoji(str(weather_data[message.chat.id][index]['weather']['code']))}"
-                                   f"\n<b>Теспература</b> {weather_data[message.chat.id][index]['low_temp']} - "
-                                   f"{weather_data[message.chat.id][index]['max_temp']}°C🌡\n"
-                                   f"<b>По ощушению</b> {weather_data[message.chat.id][index]['app_min_temp']} - "
-                                   f"{weather_data[message.chat.id][index]['app_max_temp']}°C🌡\n"
-                                   f"<b>Облачность</b> {weather_data[message.chat.id][index]['clouds']}%☁️\n"
-                                   f"<b>Вероятность осадков</b> {weather_data[message.chat.id][index]['pop']}%☔️️\n"
-                                   f"<b>Видимость</b> {weather_data[message.chat.id][index]['vis']} км🔭\n"
-                                   f"<b>Влажность</b> {weather_data[message.chat.id][index]['rh']} %💧\n"
-                                   f"<b>Атмоc. давление</b> "
-                                   f"{weather_data[message.chat.id][index]['pres']} дин·см²⏲\n"
-                                   f"<b>Ветер</b> {weather_data[message.chat.id][index]['wind_cdir_full']} 🧭\n"
-                                   f"<b>Cкорость ветра</b> "
-                                   f"{float('{:.1f}'.format(weather_data[message.chat.id][index]['wind_spd']))}"
-                                   f" м\\с💨\n",
-                              reply_markup=keyboard, parse_mode='HTML')
-    except KeyError:
-        log('Key Error in weather', 'warning')
-        bot.send_chat_action(message.chat.id, '⛔️')
+    if message.content_type != 'text':
+        bot.send_message(message.chat.id, 'Не верный формат данных😔')
+    else:
+        keyboard = InlineKeyboardMarkup(row_width=2)
+        keyboard.add(
+            InlineKeyboardButton(text="⬅️️", callback_data=f"move_to__ {index - 1 if index > 0 else 'pass'}"),
+            InlineKeyboardButton(text="➡️", callback_data=f"move_to__ "
+                                 f"{index + 1 if index < len(weather_data[message.chat.id]) - 1 else 'pass'}"))
+        keyboard.add(InlineKeyboardButton('Погода', url='https://' +
+                                                        f'darksky.net/forecast/{city_data[message.chat.id]["lat"]},'
+                                                        f'{city_data[message.chat.id]["lon"]}/us12/en'))
+        try:
+            bot.edit_message_text(chat_id=weather_msg[message.chat.id].chat.id,
+                                  message_id=weather_msg[message.chat.id].message_id,
+                                  text=f"<i>{weather_data[message.chat.id][index]['valid_date']} "
+                                       f"{get_day(weather_data[message.chat.id][index]['valid_date'])}</i>\n"
+                                       f"<b>Город {tr_w(city_data[message.chat.id]['city_name'])} "
+                                       f"{city_data[message.chat.id]['country_code']}</b>🏢\n\n"
+                                       f"<b>Погода</b> {weather_data[message.chat.id][index]['weather']['description']}️"
+                                       f"{get_weather_emoji(str(weather_data[message.chat.id][index]['weather']['code']))}"
+                                       f"\n<b>Теспература</b> {weather_data[message.chat.id][index]['low_temp']} - "
+                                       f"{weather_data[message.chat.id][index]['max_temp']}°C🌡\n"
+                                       f"<b>По ощушению</b> {weather_data[message.chat.id][index]['app_min_temp']} - "
+                                       f"{weather_data[message.chat.id][index]['app_max_temp']}°C🌡\n"
+                                       f"<b>Облачность</b> {weather_data[message.chat.id][index]['clouds']}%☁️\n"
+                                       f"<b>Вероятность осадков</b> {weather_data[message.chat.id][index]['pop']}%☔️️\n"
+                                       f"<b>Видимость</b> {weather_data[message.chat.id][index]['vis']} км🔭\n"
+                                       f"<b>Влажность</b> {weather_data[message.chat.id][index]['rh']} %💧\n"
+                                       f"<b>Атмоc. давление</b> "
+                                       f"{weather_data[message.chat.id][index]['pres']} дин·см²⏲\n"
+                                       f"<b>Ветер</b> {weather_data[message.chat.id][index]['wind_cdir_full']} 🧭\n"
+                                       f"<b>Cкорость ветра</b> "
+                                       f"{float('{:.1f}'.format(weather_data[message.chat.id][index]['wind_spd']))}"
+                                       f" м\\с💨\n",
+                                  reply_markup=keyboard, parse_mode='HTML')
+        except KeyError:
+            log('Key Error in weather', 'warning')
+            bot.send_chat_action(message.chat.id, '⛔️')
 
 
 def show_weather(message: Message) -> None:
@@ -443,43 +449,46 @@ def callback_query(call):
 
 
 def detect_music(message: Message, type_r) -> None:
-    API['AUDD_data']['url'] = bot.get_file_url(message.voice.file_id).replace('https://' + 'api.telegram.org',
-                                                                              'http://' + 'esc-ru.appspot.com/') \
-                              + '?host=api.telegram.org'
-    if type_r == 'sing':
-        result = requests.post(API['AUDD'] + 'recognizeWithOffset/',
-                               data={'url': API['AUDD_data']['url'], 'api_token': API['AUDD_data']['api_token']}).json()
+    if message.content_type != 'voice':
+        bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
-        result = requests.post(API['AUDD'], data=API['AUDD_data']).json()
-    if result['status'] == 'success' and result['result'] is not None:
-        if type_r != 'sing':
-            if result['result']['deezer']:
-                keyboard = InlineKeyboardMarkup()
-                res = YoutubeUnlimitedSearch(f"{result['result']['artist']} - {result['result']['title']}",
-                                             max_results=1).get()
-                keyboard.add(InlineKeyboardButton('Текст',
-                                                  callback_data=f"Lyric2: {str(result['result']['deezer']['id'])}"),
-                             InlineKeyboardButton('Dezeer', url=result['result']['deezer']['link']))
-                keyboard.add(InlineKeyboardButton('Песня', callback_data=res[0]['link']))
-                bot.send_photo(message.chat.id, result['result']['deezer']['artist']['picture_xl'],
-                               caption=f"{result['result']['artist']} - {result['result']['title']}🎵",
-                               reply_markup=keyboard)
-            else:
-                bot.send_message(message.chat.id, f"<b>{result['result']['artist']}</b>"
-                                                  f" - {result['result']['title']}🎵", parse_mode='HTML')
+        API['AUDD_data']['url'] = bot.get_file_url(message.voice.file_id).replace('https://' + 'api.telegram.org',
+                                                                                  'http://' + 'esc-ru.appspot.com/') \
+                                  + '?host=api.telegram.org'
+        if type_r == 'sing':
+            result = requests.post(API['AUDD'] + 'recognizeWithOffset/',
+                                   data={'url': API['AUDD_data']['url'], 'api_token': API['AUDD_data']['api_token']}).json()
         else:
-            msg = "<b>Результат</b> "
-            for i in result['result']['list']:
-                msg += f"\nСовпадение: <i>{i['score']}%</i>\n{i['artist']} - {i['title']}🎵"
-            bot.send_message(message.chat.id, msg, parse_mode='HTML')
+            result = requests.post(API['AUDD'], data=API['AUDD_data']).json()
+        if result['status'] == 'success' and result['result'] is not None:
+            if type_r != 'sing':
+                if result['result']['deezer']:
+                    keyboard = InlineKeyboardMarkup()
+                    res = YoutubeUnlimitedSearch(f"{result['result']['artist']} - {result['result']['title']}",
+                                                 max_results=1).get()
+                    keyboard.add(InlineKeyboardButton('Текст',
+                                                      callback_data=f"Lyric2: {str(result['result']['deezer']['id'])}"),
+                                InlineKeyboardButton('Песня', callback_data=res[0]['link']))
+                    keyboard.add(InlineKeyboardButton('Dezeer', url=result['result']['deezer']['link']))
+                    bot.send_photo(message.chat.id, result['result']['deezer']['artist']['picture_xl'],
+                                   caption=f"{result['result']['artist']} - {result['result']['title']}🎵",
+                                   reply_markup=keyboard)
+                else:
+                    bot.send_message(message.chat.id, f"<b>{result['result']['artist']}</b>"
+                                                      f" - {result['result']['title']}🎵", parse_mode='HTML')
+            else:
+                msg = "<b>Результат</b> "
+                for i in result['result']['list']:
+                    msg += f"\nСовпадение: <i>{i['score']}%</i>\n{i['artist']} - {i['title']}🎵"
+                bot.send_message(message.chat.id, msg, parse_mode='HTML')
 
-        @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric2:\s?\d+$', call.data))
-        def call_lyric(call):
-            res_lyric = requests.get(API['AUDD'] + 'findLyrics/?q=' + result['result']['artist'] + ' ' +
-                                     result['result']['title']).json()
-            bot.reply_to(call.message, res_lyric['result'][0]['lyrics'])
-    else:
-        bot.send_message(message.chat.id, 'Ничего не нашлось😔')
+            @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric2:\s?\d+$', call.data))
+            def call_lyric(call):
+                res_lyric = requests.get(API['AUDD'] + 'findLyrics/?q=' + result['result']['artist'] + ' ' +
+                                         result['result']['title']).json()
+                bot.reply_to(call.message, res_lyric['result'][0]['lyrics'])
+        else:
+            bot.send_message(message.chat.id, 'Ничего не нашлось😔')
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'/watch\?v=\w+.+', call.data))
@@ -821,80 +830,101 @@ def youtube_pass(call):
 
 
 def send_audio(message: Message, method: str) -> None:
-    if re.fullmatch(r'^https?://.*[\r\n]*$', message.text):
-        keyboard = InlineKeyboardMarkup()
-        keyboard.add(InlineKeyboardButton('YouTube', url=message.text))
-        try:
-            yt = YouTube(message.text)
-        except error.HTTPError:
-            bot.send_message(message.chat.id, 'Не могу найти файл😔')
-        except exceptions.RegexMatchError:
-            bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
-        else:
-            if method == 'Audio':
-                bot.send_chat_action(message.chat.id, 'upload_audio')
-                bot.delete_message(message.chat.id, message.message_id)
-                bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(
-                    filename='file'), 'rb'),
-                               reply_markup=keyboard, duration=yt.length, title=yt.title, performer=yt.author,
-                               caption=f'🎧 {sec_to_time(yt.length)} '
-                                       f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
-                                       f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps')
-                try:
-                    os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
-                except FileNotFoundError:
-                    log('Error! Can\'t remove file', 'warning')
+    if message.content_type != 'text':
+        bot.send_message(message.chat.id, 'Не верный формат данных😔')
+    else:
+        if re.fullmatch(r'^https?://.*[\r\n]*$', message.text):
+            keyboard = InlineKeyboardMarkup()
+            keyboard.add(InlineKeyboardButton('YouTube', url=message.text))
+            try:
+                yt = YouTube(message.text)
+            except error.HTTPError:
+                bot.send_message(message.chat.id, 'Не могу найти файл😔')
+            except exceptions.RegexMatchError:
+                bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
             else:
-                resolution = None
-                try:
-                    resolution = '480p'
-                    yt.streams.filter(res="480p").order_by('resolution').desc()[0].download(
-                        filename='video')
-                except IndexError:
+                if method == 'Audio':
+                    bot.send_chat_action(message.chat.id, 'upload_audio')
+                    bot.delete_message(message.chat.id, message.message_id)
+                    bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(
+                        filename='file'), 'rb'),
+                                   reply_markup=keyboard, duration=yt.length, title=yt.title, performer=yt.author,
+                                   caption=f'🎧 {sec_to_time(yt.length)} '
+                                           f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
+                                           f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps')
                     try:
-                        resolution = '320p'
-                        yt.streams.filter(res="320p").order_by('resolution').desc()[0].download(
+                        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
+                    except FileNotFoundError:
+                        log('Error! Can\'t remove file', 'warning')
+                else:
+                    try:
+                        resolution = '480p'
+                        yt.streams.filter(res="480p").order_by('resolution').desc()[0].download(
                             filename='video')
+                    except error.HTTPError:
+                        bot.send_message(message.chat.id, 'Не могу найти файл😔')
                     except IndexError:
                         try:
-                            resolution = '240p'
-                            yt.streams.filter(res="240p").order_by('resolution').desc()[0].download(
+                            resolution = '320p'
+                            yt.streams.filter(res="320p").order_by('resolution').desc()[0].download(
                                 filename='video')
+                        except error.HTTPError:
+                            bot.send_message(message.chat.id, 'Не могу найти файл😔')
                         except IndexError:
                             try:
-                                resolution = '144p'
-                                yt.streams.filter(res="144p").order_by('resolution').desc()[0].download(
+                                resolution = '240p'
+                                yt.streams.filter(res="240p").order_by('resolution').desc()[0].download(
                                     filename='video')
+                            except error.HTTPError:
+                                bot.send_message(message.chat.id, 'Не могу найти файл😔')
                             except IndexError:
-                                bot.send_message(message.chat.id, 'Даное видео имеет слигком большой объем,'
-                                                                  ' мой лимит 50МБ😔')
-                yt.streams.filter(only_audio=True)[0].download(filename='audio')
-                ffmpeg_work = Thread(target=ffmpeg_run, name='ffmpeg_work')
-                msg = bot.send_message(message.chat.id, 'Загрузка...')
-                ffmpeg_work.start()
-                ffmpeg_work.join()
-                time.sleep(5)
-                bot.delete_message(message.chat.id, message.message_id)
-                bot.delete_message(msg.chat.id, msg.message_id)
-                bot.send_video(message.chat.id, open('file.mp4', 'rb'),
-                               duration=yt.length, reply_markup=keyboard,
-                               caption=f'🎧 {sec_to_time(yt.length)} '
-                                       f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB '
-                                       f'| {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps '
-                                       f'| {resolution}')
-                try:
-                    files = os.listdir(os.path.dirname(__file__))
-                    for i in files:
-                        if i.startswith('video'):
-                            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), i))
-                        elif i.startswith('audio'):
-                            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), i))
-                        elif i.startswith('file'):
-                            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), i))
-                except FileNotFoundError:
-                    log('Error! Can\'t remove file', 'warning')
-    else:
-        bot.send_message(message.chat.id, 'Не верный формат данных😔')
+                                try:
+                                    resolution = '144p'
+                                    yt.streams.filter(res="144p").order_by('resolution').desc()[0].download(
+                                        filename='video')
+                                except error.HTTPError:
+                                    bot.send_message(message.chat.id, 'Не могу найти файл😔')
+                                except IndexError:
+                                    bot.send_message(message.chat.id, 'Даное видео имеет слигком большой объем,'
+                                                                      ' мой лимит 50МБ😔')
+                                else:
+                                    load_video(message, yt, keyboard, resolution)
+                            else:
+                                load_video(message, yt, keyboard, resolution)
+                        else:
+                            load_video(message, yt, keyboard, resolution)
+                    else:
+                        load_video(message, yt, keyboard, resolution)
+        else:
+            bot.send_message(message.chat.id, 'Не верный формат данных😔')
+
+
+def load_video(message: Message, yt, keyboard, resolution):
+    yt.streams.filter(only_audio=True)[0].download(filename='audio')
+    ffmpeg_work = Thread(target=ffmpeg_run, name='ffmpeg_work')
+    msg = bot.send_message(message.chat.id, 'Загрузка...')
+    ffmpeg_work.start()
+    ffmpeg_work.join()
+    time.sleep(5)
+    bot.delete_message(message.chat.id, message.message_id)
+    bot.delete_message(msg.chat.id, msg.message_id)
+    bot.send_video(message.chat.id, open('file.mp4', 'rb'),
+                   duration=yt.length, reply_markup=keyboard,
+                   caption=f'🎧 {sec_to_time(yt.length)} '
+                           f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB '
+                           f'| {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps '
+                           f'| {resolution}')
+    try:
+        files = os.listdir(os.path.dirname(__file__))
+        for i in files:
+            if i.startswith('video'):
+                os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), i))
+            elif i.startswith('audio'):
+                os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), i))
+            elif i.startswith('file'):
+                os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), i))
+    except FileNotFoundError:
+        log('Error! Can\'t remove file', 'warning')
 
 
 def ffmpeg_run():
@@ -941,39 +971,42 @@ def callback_query(call):
 
 
 def get_video(message: Message) -> None:
-    bot.send_chat_action(message.chat.id, 'upload_video')
-    bot.delete_message(message.chat.id, message.message_id)
-    if re.match(r'^https?://(www.)?instagram.com/\w+/.+', message.text):
-        url = re.search(r'^https?://(www.)?instagram.com/\w+/.+/', message.text)
-        if url is not None:
-            url = url.group(0)
-            try:
-                data = get_instagram_video(url)
-            except JSONDecodeError:
-                bot.send_message(message.chat.id, 'Не поддерживаются работа закрытыми аккаунтами😔')
-            else:
-                if data:
-                    if len(data) == 1:
-                        if data[0]['is_video'] is True:
-                            keyboard = InlineKeyboardMarkup()
-                            keyboard.add(InlineKeyboardButton('Instagram', url=url))
-                            bot.send_video(message.chat.id, data[0]['url'], reply_markup=keyboard)
-                        else:
-                            bot.send_message(message.chat.id, 'По ссылке нет видео😔')
-                    else:
-                        list_data = []
-                        for i in data:
-                            if i['is_video'] is True:
-                                list_data.append(InputMediaVideo(i['url']))
-                            else:
-                                list_data.append(InputMediaPhoto(i['url']))
-                        bot.send_media_group(message.chat.id, list_data)
-                else:
-                    bot.send_message(message.chat.id, 'По ссылке ничего не обнаружено😔')
-        else:
-            bot.send_message(message.chat.id, 'Не смог получить данные😔')
+    if message.content_type != 'text':
+        bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
-        bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
+        bot.send_chat_action(message.chat.id, 'upload_video')
+        bot.delete_message(message.chat.id, message.message_id)
+        if re.match(r'^https?://(www.)?instagram.com/\w+/.+', message.text):
+            url = re.search(r'^https?://(www.)?instagram.com/\w+/.+/', message.text)
+            if url is not None:
+                url = url.group(0)
+                try:
+                    data = get_instagram_video(url)
+                except JSONDecodeError:
+                    bot.send_message(message.chat.id, 'Не поддерживаются работа закрытыми аккаунтами😔')
+                else:
+                    if data:
+                        if len(data) == 1:
+                            if data[0]['is_video'] is True:
+                                keyboard = InlineKeyboardMarkup()
+                                keyboard.add(InlineKeyboardButton('Instagram', url=url))
+                                bot.send_video(message.chat.id, data[0]['url'], reply_markup=keyboard)
+                            else:
+                                bot.send_message(message.chat.id, 'По ссылке нет видео😔')
+                        else:
+                            list_data = []
+                            for i in data:
+                                if i['is_video'] is True:
+                                    list_data.append(InputMediaVideo(i['url']))
+                                else:
+                                    list_data.append(InputMediaPhoto(i['url']))
+                            bot.send_media_group(message.chat.id, list_data)
+                    else:
+                        bot.send_message(message.chat.id, 'По ссылке ничего не обнаружено😔')
+            else:
+                bot.send_message(message.chat.id, 'Не смог получить данные😔')
+        else:
+            bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
 
 
 def get_instagram_photo(message: Message) -> None:
@@ -1037,21 +1070,24 @@ def callback_query(call):
 
 def send_urls(message: Message) -> None:
     global data_torrents, torrent_msg, tracker
-    search_msg[message.chat.id] = message.text
-    if message.chat.id in data_torrents:
-        bot.delete_message(torrent_msg[message.chat.id].chat.id, torrent_msg[message.chat.id].message_id)
-    if tracker[message.chat.id] == URLS['torrent']['name']:
-        data_torrents[message.chat.id] = get_torrents1(message.text)
-    elif tracker[message.chat.id] == URLS['torrent2']['name']:
-        data_torrents[message.chat.id] = get_torrents2(message.text)
-    elif tracker[message.chat.id] == URLS['torrent3']['name']:
-        data_torrents[message.chat.id] = get_torrents3(message.text)
-    if data_torrents[message.chat.id]:
-        create_data_torrents(message)
-        torrent_msg[message.chat.id] = bot.send_message(message.chat.id, 'Загрузка...')
-        torrent_keyboard(torrent_msg[message.chat.id], 0)
+    if message.content_type != 'text':
+        bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
-        data_torrents[message.chat.id] = bot.send_message(message.chat.id, 'Ничего не нашлось😔')
+        search_msg[message.chat.id] = message.text
+        if message.chat.id in data_torrents:
+            bot.delete_message(torrent_msg[message.chat.id].chat.id, torrent_msg[message.chat.id].message_id)
+        if tracker[message.chat.id] == URLS['torrent']['name']:
+            data_torrents[message.chat.id] = get_torrents1(message.text)
+        elif tracker[message.chat.id] == URLS['torrent2']['name']:
+            data_torrents[message.chat.id] = get_torrents2(message.text)
+        elif tracker[message.chat.id] == URLS['torrent3']['name']:
+            data_torrents[message.chat.id] = get_torrents3(message.text)
+        if data_torrents[message.chat.id]:
+            create_data_torrents(message)
+            torrent_msg[message.chat.id] = bot.send_message(message.chat.id, 'Загрузка...')
+            torrent_keyboard(torrent_msg[message.chat.id], 0)
+        else:
+            torrent_msg[message.chat.id] = bot.send_message(message.chat.id, 'Ничего не нашлось😔')
 
 
 def create_data_torrents(message: Message) -> None:
@@ -1098,10 +1134,11 @@ def torrent_keyboard(message: Message, index: int) -> None:
                           f'[<a href="{i["link"]}">раздача</a>]'
     except KeyError:
         log('Key Error in torrents', 'warning')
-    torrent_msg[message.chat.id] = bot.edit_message_text(chat_id=torrent_msg[message.chat.id].chat.id,
-                                                         message_id=torrent_msg[message.chat.id].message_id,
-                                                         text=text_t, reply_markup=keyboard, parse_mode='HTML',
-                                                         disable_web_page_preview=True)
+    else:
+        bot.edit_message_text(chat_id=torrent_msg[message.chat.id].chat.id,
+                                                 message_id=torrent_msg[message.chat.id].message_id,
+                                                 text=text_t, reply_markup=keyboard, parse_mode='HTML',
+                                                 disable_web_page_preview=True)
 
 
 @bot.message_handler(func=lambda message: re.match(r'^/\w{8}_\d+_\d+$', str(message.text), flags=re.M))
@@ -1379,15 +1416,18 @@ def callback_to_code(message: Message) -> None:
     if type(leng_msg) == 'str':
         return
     elif type(leng_msg) == Message:
-        lang: [dict, None] = db.get_code(message.text)
-        if lang is not None:
-            bot.delete_message(leng_msg.chat.id, leng_msg.message_id)
-            bot.send_chat_action(message.chat.id, 'typing')
-            time.sleep(1)
-            code = bot.send_message(message.chat.id, 'Отправьте мне ваш код👾')
-            bot.register_next_step_handler(code, set_name, lang['code'])
+        if message.content_type != 'text':
+            bot.send_message(message.chat.id, 'Не верный формат данных😔')
         else:
-            bot.send_message(message.chat.id, 'Этот язык не обнаружен в базе данных😔')
+            lang: [dict, None] = db.get_code(message.text)
+            if lang is not None:
+                bot.delete_message(leng_msg.chat.id, leng_msg.message_id)
+                bot.send_chat_action(message.chat.id, 'typing')
+                time.sleep(1)
+                code = bot.send_message(message.chat.id, 'Отправьте мне ваш код👾')
+                bot.register_next_step_handler(code, set_name, lang['code'])
+            else:
+                bot.send_message(message.chat.id, 'Этот язык не обнаружен в базе данных😔')
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Code\s?\w.+$', call.data))
@@ -1404,26 +1444,30 @@ def code_callback_query(call):
 
 
 def set_name(message: Message, leng: str) -> None:  # Set file name
-    bot.send_chat_action(message.from_user.id, 'typing')
-    time.sleep(1)
-    name = bot.send_message(message.chat.id, 'Укажите имя проекта💡')
-    bot.register_next_step_handler(name, get_url, message.text, leng)
-    log(message, 'info')
+    if message.content_type != 'text':
+        bot.send_message(message.chat.id, 'Не верный формат данных😔')
+    else:
+        bot.send_chat_action(message.from_user.id, 'typing')
+        time.sleep(1)
+        name = bot.send_message(message.chat.id, 'Укажите имя проекта💡')
+        bot.register_next_step_handler(name, get_url, message.text, leng)
 
 
 def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
-    log(message, 'info')
-    values = {'api_option': 'paste', 'api_dev_key': f"{API['PasteBin']['DevApi']}",
-              'api_paste_code': f'{code}', 'api_paste_private': '0',
-              'api_paste_name': f'{message.text}', 'api_paste_expire_date': '1H',
-              'api_paste_format': f'{leng}', 'api_user_key': f"{API['PasteBin']['UserApi']}"}
-    data = parse.urlencode(values).encode('utf-8')
-    req = request.Request(API['PasteBin']['URL'], data)
-    with request.urlopen(req) as response:
-        url_bin = str(response.read()).replace('b\'', '').replace('\'', '')
-    bot.send_chat_action(message.chat.id, 'typing')
-    time.sleep(1)
-    bot.send_message(message.chat.id, url_bin)
+    if message.content_type != 'text':
+        bot.send_message(message.chat.id, 'Не верный формат данных😔')
+    else:
+        values = {'api_option': 'paste', 'api_dev_key': f"{API['PasteBin']['DevApi']}",
+                  'api_paste_code': f'{code}', 'api_paste_private': '0',
+                  'api_paste_name': f'{message.text}', 'api_paste_expire_date': '1H',
+                  'api_paste_format': f'{leng}', 'api_user_key': f"{API['PasteBin']['UserApi']}"}
+        data = parse.urlencode(values).encode('utf-8')
+        req = request.Request(API['PasteBin']['URL'], data)
+        with request.urlopen(req) as response:
+            url_bin = str(response.read()).replace('b\'', '').replace('\'', '')
+        bot.send_chat_action(message.chat.id, 'typing')
+        time.sleep(1)
+        bot.send_message(message.chat.id, url_bin)
 
 
 # <<< End code PasteBin >>>

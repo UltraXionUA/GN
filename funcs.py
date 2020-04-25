@@ -63,7 +63,7 @@ def sec_to_time(seconds: int) -> str:
         sec = '00'
     elif sec < 10:
         sec = '0' + str(sec)
-    return minutes + ':' + sec
+    return f"{minutes}:{sec}"
 
 
 def tr_w(words) -> str:  # Define and translate
