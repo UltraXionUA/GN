@@ -1777,3 +1777,4 @@ def contact_handler(message: Message) -> None:
 
 
 bot.polling(none_stop=True)
+time.sleep(100)
