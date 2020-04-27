@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 """Mains file for GNBot"""
 # <<< Import's >>
-
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, InputMediaVideo
 from telebot.types import LabeledPrice, PreCheckoutQuery, ShippingQuery
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video, get_instagram_photos
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time, clear_date
-from config import TOKEN, API, Empty_bg, URLS, GNBot_ID, Admin_ID, bot, PAYMENT_TOKEN
+from config import API, URLS, GNBot_ID, Admin_ID, bot, PAYMENT_TOKEN
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from urllib import parse, request, error
 from pytube import YouTube, exceptions
@@ -718,67 +717,77 @@ def main_news(message: Message, news_type: str) -> None:
             i['title'] = clear_link(i['title'])
             if i['description'] is not None:
                 i['description'] = clear_link(i['description'])
+    news_msg[message.chat.id] = bot.send_photo(message.chat.id, API['News']['image'])
     send_news(message, 0)
 
 
 def send_news(message: Message, index: int) -> None:
     keyboard2 = InlineKeyboardMarkup()
-    try:
-        code_url = requests.get(news[message.chat.id][index]['url']).ok
-    except requests.exceptions.ConnectionError:
-        send_news(message, index + 1)
-    except requests.exceptions.MissingSchema:
-        send_news(message, index + 1)
-    except IndexError:
-        log('Index Error in news', 'warning')
-    else:
-        if code_url is True:
-            keyboard2.add(InlineKeyboardButton('Читать', url=news[message.chat.id][index]['url']))
-        else:
-            send_news(message, index + 1)
     keyboard2.add(
         InlineKeyboardButton(text="⬅️️", callback_data=f"move_to_ {index - 1 if index > 0 else 'pass'}"),
         InlineKeyboardButton(text="➡️", callback_data=f"move_to_ "
-                                                f"{index + 1 if index < len(news[message.chat.id]) - 1 else 'pass'}"))
-    try:
+                                                      f"{index + 1 if index < len(news[message.chat.id]) - 1 else 'pass'}"))
+    if news[message.chat.id][index] == news[message.chat.id][index + 1]:
+        send_news(message, index + 1)
+        return
+    else:
         try:
-            if news[message.chat.id][index]['title'] == news[message.chat.id][index + 1]['title']:
-                send_news(message, index + 1)
-            code_img = requests.get(news[message.chat.id][index]['image']).ok
-            if news[message.chat.id][index]['image'] is not None and news[message.chat.id][index]['image'] != '' \
-                    and code_img is True:
-                req = request.Request(news[message.chat.id][index]['image'], method='HEAD')
-                f = request.urlopen(req)
-                if int(f.headers['Content-Length']) > 5242880:
-                    send_news(message, index + 1)
-            else:
-                send_news(message, index + 1)
-        except requests.exceptions.ConnectionError:
+            if requests.get(news[message.chat.id][index]['url']).ok:
+                keyboard2.add(InlineKeyboardButton('Читать', url=news[message.chat.id][index]['url']))
+        except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema):
             send_news(message, index + 1)
-        except requests.exceptions.MissingSchema:
-            send_news(message, index + 1)
-        except error.URLError:
-            send_news(message, index + 1)
+            return
         except IndexError:
-            log('Index Error in news', 'warning')
-        else:
+            log('Index Error in news url', 'warning')
+        if news[message.chat.id][index]['image'] is None or news[message.chat.id][index]['image'] == '' or\
+            requests.get(news[message.chat.id][index]['image']).ok is not True:
             if news[message.chat.id][index]['description'] is not None:
                 bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
                                        message_id=news_msg[message.chat.id].message_id,
-                                       media=InputMediaPhoto(news[message.chat.id][index]['image'],
-                                       caption=f"<b>{news[message.chat.id][index]['title']}</b>"
-                                               f"\n\n{news[message.chat.id][index]['description']}"
-                                               f"\n\n<i>{clear_date(news[message.chat.id][index]['published'])}</i>",
-                                       parse_mode='HTML'), reply_markup=keyboard2)
+                                       media=InputMediaPhoto(API['News']['image'],
+                                                             caption=f"<b>{news[message.chat.id][index]['title']}</b>"
+                                                                     f"\n\n{news[message.chat.id][index]['description']}"
+                                                                     f"\n\n<i>{clear_date(news[message.chat.id][index]['published'])}</i>",
+                                                             parse_mode='HTML'), reply_markup=keyboard2)
             else:
                 bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
                                        message_id=news_msg[message.chat.id].message_id,
-                                       media=InputMediaPhoto(news[message.chat.id][index]['image'],
-                                       caption=f"<b>{news[message.chat.id][index]['title']}</b>\n<i>"
-                                               f"{clear_date(news[message.chat.id][index]['published'])}</i>",
-                                       parse_mode='HTML'), reply_markup=keyboard2)
-    except KeyError:
-        log('Key Error in news', 'warning')
+                                       media=InputMediaPhoto(API['News']['image'],
+                                                             caption=f"<b>{news[message.chat.id][index]['title']}</b>\n<i>"
+                                                                     f"{clear_date(news[message.chat.id][index]['published'])}</i>",
+                                                             parse_mode='HTML'), reply_markup=keyboard2)
+        else:
+            try:
+                req = request.Request(news[message.chat.id][index]['image'], method='HEAD')
+                f = request.urlopen(req)
+                if f.headers['Content-Length'] is not None:
+                    if int(f.headers['Content-Length']) > 5242880:
+                        send_news(message, index + 1)
+                        return
+                else:
+                    send_news(message, index + 1)
+                    return
+            except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema, error.URLError):
+                send_news(message, index + 1)
+                return
+            except IndexError:
+                log('Index Error in news', 'warning')
+            else:
+                if news[message.chat.id][index]['description'] is not None:
+                    bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
+                                           message_id=news_msg[message.chat.id].message_id,
+                                           media=InputMediaPhoto(news[message.chat.id][index]['image'],
+                                           caption=f"<b>{news[message.chat.id][index]['title']}</b>"
+                                                   f"\n\n{news[message.chat.id][index]['description']}"
+                                                   f"\n\n<i>{clear_date(news[message.chat.id][index]['published'])}</i>",
+                                           parse_mode='HTML'), reply_markup=keyboard2)
+                else:
+                    bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
+                                           message_id=news_msg[message.chat.id].message_id,
+                                           media=InputMediaPhoto(news[message.chat.id][index]['image'],
+                                           caption=f"<b>{news[message.chat.id][index]['title']}</b>\n<i>"
+                                                   f"{clear_date(news[message.chat.id][index]['published'])}</i>",
+                                           parse_mode='HTML'), reply_markup=keyboard2)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^News\s?\w+$', call.data))
@@ -787,7 +796,6 @@ def choice_news_query(call):
     bot.delete_message(call.message.chat.id, call.message.message_id)
     if call.message.chat.id in news_msg:
         bot.delete_message(news_msg[call.message.chat.id].chat.id, news_msg[call.message.chat.id].message_id)
-    news_msg[call.message.chat.id] = bot.send_photo(call.message.chat.id, Empty_bg)
     main_news(call.message, call.data.split()[1])
 
 
