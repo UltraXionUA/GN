@@ -695,7 +695,7 @@ def loli_handler(message: Message) -> None:
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if db.check_user(message.from_user.id):
-        if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
+        if message.chat.id not in data_lolis or len(data_lolis[message.chat.id]) == 1:
             data_lolis[message.chat.id] = db.get_all_lolis()
         loli = data_lolis[message.chat.id].pop(random.choice(range(len(data_lolis[message.chat.id]) - 1)))
         bot.send_photo(message.chat.id, loli['url'])
