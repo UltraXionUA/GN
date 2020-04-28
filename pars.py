@@ -3,7 +3,7 @@
 """Parser file for GNBot"""
 from user_agent import generate_user_agent
 from bs4 import BeautifulSoup
-from db import add_memes
+from db import add_memes, add_lolis
 from config import URLS
 from funcs import log
 import requests
@@ -127,6 +127,29 @@ def parser_memes() -> None:  # Main parser
         log('Parser is done', 'info')
 
 
+def loli_parser() -> None:
+    data = []
+    for i in range(500):
+        print(f'Page: {i}')
+        soup = BeautifulSoup(requests.get(URLS['loli']['search'] + str(i),
+                                          headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+        if soup.find('h2', class_='error-title') is None:
+            list_loli = soup.find('div', id='maincontent').find_all_next('div', class_='pic-plus')
+            if list_loli is not None:
+                print('+')
+                for q in list_loli:
+                    link = q.find('img').get('src')
+                    if link.startswith('http'):
+                        data.append(link)
+                    else:
+                        data.append(URLS['loli']['main'] + link)
+                add_lolis(data)
+                data.clear()
+            else:
+                print('-')
+
+loli_parser()
+
 def main():
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
     schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
@@ -141,19 +164,4 @@ if __name__ == "__main__":
     main()
 
 
-# def loli_parser() -> None:
-#     data = []
-#     for i in range(500):
-#         soup = BeautifulSoup(requests.get(URLS['loli']['search'] + '5',
-#                                           headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
-#         if soup.find('h2', class_='error-title') is None:
-#             list_loli = soup.find('div', id='maincontent').find_all_next('div', class_='pic-plus')
-#             if list_loli is not None:
-#                 for q in list_loli:
-#                     link = q.find('img').get('src')
-#                     if link.startswith('http'):
-#                         data.append(link)
-#                     else:
-#                         data.append(URLS['loli']['main'] + link)
-#                 add_lolis(data)
-#                 data.clear()
+
