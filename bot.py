@@ -686,12 +686,19 @@ def callback_query(call):
 
 
 # <<< Loli >>>
+data_lolis = defaultdict(list)
+
+
 @bot.message_handler(commands=['loli'])  # /loli
 def loli_handler(message: Message) -> None:
+    global data_lolis
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if db.check_user(message.from_user.id):
-        bot.send_photo(message.chat.id, db.get_rend_loli())
+        if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
+            data_lolis[message.chat.id] = db.get_all_lolis()
+        loli = data_lolis[message.chat.id].pop(random.choice(range(len(data_lolis[message.chat.id]) - 1)))
+        bot.send_photo(message.chat.id, loli['url'])
     else:
         bot.send_message(message.chat.id, 'Эта функция вам недоступна😔')
 

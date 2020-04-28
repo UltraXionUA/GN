@@ -206,11 +206,11 @@ def add_memes(array) -> None:  # Add memes
     connection.close()
 
 
-def get_rend_loli() -> str:
+def get_all_lolis() -> str:
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute('SELECT `url` FROM Lolis ORDER BY RAND() LIMIT 1')
-        result = cursor.fetchone()['url']
+        cursor.execute('SELECT `url` FROM Lolis;')
+        result = cursor.fetchall()
     return result
 
 
