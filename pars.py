@@ -3,7 +3,7 @@
 """Parser file for GNBot"""
 from user_agent import generate_user_agent
 from bs4 import BeautifulSoup
-from db import add_memes, add_lolis
+from db import add_memes
 from config import URLS
 from funcs import log
 import requests
