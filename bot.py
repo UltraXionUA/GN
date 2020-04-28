@@ -685,6 +685,19 @@ def callback_query(call):
 # <<< End music >>>
 
 
+# <<< Loli >>>
+@bot.message_handler(commands=['loli'])  # /loli
+def loli_handler(message: Message) -> None:
+    log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+    if db.check_user(message.from_user.id):
+        bot.send_photo(message.chat.id, db.get_rend_loli())
+    else:
+        bot.send_message(message.chat.id, 'Эта функция вам недоступна😔')
+
+# <<< End loli >>>
+
+
 # <<< News >>>
 news = defaultdict(list)
 news_msg = defaultdict(Message)

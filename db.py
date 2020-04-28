@@ -206,14 +206,23 @@ def add_memes(array) -> None:  # Add memes
     connection.close()
 
 
-def add_lolis(lolis: list) -> None:
+def get_rend_loli() -> str:
     connection = start_connection()
     with connection.cursor() as cursor:
-        if lolis:
-            for i in lolis:
-                cursor.execute(f'INSERT INTO `Lolis`(`url`) VALUES (\'{i}\');')
-                connection.commit()
-            connection.close()
+        cursor.execute('SELECT `url` FROM Loli ORDER BY RAND() LIMIT 1')
+        result = cursor.fetchone()['url']
+    return result
+
+
+# def add_lolis(lolis: list) -> None:
+#     connection = start_connection()
+#     with connection.cursor() as cursor:
+#         if lolis:
+#             for i in lolis:
+#                 cursor.execute(f'INSERT INTO `Lolis`(`url`) VALUES (\'{i}\');')
+#                 connection.commit()
+#             connection.close()
+
 
 # def add_gn_sticker(item_id, emoji, name):  # Add stickers from GN
 #     connection = start_connection()
