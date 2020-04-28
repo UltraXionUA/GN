@@ -89,7 +89,7 @@ def change_karma(user, chat, action: list, exp: int) -> dict:  # Change Karma
     connection = start_connection()
     with connection.cursor() as cursor:
         add_user(user, chat, connection)
-        cursor.execute(f'SELECT `karma` FROM `Users` WHERE `username` = \'{user.username}\';')
+        cursor.execute(f'SELECT `karma` FROM `Users` WHERE `user_id` = {user.id};')
         karma = cursor.fetchone()['karma']
         if action[0] == '+':
             karma += len(action) * exp
