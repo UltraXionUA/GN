@@ -1379,13 +1379,15 @@ def text_handler(message: Message) -> None:
                 else:
                     from_user = reply_to.username.title()
                 if msg[0] == '+':
-                    bot.send_message(message.chat.id, f'{from_user} подкинул {len(msg) * 10} к карме😈 '
-                                                      f'{reply_user}\nИтого карма: '
-                                                      f'{db.change_karma(reply_to, message.chat, msg, 10)}')
+                    bot.send_message(message.chat.id, f'<b>{from_user}</b> подкинул <i>{len(msg) * 10}</i> к карме😈 '
+                                                      f'<b>{reply_user}</b>\nИтого карма: '
+                                                      f'<i>{db.change_karma(reply_to, message.chat, msg, 10)}</i>',
+                                     parse_mode='HTML')
                 else:
-                    bot.send_message(message.chat.id, f'{from_user} отнял от кармы -{len(msg) * 10}👿 '
-                                                      f'{reply_user}\nИтого карма: '
-                                                      f'{db.change_karma(reply_to, message.chat, msg, 10)}')
+                    bot.send_message(message.chat.id, f'<b>{from_user}</b> отнял от кармы <i>-{len(msg) * 10}</i>👿 '
+                                                      f'<b>{reply_user}</b>\nИтого карма: '
+                                                      f'<i>{db.change_karma(reply_to, message.chat, msg, 10)}</i>',
+                                     parse_mode='HTML')
                 Timer(10.0, set_true).run()
             else:
                 bot.send_message(message.chat.id, 'Операция доступна один раз в 10 секунд😔\nПожалуйста ожидайте')
