@@ -1366,19 +1366,29 @@ def text_handler(message: Message) -> None:
                 msg_from_user[message.from_user.id] = message
                 msg = list(message.text)
                 reply_to = message.reply_to_message.from_user
+                if reply_to.first_name is not None:
+                    reply_user = reply_to.first_name.title()
+                    if reply_to.last_name is not None:
+                        reply_user += ' ' + reply_to.last_name.title()
+                else:
+                    reply_user = reply_to.username.title()
+                if message.from_user.first_name is not None:
+                    from_user = message.from_user.first_name.title()
+                    if message.from_user.last_name is not None:
+                        from_user += ' ' + message.from_user.last_name.title()
+                else:
+                    from_user = reply_to.username.title()
                 if msg[0] == '+':
-                    bot.send_message(message.chat.id, f'{message.from_user.username.title()}'
-                                                      f' подкинул {len(msg) * 10} к карме😈 '
-                                                      f'{reply_to.username.title()}\nИтого карма: '
+                    bot.send_message(message.chat.id, f'{from_user} подкинул {len(msg) * 10} к карме😈 '
+                                                      f'{reply_user}\nИтого карма: '
                                                       f'{db.change_karma(reply_to, message.chat, msg, 10)}')
                 else:
-                    bot.send_message(message.chat.id, f'{message.from_user.username.title()} '
-                                                      f'отнял от кармы -{len(msg) * 10}👿 '
-                                                      f'{reply_to.username.title()}\nИтого карма: '
+                    bot.send_message(message.chat.id, f'{from_user} отнял от кармы -{len(msg) * 10}👿 '
+                                                      f'{reply_user}\nИтого карма: '
                                                       f'{db.change_karma(reply_to, message.chat, msg, 10)}')
-                Timer(30.0, set_true).run()
+                Timer(10.0, set_true).run()
             else:
-                bot.send_message(message.chat.id, 'Операция доступна один раз в 30 секунд😔\nПожалуйста ожидайте')
+                bot.send_message(message.chat.id, 'Операция доступна один раз в 10 секунд😔\nПожалуйста ожидайте')
         else:
             bot.send_message(message.chat.id, 'Нельзя менять карму самому себе😔')
 
