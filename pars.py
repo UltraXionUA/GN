@@ -2,13 +2,16 @@
 # -*- coding: utf-8 -*-
 """Parser file for GNBot"""
 from user_agent import generate_user_agent
+from urllib.parse import quote
 from bs4 import BeautifulSoup
 from db import add_memes
 from config import URLS
 from funcs import log
+from pyvirtualdisplay import Display
+from selenium import webdriver
+from selenium.webdriver.opera.options import Options
 import requests
 import schedule
-from urllib.parse import quote
 import time
 import re
 
@@ -127,11 +130,24 @@ def parser_memes() -> None:  # Main parser
         log('Parser is done', 'info')
 
 
+# def parser_books() -> None:
+#     # options = Options()
+#     # options.binary_location = r'/Applications/Opera GX.app'
+#     driver = webdriver.Opera(executable_path='/Users/ultraxion/PycharmProjects/GN/operadriver')
+#     try:
+#         driver.get('http://www.google.com')
+#         print(driver.title)  # this should print "Google"
+#     finally:
+#         driver.quit()
+#
+# parser_books()
+
 def main():
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
     schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
     schedule.every().day.at("06:00").do(parser_memes)  # Do pars every 06:00
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
+
     while True:
         schedule.run_pending()
         time.sleep(1)
