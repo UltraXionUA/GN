@@ -1,4 +1,5 @@
 #!/home/UltraXionUA/.virtualenvs/myvirtualenv/bin/python3.8
+#source /home/ultraxion/GNBot/GN/.venv/bin/activate
 # -*- coding: utf-8 -*-
 """Configuration file for GNBot"""
 import pymysql.cursors
