@@ -82,6 +82,7 @@ def clear_link(string: str) -> str:  # Clear string of links
     return clear_string
 
 
+
 def clear_date(string: str) -> str:
     date = re.sub('T', ' ', string)
     date = re.sub('Z', '', date)

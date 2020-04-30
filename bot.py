@@ -339,65 +339,65 @@ def weather_handler(message: Message) -> None:
 
 
 def weather(message: Message, index: int) -> None:
-    if message.content_type != 'text':
-        bot.send_message(message.chat.id, 'Не верный формат данных😔')
-    else:
-        keyboard = InlineKeyboardMarkup(row_width=2)
-        keyboard.add(
-            InlineKeyboardButton(text="⬅️️", callback_data=f"move_to__ {index - 1 if index > 0 else 'pass'}"),
-            InlineKeyboardButton(text="➡️", callback_data=f"move_to__ "
-                                 f"{index + 1 if index < len(weather_data[message.chat.id]) - 1 else 'pass'}"))
-        keyboard.add(InlineKeyboardButton('Погода', url='https://' +
-                                                        f'darksky.net/forecast/{city_data[message.chat.id]["lat"]},'
-                                                        f'{city_data[message.chat.id]["lon"]}/us12/en'))
-        try:
-            bot.edit_message_text(chat_id=weather_msg[message.chat.id].chat.id,
-                                  message_id=weather_msg[message.chat.id].message_id,
-                                  text=f"<i>{weather_data[message.chat.id][index]['valid_date']} "
-                                       f"{get_day(weather_data[message.chat.id][index]['valid_date'])}</i>\n"
-                                       f"<b>Город {tr_w(city_data[message.chat.id]['city_name'])} "
-                                       f"{city_data[message.chat.id]['country_code']}</b>🏢\n\n"
-                                       f"<b>Погода</b> {weather_data[message.chat.id][index]['weather']['description']}️"
-                                       f"{get_weather_emoji(str(weather_data[message.chat.id][index]['weather']['code']))}"
-                                       f"\n<b>Теспература</b> {weather_data[message.chat.id][index]['low_temp']} - "
-                                       f"{weather_data[message.chat.id][index]['max_temp']}°C🌡\n"
-                                       f"<b>По ощушению</b> {weather_data[message.chat.id][index]['app_min_temp']} - "
-                                       f"{weather_data[message.chat.id][index]['app_max_temp']}°C🌡\n"
-                                       f"<b>Облачность</b> {weather_data[message.chat.id][index]['clouds']}%☁️\n"
-                                       f"<b>Вероятность осадков</b> {weather_data[message.chat.id][index]['pop']}%☔️️\n"
-                                       f"<b>Видимость</b> {weather_data[message.chat.id][index]['vis']} км🔭\n"
-                                       f"<b>Влажность</b> {weather_data[message.chat.id][index]['rh']} %💧\n"
-                                       f"<b>Атмоc. давление</b> "
-                                       f"{weather_data[message.chat.id][index]['pres']} дин·см²⏲\n"
-                                       f"<b>Ветер</b> {weather_data[message.chat.id][index]['wind_cdir_full']} 🧭\n"
-                                       f"<b>Cкорость ветра</b> "
-                                       f"{float('{:.1f}'.format(weather_data[message.chat.id][index]['wind_spd']))}"
-                                       f" м\\с💨\n",
-                                  reply_markup=keyboard, parse_mode='HTML')
-        except KeyError:
-            log('Key Error in weather', 'warning')
-            bot.send_chat_action(message.chat.id, '⛔️')
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        InlineKeyboardButton(text="⬅️️", callback_data=f"move_to__ {index - 1 if index > 0 else 'pass'}"),
+        InlineKeyboardButton(text="➡️", callback_data=f"move_to__ "
+                             f"{index + 1 if index < len(weather_data[message.chat.id]) - 1 else 'pass'}"))
+    keyboard.add(InlineKeyboardButton('Погода', url='https://' +
+                                                    f'darksky.net/forecast/{city_data[message.chat.id]["lat"]},'
+                                                    f'{city_data[message.chat.id]["lon"]}/us12/en'))
+    try:
+        bot.edit_message_text(chat_id=weather_msg[message.chat.id].chat.id,
+                              message_id=weather_msg[message.chat.id].message_id,
+                              text=f"<i>{weather_data[message.chat.id][index]['valid_date']} "
+                                   f"{get_day(weather_data[message.chat.id][index]['valid_date'])}</i>\n"
+                                   f"<b>Город {tr_w(city_data[message.chat.id]['city_name'])} "
+                                   f"{city_data[message.chat.id]['country_code']}</b>🏢\n\n"
+                                   f"<b>Погода</b> {weather_data[message.chat.id][index]['weather']['description']}️"
+                                   f"{get_weather_emoji(str(weather_data[message.chat.id][index]['weather']['code']))}"
+                                   f"\n<b>Теспература</b> {weather_data[message.chat.id][index]['low_temp']} - "
+                                   f"{weather_data[message.chat.id][index]['max_temp']}°C🌡\n"
+                                   f"<b>По ощушению</b> {weather_data[message.chat.id][index]['app_min_temp']} - "
+                                   f"{weather_data[message.chat.id][index]['app_max_temp']}°C🌡\n"
+                                   f"<b>Облачность</b> {weather_data[message.chat.id][index]['clouds']}%☁️\n"
+                                   f"<b>Вероятность осадков</b> {weather_data[message.chat.id][index]['pop']}%☔️️\n"
+                                   f"<b>Видимость</b> {weather_data[message.chat.id][index]['vis']} км🔭\n"
+                                   f"<b>Влажность</b> {weather_data[message.chat.id][index]['rh']} %💧\n"
+                                   f"<b>Атмоc. давление</b> "
+                                   f"{weather_data[message.chat.id][index]['pres']} дин·см²⏲\n"
+                                   f"<b>Ветер</b> {weather_data[message.chat.id][index]['wind_cdir_full']} 🧭\n"
+                                   f"<b>Cкорость ветра</b> "
+                                   f"{float('{:.1f}'.format(weather_data[message.chat.id][index]['wind_spd']))}"
+                                   f" м\\с💨\n",
+                              reply_markup=keyboard, parse_mode='HTML')
+    except KeyError:
+        log('Key Error in weather', 'warning')
+        bot.send_chat_action(message.chat.id, '⛔️')
 
 
 def show_weather(message: Message) -> None:
     global weather_msg, city_data, weather_data, city_msg
-    bot.delete_message(city_msg[message.chat.id].chat.id, city_msg[message.chat.id].message_id)
-    if message.text.lower() == 'харьков':
-        city_name = 'K' + slugify(message.text)
+    if message.content_type != 'text':
+        bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
-        city_name = slugify(message.text).title()
-    try:
-        res = requests.get(API['API_Weather'].replace('CityName', city_name)).json()
-    except JSONDecodeError:
-        bot.send_message(message.chat.id, 'Не удалось найти ваш город😔')
-    else:
-        if message.chat.id in weather_msg:
-            bot.delete_message(weather_msg[message.chat.id].chat.id, weather_msg[message.chat.id].message_id)
-        city_data[message.chat.id] = {'city_name': res['city_name'], 'country_code': res['country_code'],
-                                      'lat': res['lat'], 'lon': res['lon']}
-        weather_data[message.chat.id] = res['data']
-        weather_msg[message.chat.id] = bot.send_message(message.chat.id, 'Загрузка...')
-        weather(message, 0)
+        bot.delete_message(city_msg[message.chat.id].chat.id, city_msg[message.chat.id].message_id)
+        if message.text.lower() == 'харьков':
+            city_name = 'K' + slugify(message.text)
+        else:
+            city_name = slugify(message.text).title()
+        try:
+            res = requests.get(API['API_Weather'].replace('CityName', city_name)).json()
+        except JSONDecodeError:
+            bot.send_message(message.chat.id, 'Не удалось найти ваш город😔')
+        else:
+            if message.chat.id in weather_msg:
+                bot.delete_message(weather_msg[message.chat.id].chat.id, weather_msg[message.chat.id].message_id)
+            city_data[message.chat.id] = {'city_name': res['city_name'], 'country_code': res['country_code'],
+                                          'lat': res['lat'], 'lon': res['lon']}
+            weather_data[message.chat.id] = res['data']
+            weather_msg[message.chat.id] = bot.send_message(message.chat.id, 'Загрузка...')
+            weather(message, 0)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to__\s\d+$', call.data))
@@ -610,6 +610,7 @@ def inline_keyboard(message: Message, some_index) -> InlineKeyboardMarkup:  # Na
                                  f"{some_index + 1 if some_index < len(data_songs[message.chat.id]) - 1 else 'pass'}"))
         return some_keyboard
     except KeyError:
+        bot.send_chat_action(message.chat.id, '⛔️')
         log('Key Error in music', 'warning')
 
 
@@ -1161,6 +1162,7 @@ def torrent_keyboard(message: Message, index: int) -> None:
                 text_t += f'\n\n{i["name"]} | [{i["size"]}] \n[<i>/download__{i["link_t"].split("/")[-1]}</i>] ' \
                           f'[<a href="{i["link"]}">раздача</a>]'
     except KeyError:
+        bot.send_chat_action(message.chat.id, '⛔️')
         log('Key Error in torrents', 'warning')
     else:
         bot.edit_message_text(chat_id=torrent_msg[message.chat.id].chat.id,
