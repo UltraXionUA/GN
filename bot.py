@@ -1,4 +1,4 @@
-#!/home/ultraxion/GNBot/GN/.venv/bin/python
+#!/home/ultraxion/GNBot/GN/.venv/bin/activate
 # -*- coding: utf-8 -*-
 """Mains file for GNBot"""
 # <<< Import's >>
