@@ -7,9 +7,6 @@ from bs4 import BeautifulSoup
 from db import add_memes
 from config import URLS
 from funcs import log
-from pyvirtualdisplay import Display
-from selenium import webdriver
-from selenium.webdriver.opera.options import Options
 import requests
 import schedule
 import time
@@ -130,18 +127,6 @@ def parser_memes() -> None:  # Main parser
         log('Parser is done', 'info')
 
 
-# def parser_books() -> None:
-#     # options = Options()
-#     # options.binary_location = r'/Applications/Opera GX.app'
-#     driver = webdriver.Opera(executable_path='/Users/ultraxion/PycharmProjects/GN/operadriver')
-#     try:
-#         driver.get('http://www.google.com')
-#         print(driver.title)  # this should print "Google"
-#     finally:
-#         driver.quit()
-#
-# parser_books()
-
 def main():
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
     schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
@@ -155,6 +140,23 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+# from pyvirtualdisplay import Display
+# from selenium import webdriver
+# from selenium.webdriver.opera.options import Options
+# def parser_books() -> None:
+#     # options = Options()
+#     # options.binary_location = r'/Applications/Opera GX.app'
+#     driver = webdriver.Opera(executable_path='/Users/ultraxion/PycharmProjects/GN/operadriver')
+#     try:
+#         driver.get('http://www.google.com')
+#         print(driver.title)  # this should print "Google"
+#     finally:
+#         driver.quit()
+#
+# parser_books()
 
 
 # def loli_parser() -> None:
