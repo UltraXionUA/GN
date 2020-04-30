@@ -8,7 +8,7 @@ from telebot import TeleBot
 TOKEN = '1077848786:AAHfMrRKadc3Plo14rpE7dPJJC3bVbbVod0'  # Release bot TOKEN
 TEST_TOKEN = '839168325:AAGtBUzQoqdPSSHPWUeo4K9Onxxnclv96sA'  # Test bot TOKEN
 
-bot = TeleBot(TEST_TOKEN)
+bot = TeleBot(TOKEN)
 
 PAYMENT_TOKEN = '635983722:LIVE:i7814191795'
 

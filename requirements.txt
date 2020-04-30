@@ -12,3 +12,6 @@ schedule
 pytils
 pytube3
 youtube-unlimited-search
+pydub
+user_agent
+python-ffmpeg
