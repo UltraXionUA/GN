@@ -61,17 +61,17 @@ URLS = {'logo': 'https://' + 'i.redd.it/6mfq9bv5u5n31.png',
         }
 
 
-BD_CONNECT = {'unix_socket': '/Applications/MAMP/tmp/mysql/mysql.sock',  # Local DB
-              'user': 'root',
-              'password': 'root',
-              'db': 'Bot_DB',
-              'charset': 'utf8mb4',
-              'cursorclass': pymysql.cursors.DictCursor
-              }
+# BD_CONNECT = {'unix_socket': '/Applications/MAMP/tmp/mysql/mysql.sock',  # Local DB
+#               'user': 'root',
+#               'password': 'root',
+#               'db': 'Bot_DB',
+#               'charset': 'utf8mb4',
+#               'cursorclass': pymysql.cursors.DictCursor
+#               }
 
 BD_CONNECT = {'user': 'root',  # Python Anywhere DB
               'password': '25813',
-              'host': 'UltraXionUA.mysql.pythonanywhere-services.com',
+              'host': 'localhost',
               'database': 'Bot_DB',
               'cursorclass': pymysql.cursors.DictCursor
               }
