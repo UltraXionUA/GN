@@ -815,6 +815,7 @@ def send_news(message: Message, index: int) -> None:
 def choice_news_query(call):
     global news_msg
     bot.delete_message(call.message.chat.id, call.message.message_id)
+    bot.answer_callback_query(call.id, f'Вы выбрали стр.1')
     if call.message.chat.id in news_msg:
         bot.delete_message(news_msg[call.message.chat.id].chat.id, news_msg[call.message.chat.id].message_id)
     main_news(call.message, call.data.split()[1])

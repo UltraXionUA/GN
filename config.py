@@ -1,9 +1,18 @@
 #!/home/UltraXionUA/.virtualenvs/myvirtualenv/bin/python3.8
-#source /home/ultraxion/GNBot/GN/.venv/bin/activate
+
 # -*- coding: utf-8 -*-
 """Configuration file for GNBot"""
 import pymysql.cursors
 from telebot import TeleBot
+
+#ssh ultraxion@94.103.89.221
+
+#sudo mysql -u root -p Bot_DB -h localhost
+
+#source /home/ultraxion/GNBot/GN/.venv/bin/activate
+#sudo systemctl start tgbot
+#sudo systemctl enable tgbot
+#sudo systemctl stopcat ~/.ssh/id_rsa.pub tgbot
 
 
 TOKEN = '1077848786:AAHfMrRKadc3Plo14rpE7dPJJC3bVbbVod0'  # Release bot TOKEN
