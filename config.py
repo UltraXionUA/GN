@@ -8,7 +8,7 @@ from telebot import TeleBot
 TOKEN = '1077848786:AAHfMrRKadc3Plo14rpE7dPJJC3bVbbVod0'  # Release bot TOKEN
 TEST_TOKEN = '839168325:AAGtBUzQoqdPSSHPWUeo4K9Onxxnclv96sA'  # Test bot TOKEN
 
-bot = TeleBot(TEST_TOKEN)
+bot = TeleBot(TOKEN)
 
 PAYMENT_TOKEN = '635983722:LIVE:i7814191795'
 
@@ -61,21 +61,21 @@ URLS = {'logo': 'https://' + 'i.redd.it/6mfq9bv5u5n31.png',
         }
 
 
-BD_CONNECT = {'unix_socket': '/Applications/MAMP/tmp/mysql/mysql.sock',  # Local DB
-              'user': 'root',
-              'password': 'root',
-              'db': 'Bot_DB',
-              'charset': 'utf8mb4',
-              'cursorclass': pymysql.cursors.DictCursor
-              }
-
-# BD_CONNECT = {'user': 'root',  # host
-#               'password': '25813123321',
-#               'host': 'localhost',
+# BD_CONNECT = {'unix_socket': '/Applications/MAMP/tmp/mysql/mysql.sock',  # Local DB
+#               'user': 'root',
+#               'password': 'root',
 #               'db': 'Bot_DB',
 #               'charset': 'utf8mb4',
 #               'cursorclass': pymysql.cursors.DictCursor
 #               }
+
+BD_CONNECT = {'user': 'root',  # host
+              'password': '25813123321',
+              'host': 'localhost',
+              'db': 'Bot_DB',
+              'charset': 'utf8mb4',
+              'cursorclass': pymysql.cursors.DictCursor
+              }
 
 # BD_CONNECT = {'user': 'UltraXionUA',  # Python Anywhere DB
 #               'password': 'DB25813123321',
