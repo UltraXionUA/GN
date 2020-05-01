@@ -36,6 +36,11 @@ Parser.start()
 # <<< Start >>>
 @bot.message_handler(commands=['start'])  # /start
 def start_handler(message: Message) -> None:
+    """
+    Enter /start to see start menu
+    :param message:
+    :return:
+    """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
@@ -50,11 +55,18 @@ def start_handler(message: Message) -> None:
 # <<< Help >>>
 @bot.message_handler(commands=['help'])  # /help
 def help_handler(message: Message) -> None:
+    """
+    Enter /help to see help info and contacts
+    :param message:
+    :return:
+    """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, '<b>Тут должна была быть помощь</b>🆘, но её тут не будет🌚\n'
                                       'Список всех команд можно увидить введя <b>\" </b>\\<b> \"</b>\n'
+                                      'Так же бот имеет учет кармы(<i>работает в группах</i>\n)'
+                                      'Админ команды(<b>!ban</b>, <b>!mute {<i>time</i>}</b>, <b>!kick</b>)'
                                       'Все свои вопросы и предложения вы можете писать мне 💢<b>@Ultra_Xion</b>💢\n'
                                       'Если вы нашли баг или ошибку просьба сообщить\n'
                                       '<b>Почта:</b> <i>ultra25813@gmail.com</i>', parse_mode='HTML')
@@ -66,6 +78,12 @@ def help_handler(message: Message) -> None:
 # <<< Gif >>>
 @bot.message_handler(commands=['gif'])  # /gif
 def gif_handler(message: Message) -> None:
+    """
+    Enter /gif to get random Gif
+    Api: https://api.giphy.com
+    :param message:
+    :return:
+    """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'upload_video')
@@ -85,6 +103,12 @@ qr_msg = defaultdict(Message)
 
 @bot.message_handler(commands=['qrcode'])  # /qrcode
 def qrcode_handler(message: Message) -> None:
+    """
+    Enter /qrcode to crate or reed QR Code
+    API: https://api.qrserver.com
+    :param message:
+    :return:
+    """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     keyboard = InlineKeyboardMarkup()
@@ -137,6 +161,11 @@ jokes_data = defaultdict(list)
 
 @bot.message_handler(commands=['joke'])  # /joke
 def joke_handler(message: Message) -> None:
+    """
+    Enter /joke to get random jock(18+)
+    :param message:
+    :return:
+    """
     global jokes_data
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
@@ -162,6 +191,11 @@ msg_mp3ogg = defaultdict(Message)
 
 @bot.message_handler(commands=['oggtomp3'])  # /oggtomp3
 def oggtomp3_handler(message: Message) -> None:
+    """
+    Enter /oggtomp3 to conver your voice or ogg file to .mp3
+    :param message:
+    :return:
+    """
     global msg_mp3ogg
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
@@ -240,6 +274,11 @@ def meme_en_handler(message: Message) -> None:
 # <<< Donate >>>
 @bot.message_handler(commands=['donate'])  # /donate
 def donate_handler(message: Message) -> None:
+    """
+    Enter /donate to see donate menu(not finished!)
+    :param message:
+    :return:
+    """
     log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
     if message.chat.type == 'private':
@@ -332,6 +371,12 @@ city_msg = defaultdict(Message)
 
 @bot.message_handler(commands=['weather'])  # /weather
 def weather_handler(message: Message) -> None:
+    """
+    Enter /weather and enter your city to see weather broadcast on 16th days
+    API:  https://api.weatherbit.io
+    :param message:
+    :return:
+    """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     city_msg[message.chat.id] = bot.send_message(message.chat.id, 'Введите название города✒️')
@@ -425,6 +470,12 @@ detect_msg = defaultdict(Message)
 
 @bot.message_handler(commands=['detect'])  # /detect_music
 def detect_handler(message: Message) -> None:
+    """
+    Enter /detect to detect what song play now or you can humming song
+    API: https://api.audd.io
+    :param message:
+    :return:
+    """
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     global detect_msg
     log(message, 'info')
@@ -517,6 +568,12 @@ msg_song = defaultdict(Message)
 
 @bot.message_handler(commands=['music'])  # /music
 def music_handler(message: Message) -> None:
+    """
+    Enter /music to found music by artist or title song you can get song and them lyric
+    API: https://api.deezer.com/search & PyTube
+    :param message:
+    :return:
+    """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
@@ -692,6 +749,11 @@ lolis_msg = defaultdict(Message)
 
 @bot.message_handler(commands=['loli'])  # /loli
 def loli_handler(message: Message) -> None:
+    """
+    Enter /loli to get random loli(18+), access is limited
+    :param message:
+    :return:
+    """
     global data_lolis
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
@@ -730,6 +792,12 @@ news_msg = defaultdict(Message)
 
 @bot.message_handler(commands=['news'])  # /news
 def news_handler(message: Message) -> None:
+    """
+    Enter /news to get news in 8th different categories and links on them
+    API: https://newsapi.org
+    :param message:
+    :return:
+    """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     keyboard = InlineKeyboardMarkup(row_width=2)
@@ -860,6 +928,11 @@ def news_pass(call):
 # <<< YouTube >>>
 @bot.message_handler(commands=['youtube'])  # /youtube
 def youtube_handler(message: Message) -> None:
+    """
+    Enter /youtube to get audio or video from youtube link
+    :param message:
+    :return:
+    """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     keyboard = InlineKeyboardMarkup()
@@ -996,6 +1069,11 @@ msg_instagram = defaultdict(Message)
 
 @bot.message_handler(commands=['instagram'])  # /instagram
 def instagram_handler(message: Message) -> None:
+    """
+    Enter /instagram to get photo(s) or video(s) from instagram link
+    :param message:
+    :return:
+    """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     keyboard = InlineKeyboardMarkup()
@@ -1096,6 +1174,11 @@ search = defaultdict(Message)
 
 @bot.message_handler(commands=['torrent'])  # /torrents
 def torrents_handler(message: Message) -> None:
+    """
+    Enter /torrent to search torrents on Rutor.info, GTorrent.ru or Gamestracker.org
+    :param message:
+    :return:
+    """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     keyboard = InlineKeyboardMarkup()
@@ -1258,6 +1341,11 @@ def callback_query(call):
 # <<< Translate >>>
 @bot.message_handler(commands=['translate'])  # /translate
 def translate_handler(message: Message) -> None:
+    """
+    Enter /translate to translate any sentence on any leng to russian or russian sentence to english
+    :param message:
+    :return:
+    """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'typing')
@@ -1277,6 +1365,11 @@ def trans_word(message: Message) -> None:  # Translate function
 # <<< Sticker GN >>>
 @bot.message_handler(commands=['sticker_gn'])  # /sticker_gn
 def gn_sticker_handler(message: Message) -> None:
+    """
+    Enter /sticker_gn to get random sticker from GN, access limited
+    :param message:
+    :return:
+    """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if db.check_user(message.from_user.id):
@@ -1292,6 +1385,11 @@ def gn_sticker_handler(message: Message) -> None:
 # <<< Sticker >>>
 @bot.message_handler(commands=['sticker'])  # /sticker
 def sticker_handler(message: Message) -> None:
+    """
+    Enter /sticker to get random sticker
+    :param message:
+    :return:
+    """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     bot.send_chat_action(message.chat.id, 'upload_photo')
@@ -1304,6 +1402,11 @@ def sticker_handler(message: Message) -> None:
 # <<< Add new sticker >>>
 @bot.message_handler(content_types=['sticker'])  # Add new sticker
 def add_sticker_handler(message: Message) -> None:
+    """
+    Send sticker in chat with bot to add him in our database
+    :param message:
+    :return:
+    """
     if message.chat.type != 'private':
         db.change_karma(message.from_user, message.chat, ['+'], 1)
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
@@ -1320,11 +1423,16 @@ com_stat_msg = defaultdict(Message)
 
 @bot.message_handler(commands=['stat'])  # /stat
 def stat_handler(message: Message) -> None:
+    """
+    Enter /stat to see statistic in group
+    :param message:
+    :return:
+    """
     global stat_msg, com_stat_msg
-    com_stat_msg[message.chat.id] = message
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if message.chat.type != 'private':
+        com_stat_msg[message.chat.id] = message
         data = db.get_stat(message.chat)
         if data:
             keyboard = InlineKeyboardMarkup()
@@ -1343,6 +1451,7 @@ def stat_handler(message: Message) -> None:
                         medal = '🥉'
                     text += f"<i>{en + 1}.</i> {i['first_name']}" \
                             f" {i['last_name'] if i['last_name'] != 'None' else ''} - {i['karma']}{medal}\n"
+            text += '\n\nНажмите /me что бы увидеть себя'
             stat_msg[message.chat.id] = bot.send_message(message.chat.id, text, parse_mode='HTML',
                                                          reply_markup=keyboard)
     else:
@@ -1361,6 +1470,53 @@ def callback_query(call):
 
 
 # <<< End Stat >>>
+
+
+# <<< Me >>>
+me_msg = defaultdict(Message)
+m_msg = defaultdict(Message)
+
+@bot.message_handler(commands=['me'])  # /me
+def me_handler(message: Message) -> None:
+    """
+    Enter /me to see your stat in group
+    :param message:
+    :return:
+    """
+    global me_msg
+    log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+    if message.chat.type != 'private':
+        m_msg[message.chat.id] = message
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton('Удалить', callback_data='Delete me'))
+        data_user = db.get_user(message.from_user)
+        if data_user['first_name'] is not None:
+            user = data_user['first_name']
+            if data_user['last_name'] is not None:
+                user += ' ' + data_user['last_name']
+            me_msg[message.chat.id] = bot.send_message(message.chat.id, f'{user} - {data_user["karma"]}🏆',
+                                                       reply_markup=keyboard)
+    else:
+        bot.send_message(message.chat.id, 'Функция достпуна только в группах😔')
+
+
+@bot.callback_query_handler(func=lambda call: call.data == 'Delete me')
+def callback_query(call):
+    global me_msg, m_msg
+    if call.message.chat.id in me_msg and call.message.chat.id in m_msg:
+        bot.answer_callback_query(call.id, 'Удалено')
+        bot.delete_message(me_msg[call.message.chat.id].chat.id,
+                           me_msg[call.message.chat.id].message_id)
+        bot.delete_message(m_msg[call.message.chat.id].chat.id, m_msg[call.message.chat.id].message_id)
+        try:
+            del me_msg[call.message.chat.id]
+            del m_msg[call.message.chat.id]
+        except KeyError:
+            log('Key Error in lolis', 'warning')
+    else:
+        bot.answer_callback_query(call.id, '⛔️')
+# <<< End me >>>
 
 
 # <<< Change karma >>>
@@ -1432,8 +1588,13 @@ def text_handler(message: Message) -> None:
 leng_msg = 'None'
 
 
-@bot.message_handler(commands=['code'])  # Send url on PasteBin
+@bot.message_handler(commands=['code'])  # /code
 def code_handler(message: Message) -> None:
+    """
+    Enter /code to get link on you program code on PasteBin
+    :param message:
+    :return:
+    """
     global leng_msg
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
@@ -1538,9 +1699,13 @@ second_dice: dict = {'username': None, 'dice': 0}
 
 
 @bot.message_handler(commands=['dice'])  # /dice and /darts
-@bot.message_handler(commands=['darts'])
 @bot.message_handler(content_types=['dice'])
 def dice_handler(message: Message) -> None:
+    """
+    Enter /dice or send emodji :dice: to play a dice with any member
+    :param message:
+    :return:
+    """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if message.content_type != 'dice':
@@ -1585,6 +1750,11 @@ def reset_users() -> None:  # Reset users for Dice game
 # <<< Admin menu >>>
 @bot.message_handler(content_types=['text'], regexp=r'^!ban$')  # Add answer to DB
 def text_handler(message: Message) -> None:
+    """
+    !ban func for admins
+    :param message:
+    :return:
+    """
     log(message, 'info')
     if message.chat.type != 'private':
         ban(message)
@@ -1626,6 +1796,11 @@ def ban(message: Message, chat=None, user=None):
 
 @bot.message_handler(content_types=['text'], regexp=r'^!mute\s\d+$')  # Add answer to DB
 def text_handler(message: Message) -> None:
+    """
+    !mute {some_time} func for admin
+    :param message:
+    :return:
+    """
     log(message, 'info')
     if message.chat.type != 'private':
         mute(message, message.text.split()[1])
@@ -1669,6 +1844,11 @@ def mute(message: Message, time_mute=30, chat=None, user=None):
 
 @bot.message_handler(content_types=['text'], regexp=r'^!kick$')  # Add answer to DB
 def text_handler(message: Message) -> None:
+    """
+    !kick func for admin
+    :param message:
+    :return:
+    """
     log(message, 'info')
     if message.chat.type != 'private':
         kick(message)
@@ -1716,6 +1896,11 @@ data_answers = defaultdict(list)
 @bot.message_handler(content_types=['text'])
 @bot.edited_message_handler(content_types=['text'])
 def text_handler(message: Message) -> None:
+    """
+    Check all messages by command or answer on random message
+    :param message:
+    :return:
+    """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if message.chat.type != 'private':
@@ -1733,6 +1918,8 @@ def text_handler(message: Message) -> None:
         dice_handler(message)
     elif text in ['лоли', 'лоля', 'лолю', 'loli', 'lolis']:
         loli_handler(message)
+    elif text in ['я', 'me']:
+        me_handler(message)
     if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
         if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
             data_answers[message.chat.id] = db.get_all_answers()

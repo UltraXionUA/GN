@@ -13,6 +13,15 @@ def start_connection():  # Connection to DB
         log('Ошибка подключения к БД!', 'error')
 
 
+def get_user(user) -> dict:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id};')
+        res = cursor.fetchone()
+    connection.close()
+    return res
+
+
 def get_stat(chat) -> list:  # -1001339129150
     connection = start_connection()
     with connection.cursor() as cursor:
@@ -74,6 +83,7 @@ def add_user(user, chat=None, connection=None) -> None:
                                                                    f'AND is_gn = \'False\';') == 0:
                     cursor.execute(f'UPDATE Users SET is_gn = \'True\' WHERE user_id LIKE {user.id}')
                     connection.commit()
+    connection.close()
 
 
 def get_all_jokes() -> list:  # All Joke
