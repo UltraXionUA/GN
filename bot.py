@@ -1450,7 +1450,7 @@ def stat_handler(message: Message) -> None:
                     elif en == 2:
                         medal = '🥉'
                     text += f"<i>{en + 1}.</i> {i['first_name']}" \
-                            f" {i['last_name'] if i['last_name'] != 'None' else ''} - {i['karma']}{medal}\n"
+                            f" {i['last_name'] if i['last_name'] != 'None' else ''} - <i>{i['karma']}</i>{medal}\n"
             text += '\nНажмите /me что бы увидеть себя'
             stat_msg[message.chat.id] = bot.send_message(message.chat.id, text, parse_mode='HTML',
                                                          reply_markup=keyboard)
