@@ -1,5 +1,3 @@
-#!/home/UltraXionUA/.virtualenvs/myvirtualenv/bin/python3.8
-
 # -*- coding: utf-8 -*-
 """Configuration file for GNBot"""
 import pymysql.cursors
