@@ -1506,14 +1506,8 @@ def callback_query(call):
     global me_msg, m_msg
     if call.message.chat.id in me_msg and call.message.chat.id in m_msg:
         bot.answer_callback_query(call.id, 'Удалено')
-        bot.delete_message(me_msg[call.message.chat.id].chat.id,
-                           me_msg[call.message.chat.id].message_id)
+        bot.delete_message(me_msg[call.message.chat.id].chat.id, me_msg[call.message.chat.id].message_id)
         bot.delete_message(m_msg[call.message.chat.id].chat.id, m_msg[call.message.chat.id].message_id)
-        try:
-            del me_msg[call.message.chat.id]
-            del m_msg[call.message.chat.id]
-        except KeyError:
-            log('Key Error in lolis', 'warning')
     else:
         bot.answer_callback_query(call.id, '⛔️')
 # <<< End me >>>
@@ -1918,8 +1912,6 @@ def text_handler(message: Message) -> None:
         dice_handler(message)
     elif text in ['лоли', 'лоля', 'лолю', 'loli', 'lolis']:
         loli_handler(message)
-    elif text in ['я', 'me']:
-        me_handler(message)
     if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
         if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
             data_answers[message.chat.id] = db.get_all_answers()
