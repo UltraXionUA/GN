@@ -83,7 +83,6 @@ def add_user(user, chat=None, connection=None) -> None:
                                                                    f'AND is_gn = \'False\';') == 0:
                     cursor.execute(f'UPDATE Users SET is_gn = \'True\' WHERE user_id LIKE {user.id}')
                     connection.commit()
-    connection.close()
 
 
 def get_all_jokes() -> list:  # All Joke
