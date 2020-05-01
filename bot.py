@@ -713,6 +713,10 @@ def next_news_query(call):
     if call.message.chat.id in lolis_msg:
         bot.answer_callback_query(call.id, 'Удалено')
         bot.delete_message(lolis_msg[call.message.chat.id].chat.id, lolis_msg[call.message.chat.id].message_id)
+        try:
+            del lolis_msg[call.message.chat.id]
+        except KeyError:
+            log('Key Error in lolis', 'warning')
     else:
         bot.answer_callback_query(call.id, '⛔')
 
