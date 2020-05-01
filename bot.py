@@ -1495,8 +1495,9 @@ def me_handler(message: Message) -> None:
             user = data_user['first_name']
             if data_user['last_name'] is not None:
                 user += ' ' + data_user['last_name']
-            me_msg[message.chat.id] = bot.send_message(message.chat.id, f'{user} - {data_user["karma"]}🏆',
-                                                       reply_markup=keyboard)
+            me_msg[message.chat.id] = bot.send_message(message.chat.id, f'Ваш рейтинг:\n<b>{user}</b> - '
+                                                                        f'<i>{data_user["karma"]}</i>🏆',
+                                                       reply_markup=keyboard, parse_mode='HTML')
     else:
         bot.send_message(message.chat.id, 'Функция достпуна только в группах😔')
 
