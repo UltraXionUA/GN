@@ -14,4 +14,4 @@ pytube3
 youtube-unlimited-search
 pydub
 user_agent
-fmpeg-python
+ffmpeg-python
