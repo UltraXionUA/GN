@@ -688,7 +688,7 @@ def callback_query(call):
 
 # <<< Loli >>>
 data_lolis = defaultdict(list)
-
+lolis_msg = defaultdict(Message)
 
 @bot.message_handler(commands=['loli'])  # /loli
 def loli_handler(message: Message) -> None:
@@ -696,12 +696,25 @@ def loli_handler(message: Message) -> None:
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if db.check_user(message.from_user.id):
+        bot.delete_message(message.chat.id, message.message_id)
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add((InlineKeyboardButton('Удалить', callback_data='del loli')))
         if message.chat.id not in data_lolis or len(data_lolis[message.chat.id]) == 1:
             data_lolis[message.chat.id] = db.get_all_lolis()
         loli = data_lolis[message.chat.id].pop(random.choice(range(len(data_lolis[message.chat.id]) - 1)))
-        bot.send_photo(message.chat.id, loli['url'])
+        lolis_msg[message.chat.id] = bot.send_photo(message.chat.id, loli['url'], reply_markup=keyboard)
     else:
         bot.send_message(message.chat.id, 'Эта функция вам недоступна😔')
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^del\sloli$', call.data))
+def next_news_query(call):
+    global lolis_msg
+    if call.message.chat.id in lolis_msg:
+        bot.answer_callback_query(call.id, 'Удалено')
+        bot.delete_message(lolis_msg[call.message.chat.id].chat.id, lolis_msg[call.message.chat.id].message_id)
+    else:
+        bot.answer_callback_query(call.id, '⛔')
 
 # <<< End loli >>>
 

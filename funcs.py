@@ -69,7 +69,7 @@ def sec_to_time(seconds: int) -> str:
 def tr_w(words) -> str:  # Define and translate
     leng_code = detect(words)
     if leng_code == 'mk':
-        return 'Не удалось распознат язык⛔️'
+        return 'Не удалось распознать язык⛔️'
     return Translator().translate(words, dest='en').text if leng_code == 'ru' \
         else Translator().translate(words, dest='ru').text
 
