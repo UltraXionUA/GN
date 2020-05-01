@@ -16,9 +16,9 @@ from json import JSONDecodeError
 from pydub import AudioSegment
 from threading import Thread
 from threading import Timer
+import ffmpeg
 import tempfile
 import requests
-import ffmpeg
 import random
 import time
 import db
@@ -1368,28 +1368,27 @@ def text_handler(message: Message) -> None:
                 time_to_change[message.from_user.id] = False
                 msg_from_user[message.from_user.id] = message
                 msg = list(message.text)
-                reply_to = message.reply_to_message.from_user
-                if reply_to.first_name is not None:
-                    reply_user = reply_to.first_name.title()
-                    if reply_to.last_name is not None:
-                        reply_user += ' ' + reply_to.last_name.title()
+                if message.reply_to_message.from_user.first_name is not None:
+                    reply_user = message.reply_to_message.from_user.first_name
+                    if message.reply_to_message.from_user.last_name is not None:
+                        reply_user += ' ' + message.reply_to_message.from_user.last_name
                 else:
-                    reply_user = reply_to.username.title()
+                    reply_user = message.reply_to_message.from_user.username
                 if message.from_user.first_name is not None:
-                    from_user = message.from_user.first_name.title()
+                    from_user = message.from_user.first_name
                     if message.from_user.last_name is not None:
-                        from_user += ' ' + message.from_user.last_name.title()
+                        from_user += ' ' + message.from_user.last_name
                 else:
-                    from_user = reply_to.username.title()
+                    from_user = message.reply_to_message.from_user.username
                 if msg[0] == '+':
                     bot.send_message(message.chat.id, f'<b>{from_user}</b> подкинул <i>{len(msg) * 10}</i> к карме😈 '
                                                       f'<b>{reply_user}</b>\nИтого карма: '
-                                                      f'<i>{db.change_karma(reply_to, message.chat, msg, 10)}</i>',
+                                f'<i>{db.change_karma(message.reply_to_message.from_user, message.chat, msg, 10)}</i>',
                                      parse_mode='HTML')
                 else:
                     bot.send_message(message.chat.id, f'<b>{from_user}</b> отнял от кармы <i>-{len(msg) * 10}</i>👿 '
                                                       f'<b>{reply_user}</b>\nИтого карма: '
-                                                      f'<i>{db.change_karma(reply_to, message.chat, msg, 10)}</i>',
+                                f'<i>{db.change_karma(message.reply_to_message.from_user, message.chat, msg, 10)}</i>',
                                      parse_mode='HTML')
                 Timer(10.0, set_true).run()
             else:
