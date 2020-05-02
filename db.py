@@ -25,12 +25,15 @@ def get_user(user, chat) -> dict:
             else:
                 groups = user_['supergroup'].split(',')
                 for group in groups:
-                    if group == chat.id:
+                    if group == str(chat.id):
                         users_groups.append(user_)
                         continue
-        for en, user_ in enumerate(users_groups, 1):
-            if user_['user_id'] == user.id:
-                return user_, en
+        if users_groups:
+            for en, user_ in enumerate(users_groups, 1):
+                if user_['user_id'] == user.id:
+                    return user_, en
+        else:
+            return False, False
     connection.close()
 
 

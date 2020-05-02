@@ -1491,14 +1491,16 @@ def me_handler(message: Message) -> None:
         keyboard = InlineKeyboardMarkup()
         keyboard.add(InlineKeyboardButton('Удалить', callback_data='Delete me'))
         data_user, position = db.get_user(message.from_user, message.chat)
-        print(data_user, '\n', position)
-        if data_user['first_name'] is not None:
-            user = data_user['first_name']
-            if data_user['last_name'] is not None:
-                user += ' ' + data_user['last_name']
-            me_msg[message.chat.id] = bot.send_message(message.chat.id, f'Ваш рейтинг:\n<i>{position}</i><b>{user}</b> - '
-                                                                        f'<i>{data_user["karma"]}</i>🏆',
-                                                       reply_markup=keyboard, parse_mode='HTML')
+        if data_user is not False or position is not False:
+            if data_user['first_name'] is not None:
+                user = data_user['first_name']
+                if data_user['last_name'] is not None:
+                    user += ' ' + data_user['last_name']
+                me_msg[message.chat.id] = bot.send_message(message.chat.id, f'Ваш рейтинг:\n'
+                                                                            f'<i>{position}. </i>'
+                                                                            f'<b>{user}</b> - '
+                                                                            f'<i>{data_user["karma"]}</i>🏆',
+                                                           reply_markup=keyboard, parse_mode='HTML')
     else:
         bot.send_message(message.chat.id, 'Функция достпуна только в группах😔')
 
