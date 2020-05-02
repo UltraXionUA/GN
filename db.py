@@ -13,13 +13,25 @@ def start_connection():  # Connection to DB
         log('Ошибка подключения к БД!', 'error')
 
 
-def get_user(user) -> dict:
+def get_user(user, chat) -> dict:
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id};')
-        res = cursor.fetchone()
+        cursor.execute(f'SELECT * FROM Users ORDER BY karma DESC;')
+        all_users = cursor.fetchall()
+        users_groups = []
+        for en, user_ in enumerate(all_users):
+            if user_['supergroup'] is None:
+                all_users.pop(en)
+            else:
+                groups = user_['supergroup'].split(',')
+                for group in groups:
+                    if group == chat.id:
+                        users_groups.append(user_)
+                        continue
+        for en, user_ in enumerate(users_groups, 1):
+            if user_['user_id'] == user.id:
+                return user_, en
     connection.close()
-    return res
 
 
 def get_stat(chat) -> list:  # -1001339129150
