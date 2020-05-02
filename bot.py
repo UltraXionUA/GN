@@ -770,7 +770,7 @@ def loli_handler(message: Message) -> None:
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^del\sloli$', call.data))
-def next_news_query(call):
+def loli_query(call):
     global lolis_msg
     if call.message.chat.id in lolis_msg:
         bot.answer_callback_query(call.id, 'Удалено')
@@ -1451,7 +1451,7 @@ def stat_handler(message: Message) -> None:
                         medal = '🥉'
                     text += f"<i>{en + 1}.</i> {i['first_name']}" \
                             f" {i['last_name'] if i['last_name'] != 'None' else ''} - <i>{i['karma']}</i>{medal}\n"
-            text += '\nНажмите /me что бы увидеть себя'
+            text += '...\nНажмите /me что бы увидеть себя'
             stat_msg[message.chat.id] = bot.send_message(message.chat.id, text, parse_mode='HTML',
                                                          reply_markup=keyboard)
     else:

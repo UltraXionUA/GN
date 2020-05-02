@@ -174,7 +174,6 @@ def check_ban_user(user: str) -> None:  # Ban user
             return True
         else:
             return False
-    connection.close()
 
 
 def get_all_answers() -> list:  # Get random answer
