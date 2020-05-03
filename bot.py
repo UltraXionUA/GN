@@ -16,6 +16,8 @@ from json import JSONDecodeError
 from pydub import AudioSegment
 from threading import Thread
 from threading import Timer
+import wikipediaapi
+import wikipedia
 import ffmpeg
 import tempfile
 import requests
@@ -1515,6 +1517,108 @@ def callback_query(call):
     else:
         bot.answer_callback_query(call.id, '⛔️')
 # <<< End me >>>
+
+
+# <<< Wiki >>>
+data_wiki = defaultdict(list)
+wiki_msg = defaultdict(Message)
+page_msg = defaultdict(Message)
+
+@bot.message_handler(commands=['wiki'])  # /wiki
+def wiki_handler(message: Message) -> None:
+    """
+       Enter /wiki to get result from Wikipedia and choose page what you need to read it
+       :param message:
+       :return:
+       """
+    log(message, 'info')
+    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+    msg = bot.send_message(message.chat.id, 'Введите запрос')
+    bot.register_next_step_handler(msg, get_titles)
+
+
+def get_titles(message: Message) -> None:
+    global data_wiki, wiki_msg
+    wikipedia.set_lang("ru")
+    try:
+        data_wiki[message.chat.id] = wikipedia.search(message.text, results=50, suggestion=True)
+        if not data_wiki[message.chat.id]:
+            bot.send_message(message.chat.id, 'Ничего не нашлось')
+            return
+    except requests.ConnectionError:
+        log('Connection error in  wiki', 'error')
+    else:
+        list_wiki, buf = [], []
+        for i, en in enumerate(data_wiki[message.chat.id][0], 1):
+            buf.append(en)
+            if i % 5 == 0:
+                list_wiki.append(buf.copy())
+                buf.clear()
+        if buf:
+            list_wiki.append(buf.copy())
+        data_wiki[message.chat.id] = list_wiki.copy()
+        wiki_msg[message.chat.id] = bot.send_message(message.chat.id, 'Результат поиска:',
+                         reply_markup=send_wiki(message, 0))
+
+
+def send_wiki(message: Message, index: int) -> None:
+    global data_wiki, wiki_msg
+    keyboard = InlineKeyboardMarkup()
+    try:
+        for en, wiki in enumerate(data_wiki[message.chat.id][index]):
+            keyboard.add(InlineKeyboardButton(f"{wiki}",
+                                                   callback_data=f"Wiki: {index} {en}"))
+        keyboard.add(
+            InlineKeyboardButton(text="⬅️️", callback_data=f"move {index - 1 if index > 0 else 'pass'}"),
+            InlineKeyboardButton(text="➡️", callback_data=f"move "
+                                            f"{index + 1 if index < len(data_wiki[message.chat.id]) - 1 else 'pass'}"))
+        return keyboard
+    except KeyError:
+        bot.send_chat_action(message.chat.id, '⛔️')
+        log('Key Error in wiki', 'warning')
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Wiki:\s\d+\s\d+$', call.data))
+def wiki_query(call):
+    global data_wiki, page_msg
+    wiki = wikipediaapi.Wikipedia('ru')
+    index1, index2 = call.data.split()[1:]
+    try:
+        page = wiki.page(data_wiki[call.message.chat.id][int(index1)][int(index2)].replace(' ', '_'))
+    except requests.exceptions.ConnectionError:
+        bot.answer_callback_query(call.id, '⛔️')
+        log('Connection error in  wiki', 'error')
+    except IndexError:
+        bot.answer_callback_query(call.id, '⛔️')
+        log('Key Error in wiki', 'warning')
+    else:
+        if call.message.chat.id in page_msg:
+            bot.delete_message(page_msg[call.message.chat.id].chat.id, page_msg[call.message.chat.id].message_id)
+        bot.answer_callback_query(call.id, page.title)
+        page_msg[call.message.chat.id] = bot.send_message(call.message.chat.id,
+                f'{page.summary[0:600]}...\n\n<a href="{page.fullurl}">Статья на Wikipedia</a>', parse_mode='HTML')
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move\s\d+$', call.data))
+def wiki_move_query(call):
+    global data_wiki, wiki_msg
+    index = int(call.data.split()[1])
+    if 0 <= index < len(data_wiki[call.message.chat.id]):
+        bot.answer_callback_query(call.id, f'Вы выбрали стр.{index + 1}')
+        bot.edit_message_text(chat_id=wiki_msg[call.message.chat.id].chat.id,
+                              message_id=wiki_msg[call.message.chat.id].message_id,
+                              text=wiki_msg[call.message.chat.id].text,
+                              reply_markup=send_wiki(call.message, index))
+    else:
+        bot.answer_callback_query(call.id, '⛔️')
+
+
+@bot.callback_query_handler(func=lambda call:  re.fullmatch(r'^move\spass$', call.data))
+def wiki_pass(call):
+    bot.answer_callback_query(call.id, '⛔️')
+
+    
+# <<< End Wiki >>>
 
 
 # <<< Change karma >>>
