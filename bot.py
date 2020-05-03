@@ -1523,6 +1523,8 @@ def callback_query(call):
 data_wiki = defaultdict(list)
 wiki_msg = defaultdict(Message)
 page_msg = defaultdict(Message)
+wiki_enter_msg = defaultdict(Message)
+
 
 @bot.message_handler(commands=['wiki'])  # /wiki
 def wiki_handler(message: Message) -> None:
@@ -1533,21 +1535,20 @@ def wiki_handler(message: Message) -> None:
        """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    msg = bot.send_message(message.chat.id, 'Введите запрос✒️')
-    bot.register_next_step_handler(msg, get_titles)
+    wiki_enter_msg[message.chat.id] = bot.send_message(message.chat.id, 'Введите запрос✒️')
+    bot.register_next_step_handler(wiki_enter_msg[message.chat.id], get_titles)
 
 
 def get_titles(message: Message) -> None:
     global data_wiki, wiki_msg
+    bot.delete_message(wiki_enter_msg[message.chat.id].chat.id, wiki_enter_msg[message.chat.id].message_id)
+    bot.delete_message(message.chat.id, message.message_id)
     wikipedia.set_lang("ru")
     try:
         data_wiki[message.chat.id] = wikipedia.search(message.text, results=50, suggestion=True)
-        if not data_wiki[message.chat.id]:
-            bot.send_message(message.chat.id, 'Ничего не нашлось😔')
-            return
     except requests.ConnectionError:
         log('Connection error in  wiki', 'error')
-    else:
+    if data_wiki[message.chat.id][0]:
         list_wiki, buf = [], []
         for i, en in enumerate(data_wiki[message.chat.id][0], 1):
             buf.append(en)
@@ -1557,8 +1558,12 @@ def get_titles(message: Message) -> None:
         if buf:
             list_wiki.append(buf.copy())
         data_wiki[message.chat.id] = list_wiki.copy()
+        if message.chat.id in wiki_msg:
+            bot.delete_message(wiki_msg[message.chat.id].chat.id, wiki_msg[message.chat.id].message_id)
         wiki_msg[message.chat.id] = bot.send_message(message.chat.id, 'Результат поиска:',
                          reply_markup=send_wiki(message, 0))
+    else:
+        bot.send_message(message.chat.id, 'Ничего не нашлось😔')
 
 
 def send_wiki(message: Message, index: int) -> None:
@@ -1594,7 +1599,7 @@ def wiki_query(call):
     else:
         if call.message.chat.id in page_msg:
             bot.delete_message(page_msg[call.message.chat.id].chat.id, page_msg[call.message.chat.id].message_id)
-        bot.answer_callback_query(call.id, page.title)
+        bot.answer_callback_query(call.id, page.title.replace('_', ' '))
         page_msg[call.message.chat.id] = bot.send_message(call.message.chat.id,
                 f'{page.summary[0:600]}...\n\n<a href="{page.fullurl}">Статья на Wikipedia</a>', parse_mode='HTML')
 
