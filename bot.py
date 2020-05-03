@@ -241,36 +241,27 @@ def send_mp3(message: Message, file_id: int) -> None:
 # <<< End Ogg to Mp3 >>>
 
 
-# <<< Ru meme >>>
+# <<< Meme >>>
 meme_data = defaultdict(list)
 
 
-@bot.message_handler(commands=['ru_meme'])  # /ru_meme
+@bot.message_handler(commands=['meme'])  # /meme
 def meme_handler(message: Message) -> None:
     global meme_data
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    if message.chat.id not in meme_data or len(meme_data[message.chat.id]) == 1:
-        meme_data[message.chat.id] = db.get_all_memes()
-    meme = meme_data[message.chat.id].pop(random.choice(range(len(meme_data[message.chat.id]) - 1)))
     bot.send_chat_action(message.chat.id, 'upload_photo')
-    bot.send_photo(message.chat.id, meme['url'])
+    if rend_d(50):
+        if message.chat.id not in meme_data or len(meme_data[message.chat.id]) == 1:
+            meme_data[message.chat.id] = db.get_all_memes()
+        meme = meme_data[message.chat.id].pop(random.choice(range(len(meme_data[message.chat.id]) - 1)))
+        bot.send_photo(message.chat.id, meme['url'])
+    else:
+        meme = requests.get(API['API_Meme']).json()
+        bot.send_photo(message.chat.id, meme['url'])
 
 
-# <<< End ru meme >>>
-
-
-# <<< En meme >>>
-@bot.message_handler(commands=['en_meme'])  # /en_meme
-def meme_en_handler(message: Message) -> None:
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    bot.send_chat_action(message.chat.id, 'upload_photo')
-    meme = requests.get(API['API_Meme']).json()
-    bot.send_photo(message.chat.id, meme['url'])
-
-
-# <<< End en meme >>>
+# <<< End meme >>>
 
 
 # <<< Donate >>>
