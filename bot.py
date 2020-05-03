@@ -1533,7 +1533,7 @@ def wiki_handler(message: Message) -> None:
        """
     log(message, 'info')
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    msg = bot.send_message(message.chat.id, 'Введите запрос')
+    msg = bot.send_message(message.chat.id, 'Введите запрос✒️')
     bot.register_next_step_handler(msg, get_titles)
 
 
@@ -1543,7 +1543,7 @@ def get_titles(message: Message) -> None:
     try:
         data_wiki[message.chat.id] = wikipedia.search(message.text, results=50, suggestion=True)
         if not data_wiki[message.chat.id]:
-            bot.send_message(message.chat.id, 'Ничего не нашлось')
+            bot.send_message(message.chat.id, 'Ничего не нашлось😔')
             return
     except requests.ConnectionError:
         log('Connection error in  wiki', 'error')
