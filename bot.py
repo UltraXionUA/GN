@@ -8,6 +8,7 @@ from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagra
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time, clear_date
 from config import API, URLS, GNBot_ID, Admin_ID, bot, PAYMENT_TOKEN
 from youtube_unlimited_search import YoutubeUnlimitedSearch
+from datetime import datetime as dt
 from urllib import parse, request, error
 from pytube import YouTube, exceptions
 from collections import defaultdict
@@ -16,6 +17,7 @@ from json import JSONDecodeError
 from pydub import AudioSegment
 from threading import Thread
 from threading import Timer
+
 import wikipediaapi
 import wikipedia
 import ffmpeg
@@ -43,12 +45,13 @@ def start_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    bot.send_chat_action(message.chat.id, 'typing')
-    bot.send_message(message.chat.id, 'Здравствуй, меня зовут <b>GNBot</b>🖥\n'
-                                      'Я много функциональный и мултимедийный бот👾\n'
-                                      '<b>Помощь</b> <i>/help</i>', parse_mode='HTML')
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        bot.send_chat_action(message.chat.id, 'typing')
+        bot.send_message(message.chat.id, 'Здравствуй, меня зовут <b>GNBot</b>🖥\n'
+                                          'Я много функциональный и мултимедийный бот👾\n'
+                                          '<b>Помощь</b> <i>/help</i>', parse_mode='HTML')
 
 
 # <<< End start >>>
@@ -62,16 +65,17 @@ def help_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    bot.send_chat_action(message.chat.id, 'typing')
-    bot.send_message(message.chat.id, '<b>Тут должна была быть помощь</b>🆘, но её тут не будет🌚\n'
-                                      'Список всех команд можно увидить введя <b>\" </b>\\<b> \"</b>\n'
-                                      'Так же бот имеет учет кармы(<i>работает в группах</i>\n)'
-                                      'Админ команды(<b>!ban</b>, <b>!mute {<i>time</i>}</b>, <b>!kick</b>)'
-                                      'Все свои вопросы и предложения вы можете писать мне 💢<b>@Ultra_Xion</b>💢\n'
-                                      'Если вы нашли баг или ошибку просьба сообщить\n'
-                                      '<b>Почта:</b> <i>ultra25813@gmail.com</i>', parse_mode='HTML')
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        bot.send_chat_action(message.chat.id, 'typing')
+        bot.send_message(message.chat.id, '<b>Тут должна была быть помощь</b>🆘, но её тут не будет🌚\n'
+                                          'Список всех команд можно увидить введя <b>\" </b>\\<b> \"</b>\n'
+                                          'Так же бот имеет учет кармы(<i>работает в группах</i>\n)'
+                                          'Админ команды(<b>!ban</b>, <b>!mute {<i>time</i>}</b>, <b>!kick</b>)'
+                                          'Все свои вопросы и предложения вы можете писать мне 💢<b>@Ultra_Xion</b>💢\n'
+                                          'Если вы нашли баг или ошибку просьба сообщить\n'
+                                          '<b>Почта:</b> <i>ultra25813@gmail.com</i>', parse_mode='HTML')
 
 
 # <<< End help >>>
@@ -86,14 +90,15 @@ def gif_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    bot.send_chat_action(message.chat.id, 'upload_video')
-    while True:
-        data = requests.get(API['API_Gif']).json()
-        if hi_r(data['data']['rating']):
-            bot.send_document(message.chat.id, data['data']['images']['downsized_large']['url'])
-            break
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        bot.send_chat_action(message.chat.id, 'upload_video')
+        while True:
+            data = requests.get(API['API_Gif']).json()
+            if hi_r(data['data']['rating']):
+                bot.send_document(message.chat.id, data['data']['images']['downsized_large']['url'])
+                break
 
 
 # <<< End gif >>>
@@ -111,12 +116,13 @@ def qrcode_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton('Создать', callback_data='Create_QRCode'),
-                 InlineKeyboardButton('Считать', callback_data='Read_QRCode'))
-    qr_msg[message.chat.id] = bot.send_message(message.chat.id, 'Выберите опцию🧐', reply_markup=keyboard)
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton('Создать', callback_data='Create_QRCode'),
+                     InlineKeyboardButton('Считать', callback_data='Read_QRCode'))
+        qr_msg[message.chat.id] = bot.send_message(message.chat.id, 'Выберите опцию🧐', reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Create_QRCode$', call.data))
@@ -169,19 +175,20 @@ def joke_handler(message: Message) -> None:
     :return:
     """
     global jokes_data
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    if message.chat.id not in jokes_data or len(jokes_data[message.chat.id]) == 1:
-        jokes_data[message.chat.id] = db.get_all_jokes()
-    joke = jokes_data[message.chat.id].pop(random.choice(range(len(jokes_data[message.chat.id]) - 1)))
-    bot.send_chat_action(message.chat.id, 'typing')
-    time.sleep(1.5)
-    if joke['panchline'] != 'False':
-        bot.send_message(message.chat.id, joke['setup'] + random.choice(['🧐', '🤨', '🤔']))
-        time.sleep(3.5)
-        bot.send_message(message.chat.id, joke['panchline'] + random.choice(['🌚', '😅', '🤫']))
-    else:
-        bot.send_message(message.chat.id, joke['setup'] + random.choice(['🌚', '😅', '🤫']))
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        if message.chat.id not in jokes_data or len(jokes_data[message.chat.id]) == 1:
+            jokes_data[message.chat.id] = db.get_all_jokes()
+        joke = jokes_data[message.chat.id].pop(random.choice(range(len(jokes_data[message.chat.id]) - 1)))
+        bot.send_chat_action(message.chat.id, 'typing')
+        time.sleep(1.5)
+        if joke['panchline'] != 'False':
+            bot.send_message(message.chat.id, joke['setup'] + random.choice(['🧐', '🤨', '🤔']))
+            time.sleep(3.5)
+            bot.send_message(message.chat.id, joke['panchline'] + random.choice(['🌚', '😅', '🤫']))
+        else:
+            bot.send_message(message.chat.id, joke['setup'] + random.choice(['🌚', '😅', '🤫']))
 
 
 # <<< End joke >>>
@@ -199,10 +206,11 @@ def oggtomp3_handler(message: Message) -> None:
     :return:
     """
     global msg_mp3ogg
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    msg_mp3ogg[message.chat.id] = bot.send_message(message.chat.id, 'Запишите или отправьте аудиосообщение🎙')
-    bot.register_next_step_handler(msg_mp3ogg[message.chat.id], set_name_mp3)
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        msg_mp3ogg[message.chat.id] = bot.send_message(message.chat.id, 'Запишите или отправьте аудиосообщение🎙')
+        bot.register_next_step_handler(msg_mp3ogg[message.chat.id], set_name_mp3)
 
 
 def set_name_mp3(message: Message) -> None:
@@ -248,17 +256,18 @@ meme_data = defaultdict(list)
 @bot.message_handler(commands=['meme'])  # /meme
 def meme_handler(message: Message) -> None:
     global meme_data
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    bot.send_chat_action(message.chat.id, 'upload_photo')
-    if rend_d(50):
-        if message.chat.id not in meme_data or len(meme_data[message.chat.id]) == 1:
-            meme_data[message.chat.id] = db.get_all_memes()
-        meme = meme_data[message.chat.id].pop(random.choice(range(len(meme_data[message.chat.id]) - 1)))
-        bot.send_photo(message.chat.id, meme['url'])
-    else:
-        meme = requests.get(API['API_Meme']).json()
-        bot.send_photo(message.chat.id, meme['url'])
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        bot.send_chat_action(message.chat.id, 'upload_photo')
+        if rend_d(50):
+            if message.chat.id not in meme_data or len(meme_data[message.chat.id]) == 1:
+                meme_data[message.chat.id] = db.get_all_memes()
+            meme = meme_data[message.chat.id].pop(random.choice(range(len(meme_data[message.chat.id]) - 1)))
+            bot.send_photo(message.chat.id, meme['url'])
+        else:
+            meme = requests.get(API['API_Meme']).json()
+            bot.send_photo(message.chat.id, meme['url'])
 
 
 # <<< End meme >>>
@@ -272,32 +281,33 @@ def donate_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    bot.send_chat_action(message.chat.id, 'typing')
-    if message.chat.type == 'private':
-        bot.send_message(message.chat.id, '<b>К сожеление функция не доработана</b>😔\n'
-                                          'Если вы хотите поддержать проект, '
-                                          'вы можете превести желаемую сумму на карту\n'
-                                          '<b>MonoBank:</b> <i>5375 4141 1577 0850</i>\n'
-                                          '<b>C уважением <i>@Ultra_Xion</i></b>', parse_mode='HTML')
-        # bot.send_message(message.chat.id, 'Здесь вы можете поддержать разработчика и дать мотивацию '
-        #                                   'на внесение нового фунционала в <b>GNBot</b>\n'
-        #                                   'C уважением <i>@Ultra_Xion</i>', parse_mode='HTML')
-        # if PAYMENT_TOKEN.split(':')[1] == 'LIVE':
-        #     keyboard = InlineKeyboardMarkup(row_width=1)
-        #     keyboard.add(InlineKeyboardButton('1 грн', callback_data='1 UAH'),
-        #                  InlineKeyboardButton('10 грн', callback_data='10 UAH'),
-        #                  InlineKeyboardButton('100 грн', callback_data='100 UAH'),
-        #                  InlineKeyboardButton('1000 грн', callback_data='1000 UAH'),
-        #                  InlineKeyboardButton('Своя сумма', callback_data='Своя сумма'))
-        #     msg = bot.send_message(message.chat.id, 'Сумма поддержки💸', reply_markup=keyboard)
-        #     time.sleep(20)
-        #     bot.delete_message(msg.chat.id, msg.message_id)
-    else:
-        bot.send_message(message.chat.id, 'К сожелению в группе эта функция недоступна😔\n'
-                                          'Что бы поддержать нас вы можете восползоваться'
-                                          'этой командой в личном чате с ботом 💢<b>@GNTMBot</b>💢',
-                         parse_mode='HTML')
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        bot.send_chat_action(message.chat.id, 'typing')
+        if message.chat.type == 'private':
+            bot.send_message(message.chat.id, '<b>К сожеление функция не доработана</b>😔\n'
+                                              'Если вы хотите поддержать проект, '
+                                              'вы можете превести желаемую сумму на карту\n'
+                                              '<b>MonoBank:</b> <i>5375 4141 1577 0850</i>\n'
+                                              '<b>C уважением <i>@Ultra_Xion</i></b>', parse_mode='HTML')
+            # bot.send_message(message.chat.id, 'Здесь вы можете поддержать разработчика и дать мотивацию '
+            #                                   'на внесение нового фунционала в <b>GNBot</b>\n'
+            #                                   'C уважением <i>@Ultra_Xion</i>', parse_mode='HTML')
+            # if PAYMENT_TOKEN.split(':')[1] == 'LIVE':
+            #     keyboard = InlineKeyboardMarkup(row_width=1)
+            #     keyboard.add(InlineKeyboardButton('1 грн', callback_data='1 UAH'),
+            #                  InlineKeyboardButton('10 грн', callback_data='10 UAH'),
+            #                  InlineKeyboardButton('100 грн', callback_data='100 UAH'),
+            #                  InlineKeyboardButton('1000 грн', callback_data='1000 UAH'),
+            #                  InlineKeyboardButton('Своя сумма', callback_data='Своя сумма'))
+            #     msg = bot.send_message(message.chat.id, 'Сумма поддержки💸', reply_markup=keyboard)
+            #     time.sleep(20)
+            #     bot.delete_message(msg.chat.id, msg.message_id)
+        else:
+            bot.send_message(message.chat.id, 'К сожелению в группе эта функция недоступна😔\n'
+                                              'Что бы поддержать нас вы можете восползоваться'
+                                              'этой командой в личном чате с ботом 💢<b>@GNTMBot</b>💢',
+                             parse_mode='HTML')
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^\d+\sUAH$', call.data) or call.data == 'Своя сумма')
@@ -370,10 +380,11 @@ def weather_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    city_msg[message.chat.id] = bot.send_message(message.chat.id, 'Введите название города✒️')
-    bot.register_next_step_handler(city_msg[message.chat.id], show_weather)
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        city_msg[message.chat.id] = bot.send_message(message.chat.id, 'Введите название города✒️')
+        bot.register_next_step_handler(city_msg[message.chat.id], show_weather)
 
 
 def weather(message: Message, index: int) -> None:
@@ -469,15 +480,16 @@ def detect_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     global detect_msg
-    log(message, 'info')
-    bot.send_chat_action(message.chat.id, 'typing')
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton('Записать🔊', callback_data='record'),
-                 InlineKeyboardButton('Напеть🎙', callback_data='sing'))
-    detect_msg[message.chat.id] = bot.send_message(message.chat.id,
-                                                   'Выберите что нужно определить🧐', reply_markup=keyboard)
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        bot.send_chat_action(message.chat.id, 'typing')
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton('Записать🔊', callback_data='record'),
+                     InlineKeyboardButton('Напеть🎙', callback_data='sing'))
+        detect_msg[message.chat.id] = bot.send_message(message.chat.id,
+                                                       'Выберите что нужно определить🧐', reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'record' or call.data == 'sing')
@@ -567,13 +579,14 @@ def music_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    bot.send_chat_action(message.chat.id, 'typing')
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(InlineKeyboardButton('По исполнителю🎤', callback_data='artist?q='),
-                 InlineKeyboardButton('По треку🎼', callback_data='track?q='))
-    msg_song[message.chat.id] = bot.send_message(message.chat.id, 'Как будем искать музыку?🎧', reply_markup=keyboard)
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        bot.send_chat_action(message.chat.id, 'typing')
+        keyboard = InlineKeyboardMarkup(row_width=2)
+        keyboard.add(InlineKeyboardButton('По исполнителю🎤', callback_data='artist?q='),
+                     InlineKeyboardButton('По треку🎼', callback_data='track?q='))
+        msg_song[message.chat.id] = bot.send_message(message.chat.id, 'Как будем искать музыку?🎧', reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'artist?q=' or call.data == 'track?q=')
@@ -748,18 +761,19 @@ def loli_handler(message: Message) -> None:
     :return:
     """
     global data_lolis
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    if db.check_user(message.from_user.id):
-        bot.delete_message(message.chat.id, message.message_id)
-        keyboard = InlineKeyboardMarkup()
-        keyboard.add((InlineKeyboardButton('Удалить', callback_data='del loli')))
-        if message.chat.id not in data_lolis or len(data_lolis[message.chat.id]) == 1:
-            data_lolis[message.chat.id] = db.get_all_lolis()
-        loli = data_lolis[message.chat.id].pop(random.choice(range(len(data_lolis[message.chat.id]) - 1)))
-        lolis_msg[message.chat.id] = bot.send_photo(message.chat.id, loli['url'], reply_markup=keyboard)
-    else:
-        bot.send_message(message.chat.id, 'Эта функция вам недоступна😔')
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        if db.check_user(message.from_user.id):
+            bot.delete_message(message.chat.id, message.message_id)
+            keyboard = InlineKeyboardMarkup()
+            keyboard.add((InlineKeyboardButton('Удалить', callback_data='del loli')))
+            if message.chat.id not in data_lolis or len(data_lolis[message.chat.id]) == 1:
+                data_lolis[message.chat.id] = db.get_all_lolis()
+            loli = data_lolis[message.chat.id].pop(random.choice(range(len(data_lolis[message.chat.id]) - 1)))
+            lolis_msg[message.chat.id] = bot.send_photo(message.chat.id, loli['url'], reply_markup=keyboard)
+        else:
+            bot.send_message(message.chat.id, 'Эта функция вам недоступна😔')
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^del\sloli$', call.data))
@@ -791,16 +805,17 @@ def news_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(InlineKeyboardButton('Технологии', callback_data='News technology'),
-                 InlineKeyboardButton('Наука', callback_data='News science'))
-    keyboard.add(InlineKeyboardButton('Здоровье', callback_data='News health'),
-                 InlineKeyboardButton('Общие', callback_data='News general'))
-    keyboard.add(InlineKeyboardButton('Развлечения', callback_data='News entertainment'),
-                 InlineKeyboardButton('Спорт', callback_data='News sports'))
-    bot.send_message(message.chat.id, '<b>Подборка новостей</b>', reply_markup=keyboard, parse_mode='HTML')
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        keyboard = InlineKeyboardMarkup(row_width=2)
+        keyboard.add(InlineKeyboardButton('Технологии', callback_data='News technology'),
+                     InlineKeyboardButton('Наука', callback_data='News science'))
+        keyboard.add(InlineKeyboardButton('Здоровье', callback_data='News health'),
+                     InlineKeyboardButton('Общие', callback_data='News general'))
+        keyboard.add(InlineKeyboardButton('Развлечения', callback_data='News entertainment'),
+                     InlineKeyboardButton('Спорт', callback_data='News sports'))
+        bot.send_message(message.chat.id, '<b>Подборка новостей</b>', reply_markup=keyboard, parse_mode='HTML')
 
 
 def main_news(message: Message, news_type: str) -> None:
@@ -866,7 +881,8 @@ def send_news(message: Message, index: int) -> None:
                 else:
                     send_news(message, index + 1)
                     return
-            except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema, error.URLError):
+            except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema, error.URLError,
+                    UnicodeEncodeError):
                 send_news(message, index + 1)
                 return
             except IndexError:
@@ -926,12 +942,13 @@ def youtube_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton('Видео📺', callback_data='Video'),
-                 InlineKeyboardButton('Аудио🎧', callback_data='Audio'))
-    bot.send_message(message.chat.id, 'Выберите что вам отправить🧐', reply_markup=keyboard)
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton('Видео📺', callback_data='Video'),
+                     InlineKeyboardButton('Аудио🎧', callback_data='Audio'))
+        bot.send_message(message.chat.id, 'Выберите что вам отправить🧐', reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'Audio' or call.data == 'Video')
@@ -1067,13 +1084,14 @@ def instagram_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton('Фото📷', callback_data='Instagram photo'),
-                 InlineKeyboardButton('Видео📹', callback_data='Instagram video'))
-    msg_instagram[message.chat.id] = bot.send_message(message.chat.id, '<b>Что вы хотите получить</b>',
-                                                      parse_mode='HTML', reply_markup=keyboard)
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton('Фото📷', callback_data='Instagram photo'),
+                     InlineKeyboardButton('Видео📹', callback_data='Instagram video'))
+        msg_instagram[message.chat.id] = bot.send_message(message.chat.id, '<b>Что вы хотите получить</b>',
+                                                          parse_mode='HTML', reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'Instagram\s\w+', call.data))
@@ -1172,13 +1190,14 @@ def torrents_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton('Rutor.info🇷🇺', callback_data='Rutor.info'))
-    keyboard.add(InlineKeyboardButton('GTorrent.ru🇷🇺', callback_data='GTorrent.ru'))
-    keyboard.add(InlineKeyboardButton('Gamestracker.org🇷🇺', callback_data='Gamestracker.org'))
-    search[message.chat.id] = bot.send_message(message.chat.id, 'Выберите платформу️', reply_markup=keyboard)
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton('Rutor.info🇷🇺', callback_data='Rutor.info'))
+        keyboard.add(InlineKeyboardButton('GTorrent.ru🇷🇺', callback_data='GTorrent.ru'))
+        keyboard.add(InlineKeyboardButton('Gamestracker.org🇷🇺', callback_data='Gamestracker.org'))
+        search[message.chat.id] = bot.send_message(message.chat.id, 'Выберите платформу️', reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'Gamestracker.org' or call.data == 'GTorrent.ru' or
@@ -1339,11 +1358,12 @@ def translate_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    bot.send_chat_action(message.chat.id, 'typing')
-    msg = bot.send_message(message.chat.id, 'Введите то что нужно перевести👁‍🗨')
-    bot.register_next_step_handler(msg, trans_word)
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        bot.send_chat_action(message.chat.id, 'typing')
+        msg = bot.send_message(message.chat.id, 'Введите то что нужно перевести👁‍🗨')
+        bot.register_next_step_handler(msg, trans_word)
 
 
 def trans_word(message: Message) -> None:  # Translate function
@@ -1363,13 +1383,14 @@ def gn_sticker_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    if db.check_user(message.from_user.id):
-        bot.send_chat_action(message.chat.id, 'upload_photo')
-        bot.send_sticker(message.chat.id, db.random_gn_sticker())
-    else:
-        bot.send_message(message.chat.id, 'Эта функция вам недоступна😔')
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        if db.check_user(message.from_user.id):
+            bot.send_chat_action(message.chat.id, 'upload_photo')
+            bot.send_sticker(message.chat.id, db.random_gn_sticker())
+        else:
+            bot.send_message(message.chat.id, 'Эта функция вам недоступна😔')
 
 
 # <<< End sticker GN >>>
@@ -1383,10 +1404,11 @@ def sticker_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    bot.send_chat_action(message.chat.id, 'upload_photo')
-    bot.send_sticker(message.chat.id, db.random_sticker())
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        bot.send_chat_action(message.chat.id, 'upload_photo')
+        bot.send_sticker(message.chat.id, db.random_sticker())
 
 
 # <<< End sticker >>>
@@ -1422,33 +1444,34 @@ def stat_handler(message: Message) -> None:
     :return:
     """
     global stat_msg, com_stat_msg
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    if message.chat.type != 'private':
-        com_stat_msg[message.chat.id] = message
-        data = db.get_stat(message.chat)
-        if data:
-            keyboard = InlineKeyboardMarkup()
-            keyboard.add(InlineKeyboardButton('Удалить', callback_data='Delete stat'))
-            text = '<b>Статистика:</b>\n'
-            for en, i in enumerate(data):
-                if en == 5:
-                    break
-                else:
-                    medal = ''
-                    if en == 0:
-                        medal = '🥇'
-                    elif en == 1:
-                        medal = '🥈'
-                    elif en == 2:
-                        medal = '🥉'
-                    text += f"<i>{en + 1}.</i> {i['first_name']}" \
-                            f" {i['last_name'] if i['last_name'] != 'None' else ''} - <i>{i['karma']}</i>{medal}\n"
-            text += '...\nНажмите /me что бы увидеть себя'
-            stat_msg[message.chat.id] = bot.send_message(message.chat.id, text, parse_mode='HTML',
-                                                         reply_markup=keyboard)
-    else:
-        bot.send_message(message.chat.id, 'Функция достпуна только в группах😔')
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        if message.chat.type != 'private':
+            com_stat_msg[message.chat.id] = message
+            data = db.get_stat(message.chat)
+            if data:
+                keyboard = InlineKeyboardMarkup()
+                keyboard.add(InlineKeyboardButton('Удалить', callback_data='Delete stat'))
+                text = '<b>Статистика:</b>\n'
+                for en, i in enumerate(data):
+                    if en == 5:
+                        break
+                    else:
+                        medal = ''
+                        if en == 0:
+                            medal = '🥇'
+                        elif en == 1:
+                            medal = '🥈'
+                        elif en == 2:
+                            medal = '🥉'
+                        text += f"<i>{en + 1}.</i> {i['first_name']}" \
+                                f" {i['last_name'] if i['last_name'] != 'None' else ''} - <i>{i['karma']}</i>{medal}\n"
+                text += '...\nНажмите /me что бы увидеть себя'
+                stat_msg[message.chat.id] = bot.send_message(message.chat.id, text, parse_mode='HTML',
+                                                             reply_markup=keyboard)
+        else:
+            bot.send_message(message.chat.id, 'Функция достпуна только в группах😔')
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'Delete stat')
@@ -1477,25 +1500,26 @@ def me_handler(message: Message) -> None:
     :return:
     """
     global me_msg
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    if message.chat.type != 'private':
-        m_msg[message.chat.id] = message
-        keyboard = InlineKeyboardMarkup()
-        keyboard.add(InlineKeyboardButton('Удалить', callback_data='Delete me'))
-        data_user, position = db.get_user(message.from_user, message.chat)
-        if data_user is not False or position is not False:
-            if data_user['first_name'] is not None:
-                user = data_user['first_name']
-                if data_user['last_name'] is not None:
-                    user += ' ' + data_user['last_name']
-                me_msg[message.chat.id] = bot.send_message(message.chat.id, f'Ваш рейтинг:\n'
-                                                                            f'<i>{position}. </i>'
-                                                                            f'<b>{user}</b> - '
-                                                                            f'<i>{data_user["karma"]}</i>🏆',
-                                                           reply_markup=keyboard, parse_mode='HTML')
-    else:
-        bot.send_message(message.chat.id, 'Функция достпуна только в группах😔')
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        if message.chat.type != 'private':
+            m_msg[message.chat.id] = message
+            keyboard = InlineKeyboardMarkup()
+            keyboard.add(InlineKeyboardButton('Удалить', callback_data='Delete me'))
+            data_user, position = db.get_user(message.from_user, message.chat)
+            if data_user is not False or position is not False:
+                if data_user['first_name'] is not None:
+                    user = data_user['first_name']
+                    if data_user['last_name'] is not None:
+                        user += ' ' + data_user['last_name']
+                    me_msg[message.chat.id] = bot.send_message(message.chat.id, f'Ваш рейтинг:\n'
+                                                                                f'<i>{position}. </i>'
+                                                                                f'<b>{user}</b> - '
+                                                                                f'<i>{data_user["karma"]}</i>🏆',
+                                                               reply_markup=keyboard, parse_mode='HTML')
+        else:
+            bot.send_message(message.chat.id, 'Функция достпуна только в группах😔')
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'Delete me')
@@ -1524,10 +1548,11 @@ def wiki_handler(message: Message) -> None:
        :param message:
        :return:
        """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    wiki_enter_msg[message.chat.id] = bot.send_message(message.chat.id, 'Введите запрос✒️')
-    bot.register_next_step_handler(wiki_enter_msg[message.chat.id], get_titles)
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        wiki_enter_msg[message.chat.id] = bot.send_message(message.chat.id, 'Введите запрос✒️')
+        bot.register_next_step_handler(wiki_enter_msg[message.chat.id], get_titles)
 
 
 def get_titles(message: Message) -> None:
@@ -1700,34 +1725,35 @@ def code_handler(message: Message) -> None:
     :return:
     """
     global leng_msg
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    keyboard = InlineKeyboardMarkup(row_width=3)
-    keyboard.add(InlineKeyboardButton('Bash', callback_data='Code bash'),
-                 InlineKeyboardButton('HTML 5', callback_data='Code html5'),
-                 InlineKeyboardButton('CSS', callback_data='Code css'))
-    keyboard.add(InlineKeyboardButton('JavaScript', callback_data='Code javascript'),
-                 InlineKeyboardButton('Pascal', callback_data='Code pascal'),
-                 InlineKeyboardButton('JSON', callback_data='Code json'))
-    keyboard.add(InlineKeyboardButton('Perl', callback_data='Code perl'),
-                 InlineKeyboardButton('C#', callback_data='Code csharp'),
-                 InlineKeyboardButton('Objective C', callback_data='Code objc'))
-    keyboard.add(InlineKeyboardButton('C', callback_data='Code c'),
-                 InlineKeyboardButton('C++', callback_data='Code cpp'),
-                 InlineKeyboardButton('Ruby', callback_data='Code ruby'))
-    keyboard.add(InlineKeyboardButton('Delphi', callback_data='Code delphi'),
-                 InlineKeyboardButton('Java', callback_data='Code java'),
-                 InlineKeyboardButton('CoffeeScript', callback_data='Code coffeescript'))
-    keyboard.add(InlineKeyboardButton('PHP', callback_data='Code php'),
-                 InlineKeyboardButton('Python', callback_data='Code python'),
-                 InlineKeyboardButton('PostgreSQL', callback_data='Code postgresql'))
-    keyboard.add(InlineKeyboardButton('SQL', callback_data='Code sql'),
-                 InlineKeyboardButton('Swift', callback_data='Code swift'),
-                 InlineKeyboardButton('Rust', callback_data='Code rust'))
-    keyboard.add(InlineKeyboardButton('Все доступные языки', url='https://' + 'pastebin.com/languages'))
-    keyboard.add(InlineKeyboardButton('Введите название нужного языка ниже', callback_data='Enter lang'))
-    leng_msg = bot.send_message(message.chat.id, 'Выберите нужный вам язык😈', reply_markup=keyboard)
-    bot.register_next_step_handler(leng_msg, callback_to_code)
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        keyboard = InlineKeyboardMarkup(row_width=3)
+        keyboard.add(InlineKeyboardButton('Bash', callback_data='Code bash'),
+                     InlineKeyboardButton('HTML 5', callback_data='Code html5'),
+                     InlineKeyboardButton('CSS', callback_data='Code css'))
+        keyboard.add(InlineKeyboardButton('JavaScript', callback_data='Code javascript'),
+                     InlineKeyboardButton('Pascal', callback_data='Code pascal'),
+                     InlineKeyboardButton('JSON', callback_data='Code json'))
+        keyboard.add(InlineKeyboardButton('Perl', callback_data='Code perl'),
+                     InlineKeyboardButton('C#', callback_data='Code csharp'),
+                     InlineKeyboardButton('Objective C', callback_data='Code objc'))
+        keyboard.add(InlineKeyboardButton('C', callback_data='Code c'),
+                     InlineKeyboardButton('C++', callback_data='Code cpp'),
+                     InlineKeyboardButton('Ruby', callback_data='Code ruby'))
+        keyboard.add(InlineKeyboardButton('Delphi', callback_data='Code delphi'),
+                     InlineKeyboardButton('Java', callback_data='Code java'),
+                     InlineKeyboardButton('CoffeeScript', callback_data='Code coffeescript'))
+        keyboard.add(InlineKeyboardButton('PHP', callback_data='Code php'),
+                     InlineKeyboardButton('Python', callback_data='Code python'),
+                     InlineKeyboardButton('PostgreSQL', callback_data='Code postgresql'))
+        keyboard.add(InlineKeyboardButton('SQL', callback_data='Code sql'),
+                     InlineKeyboardButton('Swift', callback_data='Code swift'),
+                     InlineKeyboardButton('Rust', callback_data='Code rust'))
+        keyboard.add(InlineKeyboardButton('Все доступные языки', url='https://' + 'pastebin.com/languages'))
+        keyboard.add(InlineKeyboardButton('Введите название нужного языка ниже', callback_data='Enter lang'))
+        leng_msg = bot.send_message(message.chat.id, 'Выберите нужный вам язык😈', reply_markup=keyboard)
+        bot.register_next_step_handler(leng_msg, callback_to_code)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Enter lang$', call.data))
@@ -1810,35 +1836,36 @@ def dice_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    if message.content_type != 'dice':
-        res = bot.send_dice(message.chat.id)
-    else:
-        res = message
-    t = Timer(60.0, reset_users)
-    if first_dice['username'] is None:
-        first_dice['username'], first_dice['dice'] = message.from_user.username, res.dice.value
-        t.start()
-    elif second_dice['username'] is None:
-        second_dice['username'], second_dice['dice'] = message.from_user.username, res.dice.value
-        if first_dice['username'] != second_dice['username']:
-            t.cancel()
-            bot.send_chat_action(message.chat.id, 'typing')
-            time.sleep(4)
-            if first_dice['dice'] > second_dice['dice']:
-                bot.send_message(message.chat.id, f'{first_dice["username"].title()}🥇 победил '
-                                                  f'{second_dice["username"].title()}🥈')
-            elif first_dice['dice'] < second_dice['dice']:
-                bot.send_message(message.chat.id, f'{second_dice["username"].title()}🥇 победил '
-                                                  f'{first_dice["username"].title()}🥈')
-            else:
-                bot.send_message(message.chat.id, 'Победила дружба🤝')
-            reset_users()
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        if message.content_type != 'dice':
+            res = bot.send_dice(message.chat.id)
         else:
-            first_dice['username'], first_dice['dice'] = message.from_user.first_name, res.dice.value
-            t.cancel()
+            res = message
+        t = Timer(60.0, reset_users)
+        if first_dice['username'] is None:
+            first_dice['username'], first_dice['dice'] = message.from_user.username, res.dice.value
             t.start()
+        elif second_dice['username'] is None:
+            second_dice['username'], second_dice['dice'] = message.from_user.username, res.dice.value
+            if first_dice['username'] != second_dice['username']:
+                t.cancel()
+                bot.send_chat_action(message.chat.id, 'typing')
+                time.sleep(4)
+                if first_dice['dice'] > second_dice['dice']:
+                    bot.send_message(message.chat.id, f'{first_dice["username"].title()}🥇 победил '
+                                                      f'{second_dice["username"].title()}🥈')
+                elif first_dice['dice'] < second_dice['dice']:
+                    bot.send_message(message.chat.id, f'{second_dice["username"].title()}🥇 победил '
+                                                      f'{first_dice["username"].title()}🥈')
+                else:
+                    bot.send_message(message.chat.id, 'Победила дружба🤝')
+                reset_users()
+            else:
+                first_dice['username'], first_dice['dice'] = message.from_user.first_name, res.dice.value
+                t.cancel()
+                t.start()
 
 
 def reset_users() -> None:  # Reset users for Dice game
@@ -2005,33 +2032,34 @@ def text_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    log(message, 'info')
-    db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-    if message.chat.type != 'private':
-        db.change_karma(message.from_user, message.chat, ['+'], 1)
-    text = message.text.lower()
-    if text in ['стикер', 'стикерочек', 'sticker']:
-        gn_sticker_handler(message)
-    elif text in ['гифка', 'гиф', 'гифон', 'gif']:
-        gif_handler(message)
-    elif text in ['мем', 'мемас', 'мемчик', 'meme']:
-        meme_handler(message)
-    elif text in ['шутка', 'шутку', 'joke', 'joke']:
-        joke_handler(message)
-    elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
-        dice_handler(message)
-    elif text in ['лоли', 'лоля', 'лолю', 'loli', 'lolis']:
-        loli_handler(message)
-    if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
-        if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
-            data_answers[message.chat.id] = db.get_all_answers()
-        if message.reply_to_message is not None:
-            if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(40):
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
+        text = message.text.lower()
+        if text in ['стикер', 'стикерочек', 'sticker']:
+            gn_sticker_handler(message)
+        elif text in ['гифка', 'гиф', 'гифон', 'gif']:
+            gif_handler(message)
+        elif text in ['мем', 'мемас', 'мемчик', 'meme']:
+            meme_handler(message)
+        elif text in ['шутка', 'шутку', 'joke', 'joke']:
+            joke_handler(message)
+        elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
+            dice_handler(message)
+        elif text in ['лоли', 'лоля', 'лолю', 'loli', 'lolis']:
+            loli_handler(message)
+        if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
+            if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
+                data_answers[message.chat.id] = db.get_all_answers()
+            if message.reply_to_message is not None:
+                if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(40):
+                    answer = data_answers[message.chat.id].pop(random.choice(range(len(data_answers[message.chat.id]) - 1)))
+                    bot.reply_to(message, answer['answer'])
+            elif rend_d(5):
                 answer = data_answers[message.chat.id].pop(random.choice(range(len(data_answers[message.chat.id]) - 1)))
                 bot.reply_to(message, answer['answer'])
-        elif rend_d(5):
-            answer = data_answers[message.chat.id].pop(random.choice(range(len(data_answers[message.chat.id]) - 1)))
-            bot.reply_to(message, answer['answer'])
 
 
 # <<< End all message >>>
