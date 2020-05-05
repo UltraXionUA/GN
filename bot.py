@@ -518,7 +518,7 @@ def detect_music(message: Message, type_r) -> None:
                     res = YoutubeUnlimitedSearch(f"{data_detect[message.chat.id]['result']['artist']} - {data_detect[message.chat.id]['result']['title']}",
                                                  max_results=1).get()
                     keyboard.add(InlineKeyboardButton('Текст',
-                                                      callback_data=f"Lyric2: {str(data_detect[message.chat.id]['result']['deezer']['id'])}"),
+                                                      callback_data=f"Lyric detect {str(data_detect[message.chat.id]['result']['deezer']['id'])}"),
                                 InlineKeyboardButton('Песня', callback_data=res[0]['link']))
                     keyboard.add(InlineKeyboardButton('Dezeer', url=data_detect[message.chat.id]['result']['deezer']['link']))
                     bot.send_photo(message.chat.id, data_detect[message.chat.id]['result']['deezer']['artist']['picture_xl'],
@@ -534,19 +534,6 @@ def detect_music(message: Message, type_r) -> None:
                 bot.send_message(message.chat.id, msg, parse_mode='HTML')
         else:
             bot.send_message(message.chat.id, 'Ничего не нашлось😔')
-
-
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric2:\s?\d+$', call.data))
-def call_lyric(call):
-    global data_detect
-    keyboard = InlineKeyboardMarkup()
-    res = requests.get(API['AUDD'] + 'findLyrics/?q=' + data_detect[call.message.chat.id]['result']['artist'] + ' ' +
-                             data_detect[call.message.chat.id]['result']['title']).json()
-    msg = bot.reply_to(call.message,res['result'][0]['lyrics'])
-    keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
-    bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
-                          text=msg.text,
-                          reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'/watch\?v=\w+.+', call.data))
@@ -710,7 +697,7 @@ def callback_query(call):
                 if res:
                     yt = YouTube('https://' + 'www.youtube.com/' + res[0]['link'])
                     keyboard = InlineKeyboardMarkup(row_width=2)
-                    keyboard.add(InlineKeyboardButton('Текст', callback_data=f'Lyric: {str(song_id)}'),
+                    keyboard.add(InlineKeyboardButton('Текст', callback_data=f'Lyric music {str(song_id)}'),
                                  InlineKeyboardButton('Dezeer', url=j['link']))
                     bot.send_chat_action(call.message.chat.id, 'upload_audio')
                     bot.send_audio(call.message.chat.id, audio=open(yt.streams.filter(
@@ -732,26 +719,36 @@ def callback_query(call):
         bot.answer_callback_query(call.id, 'Список песен пуст, выполните поиск заново😔')
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric:\s?\d+$', call.data))
-def callback_query(call):
-    global data_songs
-    song_id = call.data.replace('Lyric: ', '')
-    keyboard = InlineKeyboardMarkup()
-    for i in data_songs[call.message.chat.id]:
-        for j in i:
-            if j['id'] == int(song_id):
-                bot.answer_callback_query(call.id, f'Текст {j["name"]} - {j["title"]}')
-                res = requests.get(API['AUDD'] + 'findLyrics/?q=' + j['name'] + ' ' + j['title']).json()
-                if res['status'] == 'success' and res['result'] is not None:
-                    msg = bot.reply_to(call.message, res['result'][0]['lyrics'])
-                    keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
-                    bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
-                                          text=msg.text,
-                                          reply_markup=keyboard)
-
-
-
 # <<< End music >>>
+
+
+# <<< Lyric >>>
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric\s\w+\s\d+$', call.data))
+def callback_query(call):
+    global data_songs, data_detect
+    type_lyric, song_id = call.data.split()[1:]
+    keyboard = InlineKeyboardMarkup()
+    if type_lyric == 'music':
+        for i in data_songs[call.message.chat.id]:
+            for j in i:
+                if j['id'] == int(song_id):
+                    bot.answer_callback_query(call.id, f'Текст {j["name"]} - {j["title"]}')
+                    res = requests.get(API['AUDD'] + 'findLyrics/?q=' + j['name'] + ' ' + j['title']).json()
+                    if res['status'] == 'success' and res['result'] is not None:
+                        msg = bot.reply_to(call.message, res['result'][0]['lyrics'])
+                        keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
+                        bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
+                                              text=msg.text,
+                                              reply_markup=keyboard)
+    else:
+        res = requests.get(API['AUDD'] + 'findLyrics/?q=' + data_detect[call.message.chat.id]['result']['artist'] + ' ' +
+                           data_detect[call.message.chat.id]['result']['title']).json()
+        msg = bot.reply_to(call.message, res['result'][0]['lyrics'])
+        keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
+        bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
+                              text=msg.text,
+                              reply_markup=keyboard)
+# <<< End lyric >>>
 
 
 # <<< Loli >>>
