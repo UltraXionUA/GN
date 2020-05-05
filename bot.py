@@ -17,7 +17,6 @@ from json import JSONDecodeError
 from pydub import AudioSegment
 from threading import Thread
 from threading import Timer
-
 import wikipediaapi
 import wikipedia
 import ffmpeg
@@ -390,8 +389,8 @@ def weather_handler(message: Message) -> None:
 def weather(message: Message, index: int) -> None:
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        InlineKeyboardButton(text="⬅️️", callback_data=f"move_to__ {index - 1 if index > 0 else 'pass'}"),
-        InlineKeyboardButton(text="➡️", callback_data=f"move_to__ "
+        InlineKeyboardButton(text="⬅️️", callback_data=f"weather_move_to {index - 1 if index > 0 else 'pass'}"),
+        InlineKeyboardButton(text="➡️", callback_data=f"weather_move_to "
                              f"{index + 1 if index < len(weather_data[message.chat.id]) - 1 else 'pass'}"))
     keyboard.add(InlineKeyboardButton('Погода', url='https://' +
                                                     f'darksky.net/forecast/{city_data[message.chat.id]["lat"]},'
@@ -449,7 +448,7 @@ def show_weather(message: Message) -> None:
             weather(message, 0)
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to__\s\d+$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^weather_move_to\s\d+$', call.data))
 def weather_query(call):
     global weather_data
     index = int(call.data.split()[1])
@@ -460,16 +459,12 @@ def weather_query(call):
         bot.answer_callback_query(call.id, '⛔️')
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to__\spass$', call.data))
-def pass_query(call):
-    bot.answer_callback_query(call.id, '⛔️')
-
-
 # <<< End weather >>>
 
 
 # <<< Detect music >>>
 detect_msg = defaultdict(Message)
+data_detect = defaultdict(list)
 
 
 @bot.message_handler(commands=['detect'])  # /detect_music
@@ -504,6 +499,7 @@ def callback_query(call):
 
 
 def detect_music(message: Message, type_r) -> None:
+    global data_detect
     if message.content_type != 'voice':
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
@@ -511,39 +507,46 @@ def detect_music(message: Message, type_r) -> None:
                                                                                   'http://' + 'esc-ru.appspot.com/') \
                                   + '?host=api.telegram.org'
         if type_r == 'sing':
-            result = requests.post(API['AUDD'] + 'recognizeWithOffset/',
+            data_detect[message.chat.id] = requests.post(API['AUDD'] + 'recognizeWithOffset/',
                                    data={'url': API['AUDD_data']['url'], 'api_token': API['AUDD_data']['api_token']}).json()
         else:
-            result = requests.post(API['AUDD'], data=API['AUDD_data']).json()
-        if result['status'] == 'success' and result['result'] is not None:
+            data_detect[message.chat.id] = requests.post(API['AUDD'], data=API['AUDD_data']).json()
+        if data_detect[message.chat.id]['status'] == 'success' and data_detect[message.chat.id]['result'] is not None:
             if type_r != 'sing':
-                if result['result']['deezer']:
+                if data_detect[message.chat.id]['result']['deezer']:
                     keyboard = InlineKeyboardMarkup()
-                    res = YoutubeUnlimitedSearch(f"{result['result']['artist']} - {result['result']['title']}",
+                    res = YoutubeUnlimitedSearch(f"{data_detect[message.chat.id]['result']['artist']} - {data_detect[message.chat.id]['result']['title']}",
                                                  max_results=1).get()
                     keyboard.add(InlineKeyboardButton('Текст',
-                                                      callback_data=f"Lyric2: {str(result['result']['deezer']['id'])}"),
+                                                      callback_data=f"Lyric2: {str(data_detect[message.chat.id]['result']['deezer']['id'])}"),
                                 InlineKeyboardButton('Песня', callback_data=res[0]['link']))
-                    keyboard.add(InlineKeyboardButton('Dezeer', url=result['result']['deezer']['link']))
-                    bot.send_photo(message.chat.id, result['result']['deezer']['artist']['picture_xl'],
-                                   caption=f"{result['result']['artist']} - {result['result']['title']}🎵",
+                    keyboard.add(InlineKeyboardButton('Dezeer', url=data_detect[message.chat.id]['result']['deezer']['link']))
+                    bot.send_photo(message.chat.id, data_detect[message.chat.id]['result']['deezer']['artist']['picture_xl'],
+                                   caption=f"{data_detect[message.chat.id]['result']['artist']} - {data_detect[message.chat.id]['result']['title']}🎵",
                                    reply_markup=keyboard)
                 else:
-                    bot.send_message(message.chat.id, f"<b>{result['result']['artist']}</b>"
-                                                      f" - {result['result']['title']}🎵", parse_mode='HTML')
+                    bot.send_message(message.chat.id, f"<b>{data_detect[message.chat.id]['result']['artist']}</b>"
+                                                      f" - {data_detect[message.chat.id]['result']['title']}🎵", parse_mode='HTML')
             else:
                 msg = "<b>Результат</b> "
-                for i in result['result']['list']:
+                for i in data_detect[message.chat.id]['result']['list']:
                     msg += f"\nСовпадение: <i>{i['score']}%</i>\n{i['artist']} - {i['title']}🎵"
                 bot.send_message(message.chat.id, msg, parse_mode='HTML')
-
-            @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric2:\s?\d+$', call.data))
-            def call_lyric(call):
-                res_lyric = requests.get(API['AUDD'] + 'findLyrics/?q=' + result['result']['artist'] + ' ' +
-                                         result['result']['title']).json()
-                bot.reply_to(call.message, res_lyric['result'][0]['lyrics'])
         else:
             bot.send_message(message.chat.id, 'Ничего не нашлось😔')
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric2:\s?\d+$', call.data))
+def call_lyric(call):
+    global data_detect
+    keyboard = InlineKeyboardMarkup()
+    res = requests.get(API['AUDD'] + 'findLyrics/?q=' + data_detect[call.message.chat.id]['result']['artist'] + ' ' +
+                             data_detect[call.message.chat.id]['result']['title']).json()
+    msg = bot.reply_to(call.message,res['result'][0]['lyrics'])
+    keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
+    bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
+                          text=msg.text,
+                          reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'/watch\?v=\w+.+', call.data))
@@ -668,8 +671,8 @@ def inline_keyboard(message: Message, some_index) -> InlineKeyboardMarkup:  # Na
             some_keyboard.add(InlineKeyboardButton(f"{songs['name']} - {songs['title']}",
                                                    callback_data=f"ID: {songs['id']}"))
         some_keyboard.add(
-            InlineKeyboardButton(text="⬅️️", callback_data=f"move_to {some_index - 1 if some_index > 0 else 'pass'}"),
-            InlineKeyboardButton(text="➡️", callback_data=f"move_to "
+            InlineKeyboardButton(text="⬅️️", callback_data=f"music_move_to {some_index - 1 if some_index > 0 else 'pass'}"),
+            InlineKeyboardButton(text="➡️", callback_data=f"music_move_to "
                                  f"{some_index + 1 if some_index < len(data_songs[message.chat.id]) - 1 else 'pass'}"))
         return some_keyboard
     except KeyError:
@@ -677,12 +680,7 @@ def inline_keyboard(message: Message, some_index) -> InlineKeyboardMarkup:  # Na
         log('Key Error in music', 'warning')
 
 
-@bot.callback_query_handler(func=lambda call: call.data == 'move_to pass')
-def callback_query(call):
-    bot.answer_callback_query(call.id, '⛔️')
-
-
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to\s\d$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^music_move_to\s\d$', call.data))
 def callback_query(call):
     global data_songs
     index = int(call.data.split()[1])
@@ -738,12 +736,19 @@ def callback_query(call):
 def callback_query(call):
     global data_songs
     song_id = call.data.replace('Lyric: ', '')
+    keyboard = InlineKeyboardMarkup()
     for i in data_songs[call.message.chat.id]:
         for j in i:
             if j['id'] == int(song_id):
+                bot.answer_callback_query(call.id, f'Текст {j["name"]} - {j["title"]}')
                 res = requests.get(API['AUDD'] + 'findLyrics/?q=' + j['name'] + ' ' + j['title']).json()
                 if res['status'] == 'success' and res['result'] is not None:
-                    bot.reply_to(call.message, res['result'][0]['lyrics'])
+                    msg = bot.reply_to(call.message, res['result'][0]['lyrics'])
+                    keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
+                    bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
+                                          text=msg.text,
+                                          reply_markup=keyboard)
+
 
 
 # <<< End music >>>
@@ -751,7 +756,6 @@ def callback_query(call):
 
 # <<< Loli >>>
 data_lolis = defaultdict(list)
-lolis_msg = defaultdict(Message)
 
 @bot.message_handler(commands=['loli'])  # /loli
 def loli_handler(message: Message) -> None:
@@ -766,28 +770,18 @@ def loli_handler(message: Message) -> None:
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if db.check_user(message.from_user.id):
             bot.delete_message(message.chat.id, message.message_id)
-            keyboard = InlineKeyboardMarkup()
-            keyboard.add((InlineKeyboardButton('Удалить', callback_data='del loli')))
             if message.chat.id not in data_lolis or len(data_lolis[message.chat.id]) == 1:
                 data_lolis[message.chat.id] = db.get_all_lolis()
             loli = data_lolis[message.chat.id].pop(random.choice(range(len(data_lolis[message.chat.id]) - 1)))
-            lolis_msg[message.chat.id] = bot.send_photo(message.chat.id, loli['url'], reply_markup=keyboard)
+            msg = bot.send_photo(message.chat.id, loli['url'])
+            keyboard = InlineKeyboardMarkup()
+            keyboard.add((InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}')))
+            bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
+                                   media=InputMediaPhoto(msg.photo[-1].file_id),
+                                   reply_markup=keyboard)
         else:
-            bot.send_message(message.chat.id, 'Эта функция вам недоступна😔')
-
-
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^del\sloli$', call.data))
-def loli_query(call):
-    global lolis_msg
-    if call.message.chat.id in lolis_msg:
-        bot.answer_callback_query(call.id, 'Удалено')
-        bot.delete_message(lolis_msg[call.message.chat.id].chat.id, lolis_msg[call.message.chat.id].message_id)
-        try:
-            del lolis_msg[call.message.chat.id]
-        except KeyError:
-            log('Key Error in lolis', 'warning')
-    else:
-        bot.answer_callback_query(call.id, '⛔')
+            bot.send_message(message.chat.id, 'Эта функция вам недоступна😔\n'
+                                              'Вы можете активировать эту функцию написав администратору')
 
 # <<< End loli >>>
 
@@ -838,8 +832,8 @@ def main_news(message: Message, news_type: str) -> None:
 def send_news(message: Message, index: int) -> None:
     keyboard2 = InlineKeyboardMarkup()
     keyboard2.add(
-        InlineKeyboardButton(text="⬅️️", callback_data=f"move_to_ {index - 1 if index > 0 else 'pass'}"),
-        InlineKeyboardButton(text="➡️", callback_data=f"move_to_ "
+        InlineKeyboardButton(text="⬅️️", callback_data=f"news_move_to {index - 1 if index > 0 else 'pass'}"),
+        InlineKeyboardButton(text="➡️", callback_data=f"news_move_to "
                                                       f"{index + 1 if index < len(news[message.chat.id]) - 1 else 'pass'}"))
     if news[message.chat.id][index] == news[message.chat.id][index + 1]:
         send_news(message, index + 1)
@@ -915,7 +909,13 @@ def choice_news_query(call):
     main_news(call.message, call.data.split()[1])
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_to_\s\d+$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'\w+_move_to\spass]', call.data))
+def callback_query(call):
+    print('tut')
+    bot.answer_callback_query(call.id, '⛔️')
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^news_move_to\s\d+$', call.data))
 def next_news_query(call):
     global news
     index = int(call.data.split()[1])
@@ -924,12 +924,6 @@ def next_news_query(call):
         send_news(call.message, index)
     else:
         bot.answer_callback_query(call.id, '⛔️')
-
-
-@bot.callback_query_handler(func=lambda call: call.data == 'move_to_ pass')
-def news_pass(call):
-    bot.answer_callback_query(call.id, '⛔️')
-
 
 # <<< End news >>>
 
@@ -1248,8 +1242,8 @@ def create_data_torrents(message: Message) -> None:
 def torrent_keyboard(message: Message, index: int) -> None:
     global data_torrents, torrent_msg, search_msg, tracker
     keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton(text="⬅️️", callback_data=f"move_ {index - 1 if index > 0 else 'pass'}"),
-                 InlineKeyboardButton(text="➡️", callback_data=f"move_ "
+    keyboard.add(InlineKeyboardButton(text="⬅️️", callback_data=f"torrent_move_to {index - 1 if index > 0 else 'pass'}"),
+                 InlineKeyboardButton(text="➡️", callback_data=f"torrent_move_to "
                                       f"{index + 1 if index < len(data_torrents[message.chat.id]) - 1 else 'pass'}"))
     text_t = None
     if tracker[message.chat.id] == URLS['torrent']['name']:
@@ -1331,12 +1325,7 @@ def load_handler(message: Message):
         log('Error! Can\'t remove file', 'warning')
 
 
-@bot.callback_query_handler(func=lambda call: call.data == 'move_ pass')
-def callback_query(call):
-    bot.answer_callback_query(call.id, '⛔️')
-
-
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move_\s\d+$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^torrent_move_to\s\d+$', call.data))
 def callback_query(call):
     global data_torrents
     index = int(call.data.split()[1])
@@ -1448,11 +1437,10 @@ def stat_handler(message: Message) -> None:
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if message.chat.type != 'private':
-            com_stat_msg[message.chat.id] = message
+            bot.delete_message(message.chat.id, message.message_id)
             data = db.get_stat(message.chat)
             if data:
                 keyboard = InlineKeyboardMarkup()
-                keyboard.add(InlineKeyboardButton('Удалить', callback_data='Delete stat'))
                 text = '<b>Статистика:</b>\n'
                 for en, i in enumerate(data):
                     if en == 5:
@@ -1468,30 +1456,19 @@ def stat_handler(message: Message) -> None:
                         text += f"<i>{en + 1}.</i> {i['first_name']}" \
                                 f" {i['last_name'] if i['last_name'] != 'None' else ''} - <i>{i['karma']}</i>{medal}\n"
                 text += '...\nНажмите /me что бы увидеть себя'
-                stat_msg[message.chat.id] = bot.send_message(message.chat.id, text, parse_mode='HTML',
-                                                             reply_markup=keyboard)
+                msg = bot.send_message(message.chat.id, text, parse_mode='HTML')
+                keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
+                bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
+                                      text=msg.text,
+                                      reply_markup=keyboard)
         else:
             bot.send_message(message.chat.id, 'Функция достпуна только в группах😔')
-
-
-@bot.callback_query_handler(func=lambda call: call.data == 'Delete stat')
-def callback_query(call):
-    global stat_msg, com_stat_msg
-    if call.message.chat.id in stat_msg and call.message.chat.id in com_stat_msg:
-        bot.answer_callback_query(call.id, 'Удалено')
-        bot.delete_message(com_stat_msg[call.message.chat.id].chat.id, com_stat_msg[call.message.chat.id].message_id)
-        bot.delete_message(stat_msg[call.message.chat.id].chat.id, stat_msg[call.message.chat.id].message_id)
-    else:
-        bot.answer_callback_query(call.id, '⛔️')
 
 
 # <<< End Stat >>>
 
 
 # <<< Me >>>
-me_msg = defaultdict(Message)
-m_msg = defaultdict(Message)
-
 @bot.message_handler(commands=['me'])  # /me
 def me_handler(message: Message) -> None:
     """
@@ -1499,38 +1476,32 @@ def me_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    global me_msg
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if message.chat.type != 'private':
-            m_msg[message.chat.id] = message
+            bot.delete_message(message.chat.id, message.message_id)
             keyboard = InlineKeyboardMarkup()
-            keyboard.add(InlineKeyboardButton('Удалить', callback_data='Delete me'))
             data_user, position = db.get_user(message.from_user, message.chat)
             if data_user is not False or position is not False:
                 if data_user['first_name'] is not None:
                     user = data_user['first_name']
                     if data_user['last_name'] is not None:
                         user += ' ' + data_user['last_name']
-                    me_msg[message.chat.id] = bot.send_message(message.chat.id, f'Ваш рейтинг:\n'
-                                                                                f'<i>{position}. </i>'
-                                                                                f'<b>{user}</b> - '
-                                                                                f'<i>{data_user["karma"]}</i>🏆',
-                                                               reply_markup=keyboard, parse_mode='HTML')
+                    msg = bot.send_message(message.chat.id, f'Ваш рейтинг:\n'
+                                                            f'<i>{position}. </i>'
+                                                            f'<b>{user}</b> - '
+                                                            f'<i>{data_user["karma"]}</i>🏆',
+                                                             parse_mode='HTML')
+                    keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
+                    bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
+                                          text=msg.text,
+                                          reply_markup=keyboard)
+
         else:
             bot.send_message(message.chat.id, 'Функция достпуна только в группах😔')
 
 
-@bot.callback_query_handler(func=lambda call: call.data == 'Delete me')
-def callback_query(call):
-    global me_msg, m_msg
-    if call.message.chat.id in me_msg and call.message.chat.id in m_msg:
-        bot.answer_callback_query(call.id, 'Удалено')
-        bot.delete_message(me_msg[call.message.chat.id].chat.id, me_msg[call.message.chat.id].message_id)
-        bot.delete_message(m_msg[call.message.chat.id].chat.id, m_msg[call.message.chat.id].message_id)
-    else:
-        bot.answer_callback_query(call.id, '⛔️')
 # <<< End me >>>
 
 
@@ -1592,8 +1563,8 @@ def send_wiki(message: Message, index: int) -> None:
             keyboard.add(InlineKeyboardButton(f"{wiki}",
                                                    callback_data=f"Wiki: {index} {en}"))
         keyboard.add(
-            InlineKeyboardButton(text="⬅️️", callback_data=f"move {index - 1 if index > 0 else 'pass'}"),
-            InlineKeyboardButton(text="➡️", callback_data=f"move "
+            InlineKeyboardButton(text="⬅️️", callback_data=f"wiki_move_to {index - 1 if index > 0 else 'pass'}"),
+            InlineKeyboardButton(text="➡️", callback_data=f"wiki_move_to "
                                             f"{index + 1 if index < len(data_wiki[message.chat.id]) - 1 else 'pass'}"))
         return keyboard
     except KeyError:
@@ -1626,7 +1597,7 @@ def wiki_query(call):
 
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^move\s\d+$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^wiki_move_to\s\d+$', call.data))
 def wiki_move_query(call):
     global data_wiki, wiki_msg
     index = int(call.data.split()[1])
@@ -1638,11 +1609,6 @@ def wiki_move_query(call):
                               reply_markup=send_wiki(call.message, index))
     else:
         bot.answer_callback_query(call.id, '⛔️')
-
-
-@bot.callback_query_handler(func=lambda call:  re.fullmatch(r'^move\spass$', call.data))
-def wiki_pass(call):
-    bot.answer_callback_query(call.id, '⛔️')
 
     
 # <<< End Wiki >>>
@@ -2144,6 +2110,25 @@ def contact_handler(message: Message) -> None:
                                                      'Продам в DarkNet']))
 
 # <<< End answer's  >>>
+
+
+# <<< Del  >>>
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^del\s.+$', call.data))
+def loli_query(call):
+    bot.answer_callback_query(call.id, 'Удалено')
+    bot.delete_message(call.message.chat.id, call.data.split()[1])
+
+
+# <<< End del  >>>
+
+
+#<<< Pass >>>
+@bot.callback_query_handler(func=lambda call: re.match(r'\w+_move_to\spass', call.data))
+def callback_query(call):
+    bot.answer_callback_query(call.id, '⛔️')
+
+
+# <<< End pass  >>>
 
 
 bot.polling(none_stop=True)
