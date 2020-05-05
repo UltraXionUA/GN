@@ -2028,26 +2028,27 @@ def text_handler(message: Message) -> None:
 # <<< Answer's  >>>
 @bot.message_handler(content_types=['new_chat_members'])  # Answer on new member
 def new_member_handler(message: Message) -> None:
-    if db.check_ban_user(message.new_chat_member.id):
-        keyboard = InlineKeyboardMarkup()
-        keyboard.add(InlineKeyboardButton('Кикнуть🥊', callback_data=f'Kick '
-                                                                   f'{message.chat.id} {message.new_chat_member.id}'),
-                     InlineKeyboardButton('Забанить🚫', callback_data=f'Ban '
-                                                                    f'{message.chat.id} {message.new_chat_member.id}'),
-                     InlineKeyboardButton('Замутить❌', callback_data=f'Mute '
-                                                                      f'{message.chat.id} {message.new_chat_member.id}')
-                     )
-        msg = bot.send_message(message.chat.id, random.choice(['Опа чирик! Вечер в хату', 'Приветствую тебя',
-                                                          'Алоха друг мой!', 'Ну привет)', 'Хело май френд',
-                                                          'Рады вас видеть господин', 'В наших рядах поплнение',
-                                                          'Новобранец!', 'Рядовой!', 'Дратути']),
-                               reply_markup=keyboard)
+    for i in message.new_chat_members:
+        if db.check_ban_user(i.id):
+            keyboard = InlineKeyboardMarkup()
+            keyboard.add(InlineKeyboardButton('Кикнуть🥊', callback_data=f'Kick '
+                                                                       f'{message.chat.id} {i.id}'),
+                         InlineKeyboardButton('Забанить🚫', callback_data=f'Ban '
+                                                                        f'{message.chat.id} {i.id}'),
+                         InlineKeyboardButton('Замутить❌', callback_data=f'Mute '
+                                                                          f'{message.chat.id} {i.id}')
+                         )
+            msg = bot.send_message(message.chat.id, random.choice(['Опа чирик! Вечер в хату', 'Приветствую тебя',
+                                                              'Алоха друг мой!', 'Ну привет)', 'Хело май френд',
+                                                              'Рады вас видеть господин', 'В наших рядах поплнение',
+                                                              'Новобранец!', 'Рядовой!', 'Дратути']),
+                                   reply_markup=keyboard)
 
-        time.sleep(120)
-        bot.delete_message(msg.chat.id, msg.message_id)
-    else:
-        bot.send_message(message.chat.id, 'Добавленный пользователь в чёрном списке')
-        bot.kick_chat_member(message.chat.id, message.new_chat_member.id)
+            time.sleep(120)
+            bot.delete_message(msg.chat.id, msg.message_id)
+        else:
+            bot.send_message(message.chat.id, 'Добавленный пользователь в чёрном списке')
+            bot.kick_chat_member(message.chat.id, i.id)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Kick\s.?\w+\s.?\w+$', call.data))
