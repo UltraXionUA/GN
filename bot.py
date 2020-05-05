@@ -728,26 +728,23 @@ def callback_query(call):
     global data_songs, data_detect
     type_lyric, song_id = call.data.split()[1:]
     keyboard = InlineKeyboardMarkup()
+    res = None
     if type_lyric == 'music':
         for i in data_songs[call.message.chat.id]:
             for j in i:
                 if j['id'] == int(song_id):
                     bot.answer_callback_query(call.id, f'Текст {j["name"]} - {j["title"]}')
                     res = requests.get(API['AUDD'] + 'findLyrics/?q=' + j['name'] + ' ' + j['title']).json()
-                    if res['status'] == 'success' and res['result'] is not None:
-                        msg = bot.reply_to(call.message, res['result'][0]['lyrics'])
-                        keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
-                        bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
-                                              text=msg.text,
-                                              reply_markup=keyboard)
-    else:
+    elif type_lyric == 'detect':
         res = requests.get(API['AUDD'] + 'findLyrics/?q=' + data_detect[call.message.chat.id]['result']['artist'] + ' ' +
                            data_detect[call.message.chat.id]['result']['title']).json()
+    if res['status'] == 'success' and res['result'] is not None:
         msg = bot.reply_to(call.message, res['result'][0]['lyrics'])
         keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
         bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
                               text=msg.text,
                               reply_markup=keyboard)
+
 # <<< End lyric >>>
 
 
