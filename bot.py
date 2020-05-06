@@ -3,7 +3,7 @@
 """Mains file for GNBot"""
 # <<< Import's >>
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, InputMediaVideo
-from telebot.types import LabeledPrice, PreCheckoutQuery, ShippingQuery
+from telebot.types import LabeledPrice, PreCheckoutQuery, ShippingQuery, InputMediaAudio
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video, get_instagram_photos
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time, clear_date
 from config import API, URLS, GNBot_ID, Admin_ID, bot, PAYMENT_TOKEN
@@ -13,6 +13,7 @@ from urllib import parse, request, error
 from pytube import YouTube, exceptions
 from collections import defaultdict
 from pytils.translit import slugify
+import speech_recognition as sr
 from json import JSONDecodeError
 from pydub import AudioSegment
 from threading import Thread
@@ -2080,10 +2081,43 @@ def left_member_handler(message: Message) -> None:
 
 @bot.message_handler(content_types=['voice'])  # Answer on voice
 def voice_handler(message: Message) -> None:
-    if rend_d(30) and message.chat.type != 'private':
-        bot.reply_to(message, random.choice(['Чё ты там пизданул? Повтори!', 'Писклявый голосок',
-                                             'Лучше бы я это не слышал', 'Лучше бы я этого не слышал',
-                                             'Голос пушка', 'Ты что в пещере?']))
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton('Текст', callback_data=f'Voice {message.voice.file_id}'))
+    bot.edit_message_media(chat_id=message.chat.id, message_id=message.message_id,
+                           media=InputMediaAudio(message.voice.file_id),  # media=InputMediaPhoto(call.message.photo[-1].file_id)
+                           reply_markup=keyboard)
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Voice\s.+$', call.data))
+def voice_to_text_query(call):
+    r = sr.Recognizer()
+    data = request.urlopen(bot.get_file_url(call.data.split()[1])).read()
+    with tempfile.NamedTemporaryFile(delete=False) as f:
+        f.write(data)
+    audio = AudioSegment.from_ogg(f.name)
+    audio.export(f'file.wav', format='wav')
+    file = sr.AudioFile('file.wav')
+    with file as source:
+        audio = r.record(source)
+    try:
+        rec = r.recognize_google(audio, language='ru-RU')
+    except sr.UnknownValueError:
+        print("Google Speech Recognition could not understand audio")
+    except sr.RequestError as e:
+        print("Could not request results from Google Speech Recognition service; {0}".format(e))
+    else:
+        keyboard = InlineKeyboardMarkup()
+        msg = bot.send_message(call.message.chat.id, rec)
+        keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
+        bot.edit_message_text(msg.text, msg.chat.id, msg.message_id, reply_markup=keyboard)
+        try:
+            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file.wav'))
+        except FileNotFoundError:
+            log('Error! Can\'t remove file', 'warning')
+        # if call.message.from_user.first_name is not None:
+        #     user = message.from_user.first_name
+        #     if message.from_user.last_name is not None:
+        #         user += ' ' + message.from_user.last_name
 
 
 @bot.message_handler(content_types=['location'])  # Answer on location
