@@ -2091,7 +2091,8 @@ def voice_handler(message: Message) -> None:
     with file as source:
         audio = r.record(source)
     try:
-        rec = r.recognize_google(audio, language='ru-RU', show_all=True)
+        rec = r.recognize_wit(audio, key='OVZEFB7B7HF4O45FWEPYUWM757EUT2HF')
+        rec = rec[0].title() + rec[1:]
     except sr.UnknownValueError:
         print("Google Speech Recognition could not understand audio")
     except sr.RequestError as e:
