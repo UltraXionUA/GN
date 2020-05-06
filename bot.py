@@ -3,7 +3,7 @@
 """Mains file for GNBot"""
 # <<< Import's >>
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, InputMediaVideo
-from telebot.types import LabeledPrice, PreCheckoutQuery, ShippingQuery, InputMediaAudio
+from telebot.types import LabeledPrice, PreCheckoutQuery, ShippingQuery
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video, get_instagram_photos
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time, clear_date
 from config import API, URLS, GNBot_ID, Admin_ID, bot, PAYMENT_TOKEN
@@ -2091,7 +2091,7 @@ def voice_handler(message: Message) -> None:
     with file as source:
         audio = r.record(source)
     try:
-        rec = r.recognize_wit(audio, key='OVZEFB7B7HF4O45FWEPYUWM757EUT2HF')
+        rec = r.recognize_wit(audio, key=API['Wit'])
         rec = rec[0].title() + rec[1:]
     except sr.UnknownValueError:
         print("Google Speech Recognition could not understand audio")
