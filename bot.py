@@ -2081,17 +2081,8 @@ def left_member_handler(message: Message) -> None:
 
 @bot.message_handler(content_types=['voice'])  # Answer on voice
 def voice_handler(message: Message) -> None:
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton('Текст', callback_data=f'Voice {message.voice.file_id}'))
-    bot.edit_message_media(chat_id=message.chat.id, message_id=message.message_id,
-                           media=InputMediaAudio(message.voice.file_id),  # media=InputMediaPhoto(call.message.photo[-1].file_id)
-                           reply_markup=keyboard)
-
-
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Voice\s.+$', call.data))
-def voice_to_text_query(call):
     r = sr.Recognizer()
-    data = request.urlopen(bot.get_file_url(call.data.split()[1])).read()
+    data = request.urlopen(bot.get_file_url(message.voice.file_id)).read()
     with tempfile.NamedTemporaryFile(delete=False) as f:
         f.write(data)
     audio = AudioSegment.from_ogg(f.name)
@@ -2107,17 +2098,27 @@ def voice_to_text_query(call):
         print("Could not request results from Google Speech Recognition service; {0}".format(e))
     else:
         keyboard = InlineKeyboardMarkup()
-        msg = bot.send_message(call.message.chat.id, rec)
+        if message.forward_from is None:
+            if message.from_user.first_name is not None:
+                user = message.from_user.first_name
+                if message.from_user.last_name is not None:
+                    user += ' ' + message.from_user.last_name
+            else:
+                user = message.from_user.username
+        else:
+            if message.forward_from.first_name is not None:
+                user = message.forward_from.first_name
+                if message.forward_from.last_name is not None:
+                    user += ' ' + message.forward_from.last_name
+            else:
+                user = message.forward_from.username
+        msg = bot.send_message(message.chat.id, f'От <i>{user}</i>\n{rec}')
         keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
-        bot.edit_message_text(msg.text, msg.chat.id, msg.message_id, reply_markup=keyboard)
+        bot.edit_message_text(msg.text, msg.chat.id, msg.message_id, reply_markup=keyboard, parse_mode='HTML')
         try:
             os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file.wav'))
         except FileNotFoundError:
             log('Error! Can\'t remove file', 'warning')
-        # if call.message.from_user.first_name is not None:
-        #     user = message.from_user.first_name
-        #     if message.from_user.last_name is not None:
-        #         user += ' ' + message.from_user.last_name
 
 
 @bot.message_handler(content_types=['location'])  # Answer on location

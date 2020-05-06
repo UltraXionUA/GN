@@ -15,3 +15,4 @@ youtube-unlimited-search
 pydub
 user_agent
 ffmpeg-python
+SpeechRecognition
