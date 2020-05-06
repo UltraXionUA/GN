@@ -8,7 +8,7 @@ import logging
 import re
 
 
-logging.basicConfig(filename="logger.log", level=logging.INFO, filemode='a+')  # Turn on logger
+logging.basicConfig(filename="logger.log", level=logging.INFO, filemode='w')  # Turn on logger
 
 
 def log(message, type_l='None') -> None:  # Message processing

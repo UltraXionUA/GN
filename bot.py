@@ -767,7 +767,13 @@ def loli_handler(message: Message) -> None:
             bot.delete_message(message.chat.id, message.message_id)
             if message.chat.id not in data_lolis or len(data_lolis[message.chat.id]) == 1:
                 data_lolis[message.chat.id] = db.get_all_lolis()
-            loli = data_lolis[message.chat.id].pop(random.choice(range(len(data_lolis[message.chat.id]) - 1)))
+            while True:
+                loli = data_lolis[message.chat.id].pop(random.choice(range(len(data_lolis[message.chat.id]) - 1)))
+                try:
+                    if requests.get(loli['url']).ok:
+                        break
+                except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema):
+                    continue
             msg = bot.send_photo(message.chat.id, loli['url'])
             keyboard = InlineKeyboardMarkup()
             keyboard.add((InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}')))
@@ -2122,7 +2128,7 @@ def send_text(message: Message, rec: str) -> None:
                 user += ' ' + message.forward_from.last_name
         else:
             user = message.forward_from.username
-    msg = bot.send_message(message.chat.id, f'От <i>{user}</i>\n{rec}')
+    msg = bot.reply_to(message, f'От <b><i>{user}</i></b>\n{rec}')
     keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
     bot.edit_message_text(msg.text, msg.chat.id, msg.message_id, reply_markup=keyboard, parse_mode='HTML')
     try:
@@ -2134,7 +2140,7 @@ def send_text(message: Message, rec: str) -> None:
 @bot.message_handler(content_types=['location'])  # Answer on location
 def location_handler(message: Message) -> None:
     if rend_d(30) and message.chat.type != 'private':
-        bot.reply_to(message.chat.id, ['Скинул мусорам', 'Прикоп или магнит?', 'Ебеня какие то',
+        bot.reply_to(message, ['Скинул мусорам', 'Прикоп или магнит?', 'Ебеня какие то',
                                        'Та ну нафиг, я туда не поеду', 'Это ты там живешь? Сочувствую',
                                        'Ой ну и местечко для сходочки вы выбрали...',
                                        'Я бы туда не поехал будь я даже пьян',
@@ -2144,7 +2150,7 @@ def location_handler(message: Message) -> None:
 @bot.message_handler(content_types=['contact'])  # Answer on contact
 def contact_handler(message: Message) -> None:
     if rend_d(30) and message.chat.type != 'private':
-        bot.reply_to(message.chat.id, random.choice(['Если мне будет одиноко и холодно я знаю куда позвонить',
+        bot.reply_to(message, random.choice(['Если мне будет одиноко и холодно я знаю куда позвонить',
                                                      'Трубку не берут', 'Сохранил', 'А мой запишешь?',
                                                      'Наберу тебя вечерком)', 'Разошлю его всем знакомым',
                                                      'Продам в DarkNet']))
@@ -2154,7 +2160,7 @@ def contact_handler(message: Message) -> None:
 
 # <<< Del  >>>
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^del\s.+$', call.data))
-def loli_query(call):
+def del_query(call):
     bot.answer_callback_query(call.id, 'Удалено')
     bot.delete_message(call.message.chat.id, call.data.split()[1])
 
