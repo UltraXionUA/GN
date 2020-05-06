@@ -2093,33 +2093,42 @@ def voice_handler(message: Message) -> None:
     try:
         rec = r.recognize_wit(audio, key=API['Wit'])
         rec = rec[0].title() + rec[1:]
-    except sr.UnknownValueError:
-        print("Google Speech Recognition could not understand audio")
-    except sr.RequestError as e:
-        print("Could not request results from Google Speech Recognition service; {0}".format(e))
-    else:
-        keyboard = InlineKeyboardMarkup()
-        if message.forward_from is None:
-            if message.from_user.first_name is not None:
-                user = message.from_user.first_name
-                if message.from_user.last_name is not None:
-                    user += ' ' + message.from_user.last_name
-            else:
-                user = message.from_user.username
-        else:
-            if message.forward_from.first_name is not None:
-                user = message.forward_from.first_name
-                if message.forward_from.last_name is not None:
-                    user += ' ' + message.forward_from.last_name
-            else:
-                user = message.forward_from.username
-        msg = bot.send_message(message.chat.id, f'От <i>{user}</i>\n{rec}')
-        keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
-        bot.edit_message_text(msg.text, msg.chat.id, msg.message_id, reply_markup=keyboard, parse_mode='HTML')
+    except (sr.UnknownValueError, sr.RequestError) as e:
+        print(f"Could not request results from Wit Recognition service; {e}")
         try:
-            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file.wav'))
-        except FileNotFoundError:
-            log('Error! Can\'t remove file', 'warning')
+            rec = r.recognize_google(audio, language='ru-RU')
+            rec = rec[0].title() + rec[1:]
+        except (sr.UnknownValueError, sr.RequestError) as e:
+            print(f"Could not request results from Wit Recognition service; {e}")
+        else:
+            send_text(message, rec)
+    else:
+        send_text(message, rec)
+
+
+def send_text(message: Message, rec: str) -> None:
+    keyboard = InlineKeyboardMarkup()
+    if message.forward_from is None:
+        if message.from_user.first_name is not None:
+            user = message.from_user.first_name
+            if message.from_user.last_name is not None:
+                user += ' ' + message.from_user.last_name
+        else:
+            user = message.from_user.username
+    else:
+        if message.forward_from.first_name is not None:
+            user = message.forward_from.first_name
+            if message.forward_from.last_name is not None:
+                user += ' ' + message.forward_from.last_name
+        else:
+            user = message.forward_from.username
+    msg = bot.send_message(message.chat.id, f'От <i>{user}</i>\n{rec}')
+    keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
+    bot.edit_message_text(msg.text, msg.chat.id, msg.message_id, reply_markup=keyboard, parse_mode='HTML')
+    try:
+        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file.wav'))
+    except FileNotFoundError:
+        log('Error! Can\'t remove file', 'warning')
 
 
 @bot.message_handler(content_types=['location'])  # Answer on location
