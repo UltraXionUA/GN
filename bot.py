@@ -8,21 +8,20 @@ from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagra
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time, clear_date
 from config import API, URLS, GNBot_ID, Admin_ID, bot, PAYMENT_TOKEN
 from youtube_unlimited_search import YoutubeUnlimitedSearch
-from datetime import datetime as dt
 from urllib import parse, request, error
 from pytube import YouTube, exceptions
+from datetime import datetime as dt
 from collections import defaultdict
-from pytils.translit import slugify
-import speech_recognition as sr
 from json import JSONDecodeError
+import speech_recognition as sr
 from pydub import AudioSegment
 from threading import Thread
 from threading import Timer
 import wikipediaapi
 import wikipedia
-import ffmpeg
 import tempfile
 import requests
+import ffmpeg
 import random
 import time
 import db
@@ -431,12 +430,8 @@ def show_weather(message: Message) -> None:
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
         bot.delete_message(city_msg[message.chat.id].chat.id, city_msg[message.chat.id].message_id)
-        if message.text.lower() == 'харьков':
-            city_name = 'K' + slugify(message.text)
-        else:
-            city_name = slugify(message.text).title()
         try:
-            res = requests.get(API['API_Weather'].replace('CityName', city_name)).json()
+            res = requests.get(API['API_Weather'].replace('CityName', message.text.title())).json()
         except JSONDecodeError:
             bot.send_message(message.chat.id, 'Не удалось найти ваш город😔')
         else:
@@ -1861,35 +1856,26 @@ def text_handler(message: Message) -> None:
 
 
 def ban(message: Message, chat=None, user=None):
-    for i in bot.get_chat_administrators(message.chat.id):
-        if message.reply_to_message:
-            if message.reply_to_message.from_user.id == message.from_user.id:
-                bot.send_message(message.chat.id, 'Нельзя забанить самого себя😔')
-                return
-            if i.user.id == message.reply_to_message.from_user.id:
-                bot.send_message(message.chat.id, 'Нельзя забанить администратора😔')
-                return
-        elif user is not None:
-            if user == str(message.from_user.id):
-                bot.send_message(message.chat.id, 'Нельзя забанить самого себя😔')
-                return
-            if str(i.user.id) == user:
-                bot.send_message(message.chat.id, 'Нельзя забанить администратора😔')
-                return
-    for i in bot.get_chat_administrators(message.chat.id):
-        if i.user.id == message.from_user.id:
-            if message.reply_to_message and chat is None and user is None:
-                db.ban_user(message.reply_to_message.from_user.id)
-                bot.kick_chat_member(message.chat.id, message.reply_to_message.from_user.id)
-                bot.send_message(message.chat.id, 'Пользователь забанен навсегда😈')
-                return
-            else:
-                db.ban_user(user)
-                bot.send_message(message.chat.id, f'Пользователь забанен навсегда😈')
-                bot.kick_chat_member(chat, user)
-                return
+    if user is None and chat is None:
+        user = message.reply_to_message.from_user.id
+        chat = message.chat.id
+    if str(user) == str(message.from_user.id):
+        bot.send_message(message.chat.id, 'Нельзя забанить самого себя😔')
+        return
     else:
-        bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
+        for i in bot.get_chat_administrators(message.chat.id):
+            if str(i.user.id) == str(user):
+                bot.send_message(message.chat.id, 'Нельзя забанить администратора😔')
+                return
+        else:
+            for i in bot.get_chat_administrators(message.chat.id):
+                if i.user.id == message.from_user.id:
+                    db.ban_user(user)
+                    bot.send_message(message.chat.id, f'Пользователь забанен навсегда😈')
+                    bot.kick_chat_member(chat, user)
+                    return
+            else:
+                bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
 
 
 @bot.message_handler(content_types=['text'], regexp=r'^!mute\s\d+$')  # Add answer to DB
@@ -1907,37 +1893,27 @@ def text_handler(message: Message) -> None:
 
 
 def mute(message: Message, time_mute=30, chat=None, user=None):
-    for i in bot.get_chat_administrators(message.chat.id):
-        if message.reply_to_message:
-            if message.reply_to_message.from_user.id == message.from_user.id:
-                bot.send_message(message.chat.id, 'Нельзя замутить самого себя😔')
-                return
-            if i.user.id == message.reply_to_message.from_user.id:
-                bot.send_message(message.chat.id, 'Нельзя замутить администратора😔')
-                return
-        elif user is not None:
-            if user == str(message.from_user.id):
-                bot.send_message(message.chat.id, 'Нельзя замутить самого себя😔')
-                return
-            if str(i.user.id) == user:
-                bot.send_message(message.chat.id, 'Нельзя замутить администратора😔')
-                return
-    for i in bot.get_chat_administrators(message.chat.id):
-        if i.user.id == message.from_user.id:
-            if message.reply_to_message and chat is None and user is None:
-                bot.restrict_chat_member(message.chat.id, message.reply_to_message.from_user.id,
-                                         until_date=time.time() + int(time_mute) * 60, can_send_messages=False,
-                                         can_send_other_messages=False, can_send_media_messages=False)
-                bot.send_message(message.chat.id, f'Пользователь замучен на {time_mute} мин🤐')
-                return
-            else:
-                bot.restrict_chat_member(chat, user,  until_date=time.time() + int(time_mute) * 60,
-                                         can_send_messages=False,
-                                         can_send_other_messages=False, can_send_media_messages=False)
-                bot.send_message(message.chat.id, f'Пользователь замучен на {time_mute} мин🤐')
-                return
+    if user is None and chat is None:
+        user = message.reply_to_message.from_user.id
+        chat = message.chat.id
+    if str(user) == str(message.from_user.id):
+        bot.send_message(message.chat.id, 'Нельзя замутить самого себя😔')
+        return
     else:
-        bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
+        for i in bot.get_chat_administrators(message.chat.id):
+            if str(i.user.id) == str(user):
+                bot.send_message(message.chat.id, 'Нельзя замутить администратора😔')
+                return
+        else:
+            for i in bot.get_chat_administrators(message.chat.id):
+                if i.user.id == message.from_user.id:
+                    bot.restrict_chat_member(chat, user,  until_date=time.time() + int(time_mute) * 60,
+                                             can_send_messages=False,
+                                             can_send_other_messages=False, can_send_media_messages=False)
+                    bot.send_message(message.chat.id, f'Пользователь замучен на {time_mute} мин🤐')
+                    return
+            else:
+                bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
 
 
 @bot.message_handler(content_types=['text'], regexp=r'^!kick$')  # Add answer to DB
@@ -1955,33 +1931,24 @@ def text_handler(message: Message) -> None:
 
 
 def kick(message: Message, chat=None, user=None):
-    for i in bot.get_chat_administrators(message.chat.id):
-        if message.reply_to_message:
-            if message.reply_to_message.from_user.id == message.from_user.id:
-                bot.send_message(message.chat.id, 'Нельзя кикнуть самого себя😔')
-                return
-            if i.user.id == message.reply_to_message.from_user.id:
-                bot.send_message(message.chat.id, 'Нельзя кикнуть администратора😔')
-                return
-        elif user is not None:
-            if user == str(message.from_user.id):
-                bot.send_message(message.chat.id, 'Нельзя кикнуть самого себя😔')
-                return
-            if str(i.user.id) == user:
-                bot.send_message(message.chat.id, 'Нельзя кикнуть администратора😔')
-                return
-    for i in bot.get_chat_administrators(message.chat.id):
-        if i.user.id == message.from_user.id:
-            if message.reply_to_message and chat is None and user is None:
-                bot.kick_chat_member(message.chat.id, message.reply_to_message.from_user.id)
-                bot.send_message(message.chat.id, f'Пользователь кикнут😈')
-                return
-            else:
-                bot.kick_chat_member(chat, user)
-                bot.send_message(message.chat.id, f'Пользователь кикнут😈')
-                return
+    if user is None and chat is None:
+        user = message.reply_to_message.from_user.id
+        chat = message.chat.id
+    if str(user) == str(message.from_user.id):
+        bot.send_message(message.chat.id, 'Нельзя кикнуть самого себя😔')
     else:
-        bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
+        for i in bot.get_chat_administrators(message.chat.id):
+            if str(i.user.id) == str(user):
+                bot.send_message(message.chat.id, 'Нельзя кикнуть администратора😔')
+                return
+        else:
+            for i in bot.get_chat_administrators(message.chat.id):
+                if i.user.id == message.from_user.id:
+                    bot.kick_chat_member(chat, user)
+                    bot.send_message(message.chat.id, f'Пользователь кикнут😈')
+                    return
+            else:
+                bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
 
 
 # <<< End admin menu >>>
@@ -2054,25 +2021,25 @@ def new_member_handler(message: Message) -> None:
             time.sleep(120)
             bot.delete_message(msg.chat.id, msg.message_id)
         else:
-            bot.send_message(message.chat.id, 'Добавленный пользователь в чёрном списке')
+            bot.send_message(message.chat.id, 'Добавленный пользователь в чёрном списке😞')
             bot.kick_chat_member(message.chat.id, i.id)
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Kick\s.?\w+\s.?\w+$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Kick\s.+\s.+$', call.data))
 def code_callback_query(call):
-    bot.answer_callback_query(call.id, 'Пользователь кикнут')
+    bot.answer_callback_query(call.id, 'Пользователь кикнут🥊')
     kick(call.message, call.data.split()[1], call.data.split()[2])
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Ban\s.?\w+\s.?\w+$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Ban\s.+\s.+$', call.data))
 def code_callback_query(call):
-    bot.answer_callback_query(call.id, 'Пользователь забанен навсегда')
+    bot.answer_callback_query(call.id, 'Пользователь забанен навсегда😯')
     ban(call.message, call.data.split()[1], call.data.split()[2])
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Mute\s.?\w+\s.?\w+$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Mute\s.+\s.+$', call.data))
 def code_callback_query(call):
-    bot.answer_callback_query(call.id, 'Пользователь замучен на 30 минут')
+    bot.answer_callback_query(call.id, 'Пользователь замучен на 30 минут🤐')
     mute(call.message, 30, call.data.split()[1], call.data.split()[2])
 
 
@@ -2104,7 +2071,7 @@ def voice_handler(message: Message) -> None:
         try:
             rec = r.recognize_google(audio, language='ru-RU')
             rec = rec[0].title() + rec[1:]
-        except (sr.UnknownValueError, sr.RequestError) as e:
+        except (sr.UnknownValueError, sr.RequestError, IndexError) as e:
             print(f"Could not request results from Wit Recognition service; {e}")
         else:
             send_text(message, rec)
