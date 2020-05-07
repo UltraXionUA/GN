@@ -239,11 +239,12 @@ def add_memes(array) -> None:  # Add memes
     connection.close()
 
 
-def get_all_lolis() -> str:
+def get_loli() -> dict:
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute('SELECT `url` FROM Lolis;')
-        result = cursor.fetchall()
+        cursor.execute('SELECT `url` FROM Lolis ORDER BY rand() LIMIT 1;')
+        result = cursor.fetchone()
+        print(result)
     return result
 
 

@@ -745,8 +745,6 @@ def callback_query(call):
 
 
 # <<< Loli >>>
-data_lolis = defaultdict(list)
-
 @bot.message_handler(commands=['loli'])  # /loli
 def loli_handler(message: Message) -> None:
     """
@@ -754,15 +752,14 @@ def loli_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    global data_lolis
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if db.check_user(message.from_user.id):
-            if message.chat.id not in data_lolis or len(data_lolis[message.chat.id]) == 1:
-                data_lolis[message.chat.id] = db.get_all_lolis()
             while True:
-                loli = data_lolis[message.chat.id].pop(random.choice(range(len(data_lolis[message.chat.id]) - 1)))
+                loli = db.get_loli()
+                if not loli['url'].startswith('http'):
+                    loli['url'] = URLS['loli']['main'] + loli['url']
                 try:
                     if requests.get(loli['url']).ok:
                         break
