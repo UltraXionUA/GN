@@ -244,7 +244,6 @@ def get_loli() -> dict:
     with connection.cursor() as cursor:
         cursor.execute('SELECT `url` FROM Lolis ORDER BY rand() LIMIT 1;')
         result = cursor.fetchone()
-        print(result)
     return result
 
 
