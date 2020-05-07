@@ -760,6 +760,7 @@ def loli_handler(message: Message) -> None:
                 loli = db.get_loli()
                 if not loli['url'].startswith('http'):
                     loli['url'] = URLS['loli']['main'] + loli['url']
+                print(loli['url'])
                 try:
                     if requests.get(loli['url']).ok:
                         break
