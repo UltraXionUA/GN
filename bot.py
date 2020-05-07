@@ -826,17 +826,22 @@ def main_news(message: Message, news_type: str) -> None:
 
 
 def send_news(message: Message, index: int) -> None:
+    def send_next_news():
+        send_news(message, index + 1)
     keyboard2 = InlineKeyboardMarkup()
     keyboard2.add(
         InlineKeyboardButton(text="⬅️️", callback_data=f"news_move_to {index - 1 if index > 0 else 'pass'}"),
         InlineKeyboardButton(text="➡️", callback_data=f"news_move_to "
                                                       f"{index + 1 if index < len(news[message.chat.id]) - 1 else 'pass'}"))
-    if news[message.chat.id][index] == news[message.chat.id][index + 1]:
+    if news[message.chat.id][index]['title'] == news[message.chat.id][index + 1]['title']:
         send_news(message, index + 1)
         return
     else:
         try:
+            t = Timer(5.0, send_next_news)
+            t.start()
             if requests.get(news[message.chat.id][index]['url']).ok:
+                t.cancel()
                 keyboard2.add(InlineKeyboardButton('Читать', url=news[message.chat.id][index]['url']))
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema):
             send_news(message, index + 1)
@@ -862,8 +867,11 @@ def send_news(message: Message, index: int) -> None:
                                                              parse_mode='HTML'), reply_markup=keyboard2)
         else:
             try:
+                t = Timer(5.0, send_next_news)
+                t.start()
                 req = request.Request(news[message.chat.id][index]['image'], method='HEAD')
                 f = request.urlopen(req)
+                t.cancel()
                 if f.headers['Content-Length'] is not None:
                     if int(f.headers['Content-Length']) > 5242880:
                         send_news(message, index + 1)
@@ -877,22 +885,21 @@ def send_news(message: Message, index: int) -> None:
                 return
             except IndexError:
                 log('Index Error in news', 'warning')
+            if news[message.chat.id][index]['description'] is not None:
+                bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
+                                       message_id=news_msg[message.chat.id].message_id,
+                                       media=InputMediaPhoto(news[message.chat.id][index]['image'],
+                                       caption=f"<b>{news[message.chat.id][index]['title']}</b>"
+                                               f"\n\n{news[message.chat.id][index]['description']}"
+                                               f"\n\n<i>{clear_date(news[message.chat.id][index]['published'])}</i>",
+                                       parse_mode='HTML'), reply_markup=keyboard2)
             else:
-                if news[message.chat.id][index]['description'] is not None:
-                    bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
-                                           message_id=news_msg[message.chat.id].message_id,
-                                           media=InputMediaPhoto(news[message.chat.id][index]['image'],
-                                           caption=f"<b>{news[message.chat.id][index]['title']}</b>"
-                                                   f"\n\n{news[message.chat.id][index]['description']}"
-                                                   f"\n\n<i>{clear_date(news[message.chat.id][index]['published'])}</i>",
-                                           parse_mode='HTML'), reply_markup=keyboard2)
-                else:
-                    bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
-                                           message_id=news_msg[message.chat.id].message_id,
-                                           media=InputMediaPhoto(news[message.chat.id][index]['image'],
-                                           caption=f"<b>{news[message.chat.id][index]['title']}</b>\n<i>"
-                                                   f"{clear_date(news[message.chat.id][index]['published'])}</i>",
-                                           parse_mode='HTML'), reply_markup=keyboard2)
+                bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
+                                       message_id=news_msg[message.chat.id].message_id,
+                                       media=InputMediaPhoto(news[message.chat.id][index]['image'],
+                                       caption=f"<b>{news[message.chat.id][index]['title']}</b>\n<i>"
+                                               f"{clear_date(news[message.chat.id][index]['published'])}</i>",
+                                       parse_mode='HTML'), reply_markup=keyboard2)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^News\s?\w+$', call.data))
@@ -920,6 +927,7 @@ def next_news_query(call):
         send_news(call.message, index)
     else:
         bot.answer_callback_query(call.id, '⛔️')
+
 
 # <<< End news >>>
 
