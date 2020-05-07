@@ -2020,6 +2020,8 @@ def text_handler(message: Message) -> None:
             dice_handler(message)
         elif text in ['лоли', 'лоля', 'лолю', 'loli', 'lolis']:
             loli_handler(message)
+        elif text in ['хентай', 'хент', 'hentai']:
+            hentai_handler(message)
         if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
             if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
                 data_answers[message.chat.id] = db.get_all_answers()
