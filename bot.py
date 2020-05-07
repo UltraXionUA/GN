@@ -759,7 +759,6 @@ def loli_handler(message: Message) -> None:
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if db.check_user(message.from_user.id):
-            bot.delete_message(message.chat.id, message.message_id)
             if message.chat.id not in data_lolis or len(data_lolis[message.chat.id]) == 1:
                 data_lolis[message.chat.id] = db.get_all_lolis()
             while True:
@@ -771,7 +770,7 @@ def loli_handler(message: Message) -> None:
                     continue
             msg = bot.send_photo(message.chat.id, loli['url'])
             keyboard = InlineKeyboardMarkup()
-            keyboard.add((InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}')))
+            keyboard.add((InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {message.message_id}')))
             bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
                                    media=InputMediaPhoto(msg.photo[-1].file_id),
                                    reply_markup=keyboard)
@@ -2137,7 +2136,10 @@ def contact_handler(message: Message) -> None:
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^del\s.+$', call.data))
 def del_query(call):
     bot.answer_callback_query(call.id, 'Удалено')
-    bot.delete_message(call.message.chat.id, call.data.split()[1])
+    messages = call.data.split()[1:]
+    for i in messages:
+        bot.delete_message(call.message.chat.id, i)
+
 
 
 # <<< End del  >>>
@@ -2145,7 +2147,7 @@ def del_query(call):
 
 #<<< Pass >>>
 @bot.callback_query_handler(func=lambda call: re.match(r'\w+_move_to\spass', call.data))
-def callback_query(call):
+def pass_query(call):
     bot.answer_callback_query(call.id, '⛔️')
 
 
