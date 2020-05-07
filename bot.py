@@ -1440,7 +1440,6 @@ def stat_handler(message: Message) -> None:
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if message.chat.type != 'private':
-            bot.delete_message(message.chat.id, message.message_id)
             data = db.get_stat(message.chat)
             if data:
                 keyboard = InlineKeyboardMarkup()
@@ -1460,7 +1459,7 @@ def stat_handler(message: Message) -> None:
                                 f" {i['last_name'] if i['last_name'] != 'None' else ''} - <i>{i['karma']}</i>{medal}\n"
                 text += '...\nНажмите /me что бы увидеть себя'
                 msg = bot.send_message(message.chat.id, text, parse_mode='HTML')
-                keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
+                keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {message.message_id}'))
                 bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
                                       text=msg.text,
                                       reply_markup=keyboard)
@@ -1483,7 +1482,6 @@ def me_handler(message: Message) -> None:
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if message.chat.type != 'private':
-            bot.delete_message(message.chat.id, message.message_id)
             keyboard = InlineKeyboardMarkup()
             data_user, position = db.get_user(message.from_user, message.chat)
             if data_user is not False or position is not False:
@@ -1496,7 +1494,7 @@ def me_handler(message: Message) -> None:
                                                             f'<b>{user}</b> - '
                                                             f'<i>{data_user["karma"]}</i>🏆',
                                                              parse_mode='HTML')
-                    keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id}'))
+                    keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {message.message_id}'))
                     bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
                                           text=msg.text,
                                           reply_markup=keyboard)
