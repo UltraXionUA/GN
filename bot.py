@@ -744,6 +744,40 @@ def callback_query(call):
 # <<< End lyric >>>
 
 
+# <<< Hentai >>>
+@bot.message_handler(commands=['hentai'])  # /hentai
+def hentai_handler(message: Message) -> None:
+    """
+    Enter /loli to get random hentai(18+), access is limited
+    :param message:
+    :return:
+    """
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        if db.check_user(message.from_user.id):
+            while True:
+                loli = db.get_hentai()
+                if not loli['url'].startswith('http'):
+                    loli['url'] = URLS['loli']['main'] + loli['url']
+                try:
+                    if requests.get(loli['url']).ok:
+                        break
+                except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema):
+                    continue
+            msg = bot.send_photo(message.chat.id, loli['url'])
+            keyboard = InlineKeyboardMarkup()
+            keyboard.add((InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {message.message_id}')))
+            bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
+                                   media=InputMediaPhoto(msg.photo[-1].file_id),
+                                   reply_markup=keyboard)
+        else:
+            bot.send_message(message.chat.id, 'Эта функция вам недоступна😔\n'
+                                              'Вы можете активировать эту функцию написав администратору')
+
+# <<< End hentai >>>
+
+
 # <<< Loli >>>
 @bot.message_handler(commands=['loli'])  # /loli
 def loli_handler(message: Message) -> None:

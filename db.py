@@ -239,6 +239,14 @@ def add_memes(array) -> None:  # Add memes
     connection.close()
 
 
+def get_hentai() -> dict:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT `url` FROM Hentai ORDER BY rand() LIMIT 1;')
+        result = cursor.fetchone()
+    return result
+
+
 def get_loli() -> dict:
     connection = start_connection()
     with connection.cursor() as cursor:
@@ -247,14 +255,14 @@ def get_loli() -> dict:
     return result
 
 
-def add_lolis(lolis: list) -> None:
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        if lolis:
-            for i in lolis:
-                cursor.execute(f'INSERT INTO `Lolis`(`url`) VALUES (\'{i}\');')
-                connection.commit()
-            connection.close()
+# def add_lolis(lolis: list) -> None:
+#     connection = start_connection()
+#     with connection.cursor() as cursor:
+#         if lolis:
+#             for i in lolis:
+#                 cursor.execute(f'INSERT INTO `Lolis`(`url`) VALUES (\'{i}\');')
+#                 connection.commit()
+#             connection.close()
 
 
 # def add_gn_sticker(item_id, emoji, name):  # Add stickers from GN
