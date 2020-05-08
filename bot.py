@@ -745,8 +745,10 @@ def callback_query(call):
 
 
 # <<< Hentai >>>
+@bot.message_handler(commands=['loli'])  # /loli
 @bot.message_handler(commands=['hentai'])  # /hentai
 def hentai_handler(message: Message) -> None:
+    print(message)
     """
     Enter /loli to get random hentai(18+), access is limited
     :param message:
@@ -758,8 +760,6 @@ def hentai_handler(message: Message) -> None:
         if db.check_user(message.from_user.id):
             while True:
                 loli = db.get_hentai()
-                if not loli['url'].startswith('http'):
-                    loli['url'] = URLS['loli']['main'] + loli['url']
                 try:
                     if requests.get(loli['url']).ok:
                         break
@@ -792,8 +792,6 @@ def loli_handler(message: Message) -> None:
         if db.check_user(message.from_user.id):
             while True:
                 loli = db.get_loli()
-                if not loli['url'].startswith('http'):
-                    loli['url'] = URLS['loli']['main'] + loli['url']
                 try:
                     if requests.get(loli['url']).ok:
                         break

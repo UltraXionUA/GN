@@ -128,7 +128,7 @@ def parser_memes() -> None:  # Main parser
 
 def loli_parser() -> None:
     data = []
-    for id_p in ['109', '49', '43', '7', '311', '285', '311', '286', '46', '93']:  # 66
+    for id_p in ['66']:  # '109', '49', '43', '7', '311', '285', '311', '286', '46', '93'
         link = URLS['loli']['search'].replace('66', id_p)
         for i in range(1000):
             if i != 0:
