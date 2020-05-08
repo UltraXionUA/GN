@@ -748,7 +748,7 @@ def callback_query(call):
 @bot.message_handler(commands=['loli'])  # /loli
 @bot.message_handler(commands=['girl'])  # /girl
 @bot.message_handler(commands=['hentai'])  # /hentai
-def hentai_handler(message: Message) -> None:
+def forbidden_handler(message: Message) -> None:
     """
     Enter /{command} to get random hentai(18+) or loli(18+), or girl(18+). Access is limited
     :param message:
@@ -2000,8 +2000,8 @@ def text_handler(message: Message) -> None:
             joke_handler(message)
         elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
             dice_handler(message)
-        elif text in ['хентай', 'hentai', 'лоли', 'loli']:
-            hentai_handler(message)
+        elif text in ['хентай', 'hentai', 'лоли', 'loli', 'девушка', 'girl']:
+            forbidden_handler(message)
         if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
             if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
                 data_answers[message.chat.id] = db.get_all_answers()
