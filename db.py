@@ -247,14 +247,21 @@ def get_forbidden(type_: str) -> dict:
     return result
 
 
-def add_logic_tasks(tasks: dict) -> None:
+def get_task() -> dict:
     connection = start_connection()
     with connection.cursor() as cursor:
-        for i, q in tasks.items():
-            print(i, '\n', q, '\n\n')
-            cursor.execute(f'INSERT INTO `Logic_Tasks`(`question`, `answer`) VALUES (\'{i}\', \'{q}\');')
-            connection.commit()
-        connection.close()
+        cursor.execute(f'SELECT * FROM Logic_Tasks ORDER BY rand() LIMIT 1;')
+        result = cursor.fetchone()
+    return result
+
+# def add_logic_tasks(tasks: dict) -> None:
+#     connection = start_connection()
+#     with connection.cursor() as cursor:
+#         for i, q in tasks.items():
+#             print(i, '\n', q, '\n\n')
+#             cursor.execute(f'INSERT INTO `Logic_Tasks`(`question`, `answer`) VALUES (\'{i}\', \'{q}\');')
+#             connection.commit()
+#         connection.close()
 
 
 # def add_girls(girls: list) -> None:

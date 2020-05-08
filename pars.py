@@ -4,7 +4,7 @@
 from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from db import add_memes, add_logic_tasks
+from db import add_memes
 from Config_GNBot.config import URLS
 from funcs import log
 import requests
@@ -112,21 +112,6 @@ def get_torrents1(search: str) -> list:
         return data
 
 
-def get_tasks() -> dict:
-    data = {}
-    soup = BeautifulSoup(requests.get(URLS['logic_tasks']['main'],
-                                      headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
-    div = soup.find('div', class_='article-single-content main-page-content')
-    questions = div.find_all_next('p', style='text-align: left')
-    answers = div.find_all_next('div', id='reply')
-    for question, answer in zip(answers, questions):
-        data[re.sub(r'^\d+.\s', '', answer.find('strong').get_text())] = question.get_text()
-    add_logic_tasks(data)
-
-
-get_tasks()
-
-
 def parser_memes() -> None:  # Main parser
     user = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) ' \
            'Chrome/80.0.3987.116 Safari/537.36 OPR/67.0.3575.87'
@@ -155,6 +140,22 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+# def get_tasks() -> dict:
+#     data = {}
+#     soup = BeautifulSoup(requests.get(URLS['logic_tasks']['main'],
+#                                       headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+#     div = soup.find('div', class_='article-single-content main-page-content')
+#     questions = div.find_all_next('p', style='text-align: left')
+#     answers = div.find_all_next('div', id='reply')
+#     for question, answer in zip(answers, questions):
+#         data[re.sub(r'^\d+.\s', '', answer.find('strong').get_text())] = question.get_text()
+#     add_logic_tasks(data)
+#
+#
+# get_tasks()
 
 
 

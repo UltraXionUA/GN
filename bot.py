@@ -926,7 +926,6 @@ def choice_news_query(call):
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'\w+_move_to\spass]', call.data))
 def callback_query(call):
-    print('tut')
     bot.answer_callback_query(call.id, '⛔️')
 
 
@@ -1285,7 +1284,6 @@ def torrent_keyboard(message: Message, index: int) -> None:
                 text_t += f'\n\n{i["name"]} | [{i["size"]}] \n[<i>/download__{i["link_t"].split("/")[-1]}</i>] ' \
                           f'[<a href="{i["link"]}">раздача</a>]'
     except KeyError:
-        bot.send_chat_action(message.chat.id, '⛔️')
         log('Key Error in torrents', 'warning')
     else:
         bot.edit_message_text(chat_id=torrent_msg[message.chat.id].chat.id,
@@ -1519,6 +1517,47 @@ def me_handler(message: Message) -> None:
 # <<< End me >>>
 
 
+# <<< Logic tasks >>>
+data_logic_task = defaultdict(dict)
+
+
+@bot.message_handler(commands=['logic_task'])  # /logic_task
+def logic_task_handler(message: Message) -> None:
+    """
+       Enter /logic_task to get random logic task
+       :param message:
+       :return:
+    """
+    global data_logic_task
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        keyboard = InlineKeyboardMarkup()
+        data_logic_task[message.chat.id] = db.get_task()
+        msg = bot.send_message(message.chat.id,
+                               f'<b>Задача №</b><i>{data_logic_task[message.chat.id]["id"]}</i>\n'
+                               f'{data_logic_task[message.chat.id]["question"]}')
+        keyboard.add(InlineKeyboardButton('Ответ', callback_data=f'Answer {message.message_id} {msg.message_id}'))
+        bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
+                              text=msg.text, reply_markup=keyboard, parse_mode='HTML')
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Answer\s.+\s.+$', call.data))
+def answer_query(call):
+    global data_logic_task
+    if call.message.chat.id in data_logic_task:
+        bot.answer_callback_query(call.id, 'Ответ')
+        id_command, id_question = call.data.split()[1:]
+        keyboard = InlineKeyboardMarkup()
+        msg = bot.send_message(call.message.chat.id, f'<b>Ответ:</b> {data_logic_task[call.message.chat.id]["answer"]}')
+        keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {id_command} {id_question}'))
+        bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
+                              text=msg.text, reply_markup=keyboard, parse_mode='HTML')
+    else:
+        bot.answer_callback_query(call.id, '⛔️')
+# <<< End me >>>
+
+
 # <<< Wiki >>>
 data_wiki = defaultdict(list)
 wiki_msg = defaultdict(Message)
@@ -1582,7 +1621,6 @@ def send_wiki(message: Message, index: int) -> None:
                                             f"{index + 1 if index < len(data_wiki[message.chat.id]) - 1 else 'pass'}"))
         return keyboard
     except KeyError:
-        bot.send_chat_action(message.chat.id, '⛔️')
         log('Key Error in wiki', 'warning')
 
 
