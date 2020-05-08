@@ -166,7 +166,7 @@ def random_sticker() -> str:  # Random sticker
     return result
 
 
-def add_answer(answer) -> None:  # Add answer
+def add_answer(answer: str) -> None:  # Add answer
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'INSERT INTO `Answer`(`answer`) VALUES (\'{answer}\');')
@@ -229,7 +229,7 @@ def get_all_memes() -> list:  # Random meme
     return result
 
 
-def add_memes(array) -> None:  # Add memes
+def add_memes(array: list) -> None:  # Add memes
     connection = start_connection()
     with connection.cursor() as cursor:
         for i in array:
