@@ -260,7 +260,7 @@ def add_lolis(lolis: list) -> None:
     with connection.cursor() as cursor:
         if lolis:
             for i in lolis:
-                cursor.execute(f'INSERT INTO `Loli`(`url`) VALUES (\'{i}\');')
+                cursor.execute(f'INSERT INTO `Lolis`(`url`) VALUES (\'{i}\');')
                 connection.commit()
             connection.close()
 
