@@ -132,3 +132,5 @@ dmypy.json
 # File
 config.py
 Config_GNBot
+Config_GNBot/config.py
+/config.py
