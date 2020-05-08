@@ -754,15 +754,14 @@ def forbidden_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    print(message.text)
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if db.check(message.from_user.id, 'off_censure'):
             while True:
-                if message.text.lower() in ['/loli', 'лоли', '/loli@GNTMBot']:
+                if message.text.lower() in ['/loli', 'лоли', '/loli@gntmbot', '/loli@pineapple_test_bot']:
                     data = db.get_forbidden('Lolis')
-                elif message.text.lower() in ['/hentai', 'хентай', '/hentai@GNTMBot']:
+                elif message.text.lower() in ['/hentai', 'хентай', '/hentai@gntmbot', '/hentai@pineapple_test_bot']:
                     data = db.get_forbidden('Hentai')
                 else:
                     data = db.get_forbidden('Girls')
@@ -2130,12 +2129,12 @@ def voice_handler(message: Message) -> None:
         rec = r.recognize_wit(audio, key=API['Wit'])
         rec = rec[0].title() + rec[1:]
     except (sr.UnknownValueError, sr.RequestError) as e:
-        print(f"Could not request results from Wit Recognition service; {e}")
+        log(f"Could not request results from Wit Recognition service; {e}", 'error')
         try:
             rec = r.recognize_google(audio, language='ru-RU')
             rec = rec[0].title() + rec[1:]
         except (sr.UnknownValueError, sr.RequestError, IndexError) as e:
-            print(f"Could not request results from Wit Recognition service; {e}")
+            log(f"Could not request results from Wit Recognition service; {e}", 'error')
         else:
             send_text(message, rec)
     else:
