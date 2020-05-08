@@ -4,7 +4,7 @@
 from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from db import add_memes
+from db import add_memes, add_lolis
 from config import URLS
 from funcs import log
 import requests
@@ -126,6 +126,34 @@ def parser_memes() -> None:  # Main parser
         add_memes(links)
         log('Parser is done', 'info')
 
+def loli_parser() -> None:
+    data = []
+    for id_p in ['109', '49', '43', '7', '311', '285', '311', '286', '46', '93']:  # 66
+        link = URLS['loli']['search'].replace('66', id_p)
+        for i in range(1000):
+            if i != 0:
+                print(f'Page: {i}')
+                soup = BeautifulSoup(requests.get(link + str(i),
+                                                  headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+                if soup.find('h2', class_='error-title') is None:
+                    list_loli = soup.find('div', id='maincontent').find_all_next('div', class_='pic-plus')
+                    if list_loli is not None:
+                        print('+')
+                        for q in list_loli:
+                            http = q.find('img').get('src')
+                            if link.startswith('http'):
+                                data.append(http)
+                            else:
+                                data.append(URLS['loli']['main'] + http)
+                        add_lolis(data)
+                        data.clear()
+                    else:
+                        print('-')
+                else:
+                    break
+
+loli_parser()
+
 
 def main():
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
@@ -158,30 +186,3 @@ if __name__ == "__main__":
 #
 # parser_books()
 
-# def loli_parser() -> None:
-#     data = []
-#     for id_p in ['66']:  # '109', '49', '43', '7', '311', '285', '311', '286', '46', '93', '46'
-#         link = URLS['loli']['search'].replace('66', id_p)
-#         for i in range(1000):
-#             if i != 0:
-#                 print(f'Page: {i}')
-#                 soup = BeautifulSoup(requests.get(link + str(i),
-#                                                   headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
-#                 if soup.find('h2', class_='error-title') is None:
-#                     list_loli = soup.find('div', id='maincontent').find_all_next('div', class_='pic-plus')
-#                     if list_loli is not None:
-#                         print('+')
-#                         for q in list_loli:
-#                             http = q.find('img').get('src')
-#                             if link.startswith('http'):
-#                                 data.append(http)
-#                             else:
-#                                 data.append(URLS['loli']['main'] + link)
-#                         add_lolis(data)
-#                         data.clear()
-#                     else:
-#                         print('-')
-#                 else:
-#                     break
-#
-# loli_parser()
