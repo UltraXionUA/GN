@@ -6,7 +6,7 @@ from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, I
 from telebot.types import LabeledPrice, PreCheckoutQuery, ShippingQuery
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video, get_instagram_photos
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time, clear_date
-from config import API, URLS, GNBot_ID, Admin_ID, bot, PAYMENT_TOKEN
+from Config_GNBot.config import API, URLS, GNBot_ID, Admin_ID, bot, PAYMENT_TOKEN
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from urllib import parse, request, error
 from pytube import YouTube, exceptions
@@ -1998,7 +1998,7 @@ def text_handler(message: Message) -> None:
         elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
             dice_handler(message)
         elif text in ['лоли', 'лоля', 'лолю', 'loli', 'lolis']:
-            loli_handler(message)
+            hentai_handler(message)
         elif text in ['хентай', 'хент', 'hentai']:
             hentai_handler(message)
         if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:

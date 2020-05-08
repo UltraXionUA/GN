@@ -5,7 +5,7 @@ from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
 from db import add_memes
-from config import URLS
+from Config_GNBot.config import URLS
 from funcs import log
 import requests
 import schedule
