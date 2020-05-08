@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Control DB file for GNBot"""
 from funcs import log
-import Config_GNBot.config
+from Config_GNBot import config
 import pymysql
 
 
