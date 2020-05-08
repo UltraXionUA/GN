@@ -765,7 +765,6 @@ def hentai_handler(message: Message) -> None:
                     data = db.get_forbidden('Hentai')
                 else:
                     data = db.get_forbidden('Girls')
-                print(data)
                 try:
                     if requests.get(data['url']).ok:
                         break
