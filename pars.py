@@ -141,10 +141,11 @@ def loli_parser() -> None:
                         print('+')
                         for q in list_loli:
                             http = q.find('img').get('src')
-                            if link.startswith('http'):
+                            if http.startswith('http'):
                                 data.append(http)
                             else:
-                                data.append(URLS['loli']['main'] + http)
+                                http = URLS['loli']['main'] + http
+                                data.append(http)
                         add_lolis(data)
                         data.clear()
                     else:
