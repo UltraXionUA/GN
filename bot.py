@@ -966,7 +966,7 @@ def youtube_handler(message: Message) -> None:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
-        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        # db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         keyboard = InlineKeyboardMarkup()
         keyboard.add(InlineKeyboardButton('Видео📺', callback_data='Video'),
                      InlineKeyboardButton('Аудио🎧', callback_data='Audio'))
@@ -1057,15 +1057,19 @@ def load_video(message: Message, yt, keyboard, resolution):
     msg = bot.send_message(message.chat.id, 'Загрузка...')
     ffmpeg_work.start()
     ffmpeg_work.join()
-    time.sleep(5)
-    bot.delete_message(message.chat.id, message.message_id)
-    bot.delete_message(msg.chat.id, msg.message_id)
-    bot.send_video(message.chat.id, open('file.mp4', 'rb'),
-                   duration=yt.length, reply_markup=keyboard,
-                   caption=f'🎧 {sec_to_time(yt.length)} '
-                           f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB '
-                           f'| {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps '
-                           f'| {resolution}')
+    time.sleep(1)
+    if round(os.path.getsize("file.mp4") / 1000000, 1) < 50:
+        bot.delete_message(message.chat.id, message.message_id)
+        bot.delete_message(msg.chat.id, msg.message_id)
+        bot.send_video(message.chat.id, open('file.mp4', 'rb'),
+                       duration=yt.length, reply_markup=keyboard,
+                       caption=f'🎧 {sec_to_time(yt.length)} '
+                               f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB '
+                               f'| {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps '
+                               f'| {resolution}')
+    else:
+        bot.send_message(message.chat.id, 'Даное видео имеет слигком большой объем,'
+                                          ' мой лимит 50МБ😔')
     try:
         files = os.listdir(os.path.dirname(__file__))
         for i in files:
