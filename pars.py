@@ -4,7 +4,7 @@
 from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from db import add_memes, add_girls
+from db import add_memes
 from Config_GNBot.config import URLS
 from funcs import log
 import requests
@@ -112,32 +112,6 @@ def get_torrents1(search: str) -> list:
         return data
 
 
-def girl_parser() -> list:
-    data = []
-    for en, page in enumerate(range(20), 1):
-        print('Page:', en)
-        soup = BeautifulSoup(requests.get(URLS['girl']['search'].replace('PAGE', str(en)),
-                                      headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
-        links = soup.find_all('a', class_='color_button site_button more_button')
-        for i in links:
-            girls = BeautifulSoup(requests.get(i.get('href'),
-                                              headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
-            images = girls.find('div', class_='post_content m20').find_all_next('img')
-            for image in images:
-                link = URLS['girl']['main'] + image.get('src')
-                if re.fullmatch(r'https?://paprikolu.net/uploads/posts/.+/thumbs/.+.\w+$', link):
-                    data.append(link)
-        print('+')
-        if data:
-            add_girls(data)
-        data.clear()
-
-
-
-
-girl_parser()
-
-
 def parser_memes() -> None:  # Main parser
     user = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) ' \
            'Chrome/80.0.3987.116 Safari/537.36 OPR/67.0.3575.87'
@@ -166,6 +140,32 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# def girl_parser() -> list:
+#     data = []
+#     for en, page in enumerate(range(20), 1):
+#         print('Page:', en)
+#         soup = BeautifulSoup(requests.get(URLS['girl']['search'].replace('PAGE', str(en)),
+#                                       headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+#         links = soup.find_all('a', class_='color_button site_button more_button')
+#         for i in links:
+#             girls = BeautifulSoup(requests.get(i.get('href'),
+#                                               headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+#             images = girls.find('div', class_='post_content m20').find_all_next('img')
+#             for image in images:
+#                 link = URLS['girl']['main'] + image.get('src')
+#                 if re.fullmatch(r'https?://paprikolu.net/uploads/posts/.+/thumbs/.+.\w+$', link):
+#                     data.append(link)
+#         print('+')
+#         if data:
+#             add_girls(data)
+#         data.clear()
+#
+#
+#
+#
+# girl_parser()
 
 
 # def loli_parser() -> None:

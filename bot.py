@@ -744,12 +744,13 @@ def callback_query(call):
 # <<< End lyric >>>
 
 
-# <<< Loli&Hentai >>>
+# <<< Loli&Hentai&Girl >>>
 @bot.message_handler(commands=['loli'])  # /loli
+@bot.message_handler(commands=['girl'])  # /girl
 @bot.message_handler(commands=['hentai'])  # /hentai
 def hentai_handler(message: Message) -> None:
     """
-    Enter /loli to get random hentai(18+) or loli(18+), access is limited
+    Enter /{command} to get random hentai(18+) or loli(18+), or girl(18+). Access is limited
     :param message:
     :return:
     """
@@ -759,9 +760,12 @@ def hentai_handler(message: Message) -> None:
         if db.check(message.from_user.id, 'off_censure'):
             while True:
                 if message.text == '/loli' or message.text.lower() == 'лоли':
-                    data = db.get_hentai('Lolis')
+                    data = db.get_forbidden('Lolis')
+                elif message.text == '/hentai' or message.text.lower() == 'хентай':
+                    data = db.get_forbidden('Hentai')
                 else:
-                    data = db.get_hentai('Hentai')
+                    data = db.get_forbidden('Girls')
+                print(data)
                 try:
                     if requests.get(data['url']).ok:
                         break
@@ -777,7 +781,7 @@ def hentai_handler(message: Message) -> None:
             bot.send_message(message.chat.id, 'Эта функция вам недоступна😔\n'
                                               'Вы можете активировать эту функцию написав администратору')
 
-# <<< End loli&hentai >>>
+# <<< End loli&hentai&girl >>>
 
 
 # <<< News >>>

@@ -239,21 +239,21 @@ def add_memes(array: list) -> None:  # Add memes
     connection.close()
 
 
-def get_hentai(type_: str) -> dict:
+def get_forbidden(type_: str) -> dict:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT `url` FROM {type_} ORDER BY rand() LIMIT 1;')
         result = cursor.fetchone()
     return result
 
-def add_girls(girls: list) -> None:
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        if girls:
-            for i in girls:
-                cursor.execute(f'INSERT INTO `Girls`(`url`) VALUES (\'{i}\');')
-                connection.commit()
-            connection.close()
+# def add_girls(girls: list) -> None:
+#     connection = start_connection()
+#     with connection.cursor() as cursor:
+#         if girls:
+#             for i in girls:
+#                 cursor.execute(f'INSERT INTO `Girls`(`url`) VALUES (\'{i}\');')
+#                 connection.commit()
+#             connection.close()
 
 # def add_lolis(lolis: list) -> None:
 #     connection = start_connection()
