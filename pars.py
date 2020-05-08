@@ -4,7 +4,7 @@
 from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from db import add_memes
+from db import add_memes, add_girls
 from Config_GNBot.config import URLS
 from funcs import log
 import requests
@@ -110,6 +110,32 @@ def get_torrents1(search: str) -> list:
                     link_t = link_t.find_all_next('a')[0].get('href').replace('/engine/download.php?id=', '')
                     data.append({'name': name, 'size': size, 'link_t': link_t, 'link': link})
         return data
+
+
+def girl_parser() -> list:
+    data = []
+    for en, page in enumerate(range(20), 1):
+        print('Page:', en)
+        soup = BeautifulSoup(requests.get(URLS['girl']['search'].replace('PAGE', str(en)),
+                                      headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+        links = soup.find_all('a', class_='color_button site_button more_button')
+        for i in links:
+            girls = BeautifulSoup(requests.get(i.get('href'),
+                                              headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+            images = girls.find('div', class_='post_content m20').find_all_next('img')
+            for image in images:
+                link = URLS['girl']['main'] + image.get('src')
+                if re.fullmatch(r'https?://paprikolu.net/uploads/posts/.+/thumbs/.+.\w+$', link):
+                    data.append(link)
+        print('+')
+        if data:
+            add_girls(data)
+        data.clear()
+
+
+
+
+girl_parser()
 
 
 def parser_memes() -> None:  # Main parser

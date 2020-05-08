@@ -756,9 +756,9 @@ def hentai_handler(message: Message) -> None:
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-        if db.check_user(message.from_user.id):
+        if db.check(message.from_user.id, 'off_censure'):
             while True:
-                if message.text == '/loli':
+                if message.text == '/loli' or message.text.lower() == 'лоли':
                     data = db.get_hentai('Lolis')
                 else:
                     data = db.get_hentai('Hentai')
@@ -1388,7 +1388,7 @@ def gn_sticker_handler(message: Message) -> None:
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-        if db.check_user(message.from_user.id):
+        if db.check(message.from_user.id, 'is_gn'):
             bot.send_chat_action(message.chat.id, 'upload_photo')
             bot.send_sticker(message.chat.id, db.random_gn_sticker())
         else:
@@ -1997,9 +1997,7 @@ def text_handler(message: Message) -> None:
             joke_handler(message)
         elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
             dice_handler(message)
-        elif text in ['лоли', 'лоля', 'лолю', 'loli', 'lolis']:
-            hentai_handler(message)
-        elif text in ['хентай', 'хент', 'hentai']:
+        elif text in ['хентай', 'hentai', 'лоли', 'loli']:
             hentai_handler(message)
         if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
             if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:

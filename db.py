@@ -109,11 +109,11 @@ def get_all_jokes() -> list:  # All Joke
     return result
 
 
-def check_user(user_id: str) -> bool:
+def check(user_id: str, check_t: str) -> bool:
     connection = start_connection()
     with connection.cursor() as cursor:
         if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user_id}\''
-                          f'AND is_gn LIKE \'True\';') == 0:
+                          f'AND {check_t} LIKE \'True\';') == 0:
             return False
         else:
             return True
@@ -246,6 +246,14 @@ def get_hentai(type_: str) -> dict:
         result = cursor.fetchone()
     return result
 
+def add_girls(girls: list) -> None:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        if girls:
+            for i in girls:
+                cursor.execute(f'INSERT INTO `Girls`(`url`) VALUES (\'{i}\');')
+                connection.commit()
+            connection.close()
 
 # def add_lolis(lolis: list) -> None:
 #     connection = start_connection()
