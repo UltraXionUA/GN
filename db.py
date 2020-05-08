@@ -247,11 +247,11 @@ def get_forbidden(type_: str) -> dict:
     return result
 
 
-def get_task() -> dict:
+def get_tasks() -> list:
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM Logic_Tasks ORDER BY rand() LIMIT 1;')
-        result = cursor.fetchone()
+        cursor.execute(f'SELECT * FROM Logic_Tasks;')
+        result = cursor.fetchall()
     return result
 
 # def add_logic_tasks(tasks: dict) -> None:

@@ -125,7 +125,7 @@ def qrcode_handler(message: Message) -> None:
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Create_QRCode$', call.data))
-def create_sqcode(call) -> None:
+def create_qrcode(call) -> None:
     global qr_msg
     bot.answer_callback_query(call.id, 'Вы выбрали создать')
     bot.delete_message(qr_msg[call.message.chat.id].chat.id, qr_msg[call.message.chat.id].message_id)
@@ -134,7 +134,7 @@ def create_sqcode(call) -> None:
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Read_QRCode$', call.data))
-def read_sqcode(call) -> None:
+def read_qrcode(call) -> None:
     bot.answer_callback_query(call.id, 'Вы выбрали считать')
     bot.delete_message(qr_msg[call.message.chat.id].chat.id, qr_msg[call.message.chat.id].message_id)
     msg = bot.send_message(call.message.chat.id, 'Отправь мне QR Code или его фотографию📸')
@@ -754,14 +754,15 @@ def forbidden_handler(message: Message) -> None:
     :param message:
     :return:
     """
+    print(message.text)
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if db.check(message.from_user.id, 'off_censure'):
             while True:
-                if message.text == '/loli' or message.text.lower() == 'лоли':
+                if message.text.lower() in ['/loli', 'лоли', '/loli@GNTMBot']:
                     data = db.get_forbidden('Lolis')
-                elif message.text == '/hentai' or message.text.lower() == 'хентай':
+                elif message.text.lower() in ['/hentai', 'хентай', '/hentai@GNTMBot']:
                     data = db.get_forbidden('Hentai')
                 else:
                     data = db.get_forbidden('Girls')
@@ -1518,7 +1519,7 @@ def me_handler(message: Message) -> None:
 
 
 # <<< Logic tasks >>>
-data_logic_task = defaultdict(dict)
+data_logic_tasks = defaultdict(dict)
 
 
 @bot.message_handler(commands=['logic_task'])  # /logic_task
@@ -1528,31 +1529,37 @@ def logic_task_handler(message: Message) -> None:
        :param message:
        :return:
     """
-    global data_logic_task
+    global data_logic_tasks
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         keyboard = InlineKeyboardMarkup()
-        data_logic_task[message.chat.id] = db.get_task()
+        if message.chat.id not in data_logic_tasks or len(data_logic_tasks[message.chat.id]) == 1:
+            data_logic_tasks[message.chat.id] = db.get_tasks()
+        task = data_logic_tasks[message.chat.id][random.choice(range(len(data_logic_tasks[message.chat.id]) - 1))]
         msg = bot.send_message(message.chat.id,
-                               f'<b>Задача №</b><i>{data_logic_task[message.chat.id]["id"]}</i>\n'
-                               f'{data_logic_task[message.chat.id]["question"]}')
-        keyboard.add(InlineKeyboardButton('Ответ', callback_data=f'Answer {message.message_id} {msg.message_id}'))
+                               f'<b>Задача №</b><i>{task["id"]}</i>\n'
+                               f'{task["question"]}')
+        keyboard.add(InlineKeyboardButton('Ответ', callback_data=f'Answer'
+                                                                 f' {task["id"]} {message.message_id} {msg.message_id}'))
         bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
                               text=msg.text, reply_markup=keyboard, parse_mode='HTML')
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Answer\s.+\s.+$', call.data))
 def answer_query(call):
-    global data_logic_task
-    if call.message.chat.id in data_logic_task:
+    global data_logic_tasks
+    if call.message.chat.id in data_logic_tasks:
         bot.answer_callback_query(call.id, 'Ответ')
-        id_command, id_question = call.data.split()[1:]
+        id_answer, id_command, id_question = call.data.split()[1:]
         keyboard = InlineKeyboardMarkup()
-        msg = bot.send_message(call.message.chat.id, f'<b>Ответ:</b> {data_logic_task[call.message.chat.id]["answer"]}')
-        keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {id_command} {id_question}'))
-        bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
-                              text=msg.text, reply_markup=keyboard, parse_mode='HTML')
+        for en, i in enumerate(data_logic_tasks[call.message.chat.id]):
+            if i['id'] == int(id_answer):
+                msg = bot.send_message(call.message.chat.id, f'<b>Ответ:</b> {i["answer"]}')
+                data_logic_tasks[call.message.chat.id].pop(en)
+                keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {id_command} {id_question}'))
+                bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
+                                      text=msg.text, reply_markup=keyboard, parse_mode='HTML')
     else:
         bot.answer_callback_query(call.id, '⛔️')
 # <<< End me >>>
