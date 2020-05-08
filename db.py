@@ -242,8 +242,8 @@ def add_memes(array: list) -> None:  # Add memes
 def get_forbidden(type_: str) -> dict:
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT `url` FROM {type_} ORDER BY rand() LIMIT 1;')
-        result = cursor.fetchone()
+        cursor.execute(f'SELECT `url` FROM {type_} ORDER BY RAND() LIMIT 100;')
+        result = cursor.fetchall()
     return result
 
 
