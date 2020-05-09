@@ -242,7 +242,7 @@ def send_mp3(message: Message, file_id: int) -> None:
         bot.send_audio(message.chat.id, open(f'{message.text}.mp3', 'rb'))
         try:
             os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'{message.text}' + '.mp3'))
-        except FileNotFoundError:
+        except (FileNotFoundError, NameError):
             log('Error! Can\'t remove file', 'warning')
 
 
@@ -545,7 +545,7 @@ def callback_query(call):
                            f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps')
     try:
         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
-    except FileNotFoundError:
+        except (FileNotFoundError, NameError):
         log('Error! Can\'t remove file', 'warning')
 
 
@@ -707,7 +707,7 @@ def callback_query(call):
                                            f' Kbps')
                     try:
                         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
-                    except FileNotFoundError:
+                    except (FileNotFoundError, NameError):
                         log('Error! Can\'t remove file', 'warning')
                     break
                 else:
@@ -966,7 +966,7 @@ def youtube_handler(message: Message) -> None:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
-        # db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         keyboard = InlineKeyboardMarkup()
         keyboard.add(InlineKeyboardButton('Видео📺', callback_data='Video'),
                      InlineKeyboardButton('Аудио🎧', callback_data='Audio'))
@@ -1006,7 +1006,7 @@ def send_audio(message: Message, method: str) -> None:
                                            f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps')
                     try:
                         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
-                    except FileNotFoundError:
+                    except (FileNotFoundError, NameError):
                         log('Error! Can\'t remove file', 'warning')
                 else:
                     try:
@@ -1079,7 +1079,7 @@ def load_video(message: Message, yt, keyboard, resolution):
                 os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), i))
             elif i.startswith('file'):
                 os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), i))
-    except FileNotFoundError:
+    except (FileNotFoundError, NameError):
         log('Error! Can\'t remove file', 'warning')
 
 
@@ -1324,7 +1324,7 @@ def load_handler(message: Message):
                 bot.send_document(message.chat.id, open(f'file{id_torrent}.torrent', 'rb'))
                 try:
                     os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file{id_torrent}.torrent'))
-                except FileNotFoundError:
+                except (FileNotFoundError, NameError):
                     log('Error! Can\'t remove file', 'warning')
 
 
@@ -1338,7 +1338,7 @@ def load_handler(message: Message):
     bot.send_document(message.chat.id, open(f'file{id_torrent}.torrent', 'rb'))
     try:
         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file{id_torrent}.torrent'))
-    except FileNotFoundError:
+    except (FileNotFoundError, NameError):
         log('Error! Can\'t remove file', 'warning')
 
 
@@ -1352,7 +1352,7 @@ def load_handler(message: Message):
     bot.send_document(message.chat.id, open(f'file{id_torrent}.torrent', 'rb'))
     try:
         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file{id_torrent}.torrent'))
-    except FileNotFoundError:
+    except (FileNotFoundError, NameError)::
         log('Error! Can\'t remove file', 'warning')
 
 
@@ -2179,7 +2179,7 @@ def send_text(message: Message, rec: str) -> None:
     bot.edit_message_text(msg.text, msg.chat.id, msg.message_id, reply_markup=keyboard, parse_mode='HTML')
     try:
         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file.wav'))
-    except FileNotFoundError:
+    except (FileNotFoundError, NameError):
         log('Error! Can\'t remove file', 'warning')
 
 

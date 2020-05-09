@@ -3,7 +3,10 @@
 from funcs import log
 from Config_GNBot import config
 import pymysql
+import redis
 
+
+# r = redis.Redis(host='localhost', port=6379, db=0)
 
 def start_connection():  # Connection to DB
     try:
