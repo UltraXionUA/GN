@@ -746,11 +746,6 @@ def callback_query(call):
 
 
 # <<< Loli&Hentai&Girl >>>
-loli_data = defaultdict(list)
-hentai_data = defaultdict(list)
-girls_data = defaultdict(list)
-
-
 @bot.message_handler(commands=['loli'])  # /loli
 @bot.message_handler(commands=['girl'])  # /girl
 @bot.message_handler(commands=['hentai'])  # /hentai
@@ -760,38 +755,31 @@ def forbidden_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    global loli_data, hentai_data, girls_data
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if db.check(message.from_user.id, 'off_censure'):
             while True:
                 if message.text.lower() in ['/loli', 'лоли', '/loli@gntmbot', '/loli@pineapple_test_bot']:
-                    if message.chat.id not in loli_data or len(loli_data[message.chat.id]) == 1:
-                        loli_data[message.chat.id] = db.get_forbidden('Lolis')
-                    data = loli_data[message.chat.id].pop(random.choice(range(len(loli_data[message.chat.id]) - 1)))
+                    data = db.get_forbidden('loli')
                 elif message.text.lower() in ['/hentai', 'хентай', '/hentai@gntmbot', '/hentai@pineapple_test_bot']:
-                    if message.chat.id not in hentai_data or len(hentai_data[message.chat.id]) == 1:
-                        hentai_data[message.chat.id] = db.get_forbidden('Hentai')
-                    data = hentai_data[message.chat.id].pop(random.choice(range(len(hentai_data[message.chat.id]) - 1)))
+                    data = db.get_forbidden('hentai')
                 else:
-                    if message.chat.id not in girls_data or len(girls_data[message.chat.id]) == 1:
-                        girls_data[message.chat.id] = db.get_forbidden('Girls')
-                    data = girls_data[message.chat.id].pop(random.choice(range(len(girls_data[message.chat.id]) - 1)))
+                    data = db.get_forbidden('girls')
                 try:
-                    if requests.get(data['url']).ok:
+                    if requests.get(data).ok:
                         break
                 except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema):
                     continue
-            msg = bot.send_photo(message.chat.id, data['url'])
+            msg = bot.send_photo(message.chat.id, data)
             keyboard = InlineKeyboardMarkup()
             keyboard.add((InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {message.message_id}')))
             bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
                                    media=InputMediaPhoto(msg.photo[-1].file_id),
                                    reply_markup=keyboard)
-    else:
-        bot.send_message(message.chat.id, 'Эта функция вам недоступна😔\n'
-                                              'Вы можете активировать эту функцию написав администратору')
+        else:
+            bot.send_message(message.chat.id, 'Эта функция вам недоступна😔\n'
+                                                  'Вы можете активировать эту функцию написав администратору')
 
 # <<< End loli&hentai&girl >>>
 

@@ -16,3 +16,4 @@ pydub
 user_agent
 ffmpeg-python
 SpeechRecognition
+redis
