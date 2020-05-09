@@ -545,7 +545,7 @@ def callback_query(call):
                            f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps')
     try:
         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
-        except (FileNotFoundError, NameError):
+    except (FileNotFoundError, NameError):
         log('Error! Can\'t remove file', 'warning')
 
 
@@ -783,12 +783,12 @@ def forbidden_handler(message: Message) -> None:
                         break
                 except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema):
                     continue
-        msg = bot.send_photo(message.chat.id, data['url'])
-        keyboard = InlineKeyboardMarkup()
-        keyboard.add((InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {message.message_id}')))
-        bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
-                               media=InputMediaPhoto(msg.photo[-1].file_id),
-                               reply_markup=keyboard)
+            msg = bot.send_photo(message.chat.id, data['url'])
+            keyboard = InlineKeyboardMarkup()
+            keyboard.add((InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {message.message_id}')))
+            bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
+                                   media=InputMediaPhoto(msg.photo[-1].file_id),
+                                   reply_markup=keyboard)
     else:
         bot.send_message(message.chat.id, 'Эта функция вам недоступна😔\n'
                                               'Вы можете активировать эту функцию написав администратору')
@@ -1352,7 +1352,7 @@ def load_handler(message: Message):
     bot.send_document(message.chat.id, open(f'file{id_torrent}.torrent', 'rb'))
     try:
         os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), f'file{id_torrent}.torrent'))
-    except (FileNotFoundError, NameError)::
+    except (FileNotFoundError, NameError):
         log('Error! Can\'t remove file', 'warning')
 
 

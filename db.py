@@ -6,7 +6,6 @@ import pymysql
 import redis
 
 
-# r = redis.Redis(host='localhost', port=6379, db=0)
 
 def start_connection():  # Connection to DB
     try:
@@ -15,6 +14,28 @@ def start_connection():  # Connection to DB
     except pymysql.err.OperationalError:
         log('Ошибка подключения к БД!', 'error')
 
+def add_to_redis(data: list, type_: str):
+    r = redis.Redis(host='localhost', port=6379, db=0)
+    r.set(f'len_{type_}', len(data))
+    print(len(data))
+    for en, i in enumerate(data, 1):
+        r.set(type_ + str(en), i['url'])
+    print('finish')
+
+def get_all():
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT * FROM Lolis;')
+        result = cursor.fetchall()
+        add_to_redis(result, 'loli')
+        cursor.execute(f'SELECT * FROM Hentai;')
+        result = cursor.fetchall()
+        add_to_redis(result, 'hentai')
+        cursor.execute(f'SELECT * FROM Girls;')
+        result = cursor.fetchall()
+        add_to_redis(result, 'girls')
+
+get_all()
 
 def get_user(user, chat) -> dict:
     connection = start_connection()
