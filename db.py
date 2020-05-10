@@ -6,7 +6,6 @@ import pymysql
 import redis
 
 
-
 def start_connection():  # Connection to DB
     try:
         connection = pymysql.connect(**config.BD_CONNECT)
@@ -38,7 +37,7 @@ def get_user(user, chat) -> dict:
     connection.close()
 
 
-def get_stat(chat) -> list:  # -1001339129150
+def get_stat(chat) -> list:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM Users WHERE is_bote = \'False\' AND supergroup IS NOT NULL ORDER BY karma DESC')
