@@ -185,16 +185,18 @@ def joke_handler(message: Message) -> None:
         time.sleep(1.5)
         keyboard = InlineKeyboardMarkup()
         if joke['panchline'] != 'False':
-            keyboard.add(InlineKeyboardButton('Удалить', callback_data=f''))
             setup = bot.send_message(message.chat.id, joke['setup'] + random.choice(['🧐', '🤨', '🤔']))
             time.sleep(3.5)
             panchline = bot.send_message(message.chat.id, joke['panchline'] + random.choice(['🌚', '😅', '🤫']))
-            keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {setup.message_id} {panchline.message_id}'))
+            keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {message.message_id}'
+                                                                       f' {setup.message_id} {panchline.message_id}'))
+            time.sleep(1.5)
             bot.edit_message_text(chat_id=message.chat.id, message_id=panchline.message_id,
                                   text=panchline.text, reply_markup=keyboard)
         else:
+            keyboard = InlineKeyboardMarkup()
             joke = bot.send_message(message.chat.id, joke['setup'] + random.choice(['🌚', '😅', '🤫']))
-            keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {joke.message_id}'))
+            keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {message.message_id} {joke.message_id}'))
             bot.edit_message_text(chat_id=message.chat.id, message_id=joke.message_id,
                                   text=joke.text, reply_markup=keyboard)
 
