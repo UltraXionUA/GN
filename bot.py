@@ -854,8 +854,7 @@ def send_news(message: Message, index: int) -> None:
             return
         except IndexError:
             log('Index Error in news url', 'warning')
-        if news[message.chat.id][index]['image'] is None or news[message.chat.id][index]['image'] == '' or\
-            requests.get(news[message.chat.id][index]['image']).ok is not True:
+        if news[message.chat.id][index]['image'] is None or news[message.chat.id][index]['image'] == '':
             if news[message.chat.id][index]['description'] is not None:
                 bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
                                        message_id=news_msg[message.chat.id].message_id,
@@ -873,13 +872,18 @@ def send_news(message: Message, index: int) -> None:
                                                              parse_mode='HTML'), reply_markup=keyboard2)
         else:
             try:
-                t = Timer(5.0, send_next_news)
-                t.start()
-                req = request.Request(news[message.chat.id][index]['image'], method='HEAD')
-                f = request.urlopen(req)
-                t.cancel()
-                if f.headers['Content-Length'] is not None:
-                    if int(f.headers['Content-Length']) > 5242880:
+                if requests.get(news[message.chat.id][index]['image']).ok is True:
+                    t = Timer(5.0, send_next_news)
+                    t.start()
+                    req = request.Request(news[message.chat.id][index]['image'], method='HEAD')
+                    f = request.urlopen(req)
+                    t.cancel()
+                    if f.headers['Content-Length'] is not None:
+                        if int(f.headers['Content-Length']) > 5242880:
+                            news[message.chat.id].pop(index)
+                            send_news(message, index + 1)
+                            return
+                    else:
                         news[message.chat.id].pop(index)
                         send_news(message, index + 1)
                         return
@@ -1124,7 +1128,6 @@ def get_video(message: Message) -> None:
     if message.content_type != 'text':
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
-        bot.send_chat_action(message.chat.id, 'upload_video')
         bot.delete_message(message.chat.id, message.message_id)
         if re.match(r'^https?://(www.)?instagram.com/\w+/.+', message.text):
             url = re.search(r'^https?://(www.)?instagram.com/\w+/.+/', message.text)
@@ -1138,16 +1141,29 @@ def get_video(message: Message) -> None:
                     if data:
                         if len(data) == 1:
                             if data[0]['is_video'] is True:
-                                keyboard = InlineKeyboardMarkup()
-                                keyboard.add(InlineKeyboardButton('Instagram', url=url))
-                                bot.send_video(message.chat.id, data[0]['url'], reply_markup=keyboard)
+                                req = request.Request(data[0]['url'], method='HEAD')
+                                f = request.urlopen(req)
+                                if f.headers['Content-Length'] is not None:
+                                    if int(f.headers['Content-Length']) < 5242880:
+                                        bot.send_chat_action(message.chat.id, 'upload_video')
+                                        keyboard = InlineKeyboardMarkup()
+                                        keyboard.add(InlineKeyboardButton('Instagram', url=url))
+                                        bot.send_video(message.chat.id, data[0]['url'], reply_markup=keyboard)
+                                    else:
+                                        bot.send_message(message.chat.id, 'Размер видео слишком большой😔')
                             else:
                                 bot.send_message(message.chat.id, 'По ссылке нет видео😔')
                         else:
                             list_data = []
+                            bot.send_chat_action(message.chat.id, 'upload_video')
                             for i in data:
                                 if i['is_video'] is True:
-                                    list_data.append(InputMediaVideo(i['url']))
+                                    req = request.Request(i['url'], method='HEAD')
+                                    f = request.urlopen(req)
+                                    if f.headers['Content-Length'] is not None:
+                                        print(f.headers['Content-Length'])
+                                        if int(f.headers['Content-Length']) < 5242880:
+                                            list_data.append(InputMediaVideo(i['url']))
                                 else:
                                     list_data.append(InputMediaPhoto(i['url']))
                             bot.send_media_group(message.chat.id, list_data)
