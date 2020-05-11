@@ -779,14 +779,18 @@ def forbidden_handler(message: Message) -> None:
                 try:
                     if requests.get(data).ok:
                         break
-                except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema):
+                except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema, Exep):
                     continue
-            msg = bot.send_photo(message.chat.id, data)
-            keyboard = InlineKeyboardMarkup()
-            keyboard.add((InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {message.message_id}')))
-            bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
-                                   media=InputMediaPhoto(msg.photo[-1].file_id),
-                                   reply_markup=keyboard)
+            try:
+                msg = bot.send_photo(message.chat.id, data)
+            except Exception:
+                forbidden_handler(message)
+            else:
+                keyboard = InlineKeyboardMarkup()
+                keyboard.add((InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {message.message_id}')))
+                bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
+                                       media=InputMediaPhoto(msg.photo[-1].file_id),
+                                       reply_markup=keyboard)
         else:
             bot.send_message(message.chat.id, 'Эта функция вам недоступна😔\n'
                                                   'Вы можете активировать эту функцию написав администратору')
