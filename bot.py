@@ -2075,7 +2075,7 @@ def text_handler(message: Message) -> None:
             joke_handler(message)
         elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
             dice_handler(message)
-        elif text in ['хентай', 'hentai', 'лоли', 'loli', 'девушка', 'girl']:
+        elif text in ['хентай', 'hentai', 'лоли', 'loli', 'девушка', 'girl', 'баба']:
             forbidden_handler(message)
         if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
             if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
