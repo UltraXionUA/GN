@@ -100,15 +100,6 @@ def add_user(user, chat=None, connection=None) -> None:
                     connection.commit()
 
 
-def get_all_jokes() -> list:  # All Joke
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        cursor.execute('SELECT `setup`, `panchline` FROM Joke')
-        result = cursor.fetchall()
-    connection.close()
-    return result
-
-
 def check(user_id: str, check_t: str) -> bool:
     connection = start_connection()
     with connection.cursor() as cursor:
@@ -202,7 +193,6 @@ def get_code(name: str) -> [dict, None]:  # Get all answers
         result = cursor.fetchone()
     connection.close()
     return result
-
 
 def get_all(type_: str) -> list:
     connection = start_connection()

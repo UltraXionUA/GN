@@ -180,7 +180,7 @@ def joke_handler(message: Message) -> None:
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if message.chat.id not in jokes_data or len(jokes_data[message.chat.id]) == 1:
-            jokes_data[message.chat.id] = db.get_all_jokes()
+            jokes_data[message.chat.id] = db.get_all('Joke')
         joke = jokes_data[message.chat.id].pop(random.choice(range(len(jokes_data[message.chat.id]) - 1)))
         bot.send_chat_action(message.chat.id, 'typing')
         time.sleep(1.5)
@@ -1561,10 +1561,10 @@ def me_handler(message: Message) -> None:
 data_logic_tasks = defaultdict(dict)
 
 
-@bot.message_handler(commands=['logic_task'])  # /logic_task
-def logic_task_handler(message: Message) -> None:
+@bot.message_handler(commands=['logic'])  # /logic
+def logic_handler(message: Message) -> None:
     """
-       Enter /logic_task to get random logic task
+       Enter /logic to get random logic task
        :param message:
        :return:
     """
