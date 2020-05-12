@@ -71,10 +71,11 @@ def help_handler(message: Message) -> None:
         bot.send_chat_action(message.chat.id, 'typing')
         bot.send_message(message.chat.id, '<b>Тут должна была быть помощь</b>🆘, но её тут не будет🌚\n'
                                           'Список всех команд можно увидить введя <b>\" </b>\\<b> \"</b>\n'
-                                          'Так же бот имеет учет кармы(<i>работает в группах</i>\n)'
-                                          'Админ команды(<b>!ban</b>, <b>!mute {<i>time</i>}</b>, <b>!kick</b>)'
-                                          'Все свои вопросы и предложения вы можете писать мне 💢<b>@Ultra_Xion</b>💢\n'
-                                          'Если вы нашли баг или ошибку просьба сообщить\n'
+                                          'Так же бот имеет ввести учет кармы😇(<i>работает в группах</i>)\n'
+                                          'Админ команды(<b>!ban</b>, <b>!mute {<i>time</i>}</b>, <b>!kick</b>)\n'
+                                          'Доступ к запрещенным🔞 командам можно получить написав в администрацию'
+                                          'Все свои вопросы, предложения или если вы наши баг, '
+                                          'или ошибку вы можете писать мне 💢<b>@Ultra_Xion</b>💢\n'
                                           '<b>Почта:</b> <i>ultra25813@gmail.com</i>', parse_mode='HTML')
 
 
@@ -398,6 +399,7 @@ def weather_handler(message: Message) -> None:
 
 
 def weather(message: Message, index: int) -> None:
+    bot.delete_message(message.chat.id, message.message_id)
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
         InlineKeyboardButton(text="⬅️️", callback_data=f"weather_move_to {index - 1 if index > 0 else 'pass'}"),
@@ -406,6 +408,7 @@ def weather(message: Message, index: int) -> None:
     keyboard.add(InlineKeyboardButton('Погода', url='https://' +
                                                     f'darksky.net/forecast/{city_data[message.chat.id]["lat"]},'
                                                     f'{city_data[message.chat.id]["lon"]}/us12/en'))
+    keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {weather_msg[message.chat.id].message_id}'))
     try:
         bot.edit_message_text(chat_id=weather_msg[message.chat.id].chat.id,
                               message_id=weather_msg[message.chat.id].message_id,
