@@ -135,15 +135,6 @@ def change_karma(user, chat, action: list, exp: int) -> dict:  # Change Karma
     return karma
 
 
-def random_gn_sticker() -> str:  # Random sticker from GN
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        cursor.execute('SELECT `item_id` FROM Stickers_gn ORDER BY RAND() LIMIT 1')
-        result = cursor.fetchone()['item_id']
-    connection.close()
-    return result
-
-
 def add_sticker(item_id, emoji, name) -> None:  # Add sticker
     connection = start_connection()
     with connection.cursor() as cursor:
@@ -157,10 +148,13 @@ def add_sticker(item_id, emoji, name) -> None:  # Add sticker
     connection.close()
 
 
-def random_sticker() -> str:  # Random sticker
+def random_sticker(gn=False) -> str:  # Random sticker
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute('SELECT `item_id` FROM Stickers ORDER BY RAND() LIMIT 1')
+        if gn is False:
+            cursor.execute('SELECT `item_id` FROM Stickers ORDER BY RAND() LIMIT 1')
+        else:
+            cursor.execute('SELECT `item_id` FROM Stickers_gn ORDER BY RAND() LIMIT 1')
         result = cursor.fetchone()['item_id']
     connection.close()
     return result
@@ -191,24 +185,14 @@ def check_ban_user(user: str) -> None:  # Ban user
             return False
 
 
-def get_all_answers() -> list:  # Get random answer
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        cursor.execute(
-            f'SELECT answer FROM Answer;')
-        result = cursor.fetchall()
-    connection.close()
-    return result
-
-
 def get_answer(word) -> str:  # Get random answer with word
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(
             f'SELECT answer FROM Word_Answer WHERE word LIKE \'{word}\' ORDER BY RAND() LIMIT 1')
-        result = cursor.fetchone()['answer']
+        result = cursor.fetchone()
     connection.close()
-    return result
+    return result['answer']
 
 
 def get_code(name: str) -> [dict, None]:  # Get all answers
@@ -220,14 +204,12 @@ def get_code(name: str) -> [dict, None]:  # Get all answers
     return result
 
 
-def get_all_memes() -> list:  # Random meme
+def get_all(type_: str) -> list:
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute('SELECT `url` FROM Memes;')  # Выполнить команду запроса.
+        cursor.execute(f'SELECT * FROM {type_};')
         result = cursor.fetchall()
-    connection.close()
     return result
-
 
 def add_memes(array: list) -> None:  # Add memes
     connection = start_connection()
@@ -246,12 +228,12 @@ def get_forbidden(type_: str) -> str:
     return r.get(f'{type_}{random.randint(1, int(count_))}').decode('utf-8')
 
 
-def get_tasks() -> list:
+def get_task_answer(id_: str) -> list:
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM Logic_Tasks;')
-        result = cursor.fetchall()
-    return result
+        cursor.execute(f'SELECT answer FROM Logic_Tasks WHERE id={id_};')
+        result = cursor.fetchone()
+    return result['answer']
 
 
 # def add_to_redis(data: list, type_: str):

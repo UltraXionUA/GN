@@ -272,7 +272,7 @@ def meme_handler(message: Message) -> None:
         bot.send_chat_action(message.chat.id, 'upload_photo')
         if rend_d(50):
             if message.chat.id not in meme_data or len(meme_data[message.chat.id]) == 1:
-                meme_data[message.chat.id] = db.get_all_memes()
+                meme_data[message.chat.id] = db.get_all('Memes')
             meme = meme_data[message.chat.id].pop(random.choice(range(len(meme_data[message.chat.id]) - 1)))
             bot.send_photo(message.chat.id, meme['url'])
         else:
@@ -769,6 +769,8 @@ def forbidden_handler(message: Message) -> None:
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if db.check(message.from_user.id, 'off_censure'):
+            if message.chat.type != 'private':
+                db.change_karma(message.from_user, message.chat, ['-'], 10)
             while True:
                 if message.text.lower() in ['/loli', 'лоли', '/loli@gntmbot', '/loli@pineapple_test_bot']:
                     data = db.get_forbidden('loli')
@@ -779,7 +781,7 @@ def forbidden_handler(message: Message) -> None:
                 try:
                     if requests.get(data).ok:
                         break
-                except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema, Exep):
+                except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema, Exception):
                     continue
             try:
                 msg = bot.send_photo(message.chat.id, data)
@@ -1426,7 +1428,7 @@ def gn_sticker_handler(message: Message) -> None:
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if db.check(message.from_user.id, 'is_gn'):
             bot.send_chat_action(message.chat.id, 'upload_photo')
-            bot.send_sticker(message.chat.id, db.random_gn_sticker())
+            bot.send_sticker(message.chat.id, db.random_sticker(True))
         else:
             bot.send_message(message.chat.id, 'Эта функция вам недоступна😔')
 
@@ -1569,8 +1571,8 @@ def logic_task_handler(message: Message) -> None:
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         keyboard = InlineKeyboardMarkup()
         if message.chat.id not in data_logic_tasks or len(data_logic_tasks[message.chat.id]) == 1:
-            data_logic_tasks[message.chat.id] = db.get_tasks()
-        task = data_logic_tasks[message.chat.id][random.choice(range(len(data_logic_tasks[message.chat.id]) - 1))]
+            data_logic_tasks[message.chat.id] = db.get_all('Logic_Tasks')
+        task = data_logic_tasks[message.chat.id].pop(random.choice(range(len(data_logic_tasks[message.chat.id]) - 1)))
         msg = bot.send_message(message.chat.id,
                                f'<b>Задача №</b><i>{task["id"]}</i>\n'
                                f'{task["question"]}')
@@ -1583,19 +1585,13 @@ def logic_task_handler(message: Message) -> None:
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Answer\s.+\s.+$', call.data))
 def answer_query(call):
     global data_logic_tasks
-    if call.message.chat.id in data_logic_tasks:
-        bot.answer_callback_query(call.id, 'Ответ')
-        id_answer, id_command, id_question = call.data.split()[1:]
-        keyboard = InlineKeyboardMarkup()
-        for en, i in enumerate(data_logic_tasks[call.message.chat.id]):
-            if i['id'] == int(id_answer):
-                msg = bot.send_message(call.message.chat.id, f'<b>Ответ:</b> {i["answer"]}')
-                data_logic_tasks[call.message.chat.id].pop(en)
-                keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {id_command} {id_question}'))
-                bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
-                                      text=msg.text, reply_markup=keyboard, parse_mode='HTML')
-    else:
-        bot.answer_callback_query(call.id, '⛔️')
+    bot.answer_callback_query(call.id, 'Ответ')
+    id_answer, id_command, id_question = call.data.split()[1:]
+    keyboard = InlineKeyboardMarkup()
+    msg = bot.send_message(call.message.chat.id, f'<b>Ответ:</b> {db.get_task_answer(id_answer)}')
+    keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {id_command} {id_question}'))
+    bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
+                          text=msg.text, reply_markup=keyboard, parse_mode='HTML')
 # <<< End me >>>
 
 
@@ -2083,7 +2079,7 @@ def text_handler(message: Message) -> None:
             forbidden_handler(message)
         if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
             if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
-                data_answers[message.chat.id] = db.get_all_answers()
+                data_answers[message.chat.id] = db.get_all('Answer')
             if message.reply_to_message is not None:
                 if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(40):
                     answer = data_answers[message.chat.id].pop(random.choice(range(len(data_answers[message.chat.id]) - 1)))
@@ -2228,7 +2224,10 @@ def del_query(call):
     bot.answer_callback_query(call.id, 'Удалено')
     messages = call.data.split()[1:]
     for i in messages:
-        bot.delete_message(call.message.chat.id, i)
+        try:
+            bot.delete_message(call.message.chat.id, i)
+        except Exception:
+            pass
 
 
 
