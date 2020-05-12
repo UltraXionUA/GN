@@ -230,7 +230,7 @@ def set_eluler(data: list) -> None:
     with connection.cursor() as cursor:
         if data:
             for i in data:
-                cursor.execute(f'INSERT INTO `Project_Euler`(`name`, `url`) VALUES (\'{i["name"]}\', \'{i["url"]}\');')
+                cursor.execute(f'INSERT INTO `Project_Euler`(`name`, `url`) VALUES (\'{str(i["name"])}\', \'{str(i["url"])}\');')
                 connection.commit()
             connection.close()
 
