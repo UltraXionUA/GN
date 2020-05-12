@@ -225,14 +225,16 @@ def get_task_answer(id_: str) -> list:
         result = cursor.fetchone()
     return result['answer']
 
-def set_eluler(data: list) -> None:
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        if data:
-            for i in data:
-                cursor.execute(f'INSERT INTO `Project_Euler`(`name`, `url`) VALUES (\'{str(i["name"])}\', \'{str(i["url"])}\');')
-                connection.commit()
-            connection.close()
+
+
+# def set_eluler(data: list) -> None:
+#     connection = start_connection()
+#     with connection.cursor() as cursor:
+#         if data:
+#             for i in data:
+#                 cursor.execute(f'INSERT INTO `Project_Euler`(`name`, `url`) VALUES (\'{str(i["name"])}\', \'{str(i["url"])}\');')
+#                 connection.commit()
+#             connection.close()
 
 
 # def add_to_redis(data: list, type_: str):
@@ -242,7 +244,7 @@ def set_eluler(data: list) -> None:
 #     for en, i in enumerate(data, 1):
 #         r.set(type_ + str(en), i['url'])
 #     print('finish')
-#
+
 # def get_all():
 #     connection = start_connection()
 #     with connection.cursor() as cursor:

@@ -4,7 +4,7 @@
 from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from db import add_memes, set_eluler
+from db import add_memes
 from Config_GNBot.config import URLS
 from funcs import log
 import requests
@@ -42,19 +42,6 @@ def get_instagram_photos(link: str) -> list:
             data.append(i['node']['display_resources'][2]['src'])
     return data
 
-
-def get_elner() -> list:
-    data = []
-    soup = BeautifulSoup(requests.get('https://euler.jakumo.org/problems/showall.html',
-                                      headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
-    trs = soup.find('table', class_='problems').find_all_next('tr')
-    for i in trs:
-        link =  i.find('a')
-        if link is not None:
-            data.append({'name': link.get_text(), 'url': link.get('href')})
-    set_eluler(data)
-
-get_elner()
 
 def get_torrents3(search: str) -> list:
     data = []
@@ -155,6 +142,17 @@ if __name__ == "__main__":
     main()
 
 
+# def get_elner() -> list:
+#     data = []
+#     soup = BeautifulSoup(requests.get('https://euler.jakumo.org/problems/showall.html',
+#                                       headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+#     trs = soup.find('table', class_='problems').find_all_next('tr')
+#     for i in trs:
+#         link =  i.find('a')
+#         if link is not None:
+#             data.append({'name': link.get_text(), 'url': link.get('href')})
+#     set_eluler(data)
+
 
 # def get_tasks() -> dict:
 #     data = {}
@@ -167,8 +165,6 @@ if __name__ == "__main__":
 #         data[re.sub(r'^\d+.\s', '', answer.find('strong').get_text())] = question.get_text()
 #     add_logic_tasks(data)
 #
-#
-# get_tasks()
 
 
 
@@ -192,10 +188,6 @@ if __name__ == "__main__":
 #             add_girls(data)
 #         data.clear()
 #
-#
-#
-#
-# girl_parser()
 
 
 # def loli_parser() -> None:
@@ -225,7 +217,7 @@ if __name__ == "__main__":
 #                 else:
 #                     break
 #
-# loli_parser()
+
 
 
 # from pyvirtualdisplay import Display
@@ -240,6 +232,5 @@ if __name__ == "__main__":
 #         print(driver.title)  # this should print "Google"
 #     finally:
 #         driver.quit()
-#
-# parser_books()
+
 
