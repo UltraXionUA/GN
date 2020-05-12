@@ -4,7 +4,7 @@
 from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from db import add_memes
+from db import add_memes, set_eluler
 from Config_GNBot.config import URLS
 from funcs import log
 import requests
@@ -42,6 +42,19 @@ def get_instagram_photos(link: str) -> list:
             data.append(i['node']['display_resources'][2]['src'])
     return data
 
+
+def get_elner() -> list:
+    data = []
+    soup = BeautifulSoup(requests.get('https://euler.jakumo.org/problems/showall.html',
+                                      headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+    trs = soup.find('table', class_='problems').find_all_next('tr')
+    for i in trs:
+        link =  i.find('a')
+        if link is not None:
+            data.append({'name': link.get_text(), 'url': link.get('href')})
+    set_eluler(data)
+
+get_elner()
 
 def get_torrents3(search: str) -> list:
     data = []

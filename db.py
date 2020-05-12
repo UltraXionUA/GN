@@ -225,6 +225,15 @@ def get_task_answer(id_: str) -> list:
         result = cursor.fetchone()
     return result['answer']
 
+def set_eluler(data: list) -> None:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        if data:
+            for i in data:
+                cursor.execute(f'INSERT INTO `Project_Euler`(`name`, `url`) VALUES (\'{i["name"]}\', \'{i["url"]}\');')
+                connection.commit()
+            connection.close()
+
 
 # def add_to_redis(data: list, type_: str):
 #     r = redis.Redis(host='localhost', port=6379, db=0)
