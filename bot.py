@@ -1582,11 +1582,12 @@ def euler_handler(message: Message) -> None:
         if task['other'] != 'False':
             name_file = task['other'].split('/')[-1]
             keyboard.add(InlineKeyboardButton(name_file, callback_data=f'load doc {task["id"]}'))
+        text = f'<b>Задача</b> <i>№{task["id"]}</i>\n<b><i>{task["name"]}</i></b>'
+        if task['is_full'] != 'True':
+            text += '\nЗадача слишком большая, её полная версия достпна по ссылке ниже'
         bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
                                media=InputMediaPhoto(msg.photo[-1].file_id,
-                               caption=f'<b>Задача</b> <i>№{task["id"]}</i>\n'
-                                       f'<b><i>{task["name"]}</i></b>\n\nПоделиться решением'
-                                       f' <i>/code</i>', parse_mode='HTML'),
+                               caption=text + '\n\nПоделиться решением <i>/code</i>', parse_mode='HTML'),
                                reply_markup=keyboard)
 
 
@@ -1595,17 +1596,17 @@ def answer_query(call):
     type_, id_ = call.data.split()[1:]
     url = db.get_doc(id_)
     name = url.split('/')[-1]
+    bot.answer_callback_query(call.id, name)
     if type_ == 'doc':
         with open(name, 'wb') as f:
             req = requests.get(url, stream=True)
             for i in req.iter_content(1024):
                 f.write(i)
-        bot.send_document(call.message.chat.id, open(f'file.txt', 'rb'))
+            bot.send_document(call.message.chat.id, data=open(name, 'rb'))
         try:
             os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), name))
         except (FileNotFoundError, NameError):
             log('Error! Can\'t remove file', 'warning')
-        bot.send_document(call.message.chat.id, )
 # <<< End project Euler >>>
 
 
