@@ -1576,18 +1576,18 @@ def euler_handler(message: Message) -> None:
         if message.chat.id not in data_euler or len(data_euler[message.chat.id]) == 1:
             data_euler[message.chat.id] = db.get_all('Project_Euler')
         task = data_euler[message.chat.id].pop(random.choice(range(len(data_euler[message.chat.id]) - 1)))
-        try:
-            keyboard.add(InlineKeyboardButton('Ссылка', url=task['url']),
-                         InlineKeyboardButton('Удалить', callback_data=f'del {message.message_id}'))
-            if task['other'] != 'False':
-                name_file = task['other'].split('/')[-1]
-                keyboard.add(InlineKeyboardButton(name_file, callback_data=f'load doc {task["id"]}'))
-            bot.send_photo(message.chat.id, task['image_url'], caption=f'<b>Задача</b> <i>№{task["id"]}</i>\n'
-                                                                       f'<i>{task["name"]}</i>\nПоделиться решением'
-                                                                       f' <i>/code</i>',
-                                                                        reply_markup=keyboard, parse_mode='HTML')
-        except Exception:
-            print(task['id'], task['url'])
+        msg = bot.send_photo(message.chat.id, task['image_url'])
+        keyboard.add(InlineKeyboardButton('Ссылка', url=task['url']),
+                     InlineKeyboardButton('Удалить', callback_data=f'del {message.message_id} {msg.message_id}'))
+        if task['other'] != 'False':
+            name_file = task['other'].split('/')[-1]
+            keyboard.add(InlineKeyboardButton(name_file, callback_data=f'load doc {task["id"]}'))
+        bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
+                               media=InputMediaPhoto(msg.photo[-1].file_id,
+                               caption=f'<b>Задача</b> <i>№{task["id"]}</i>\n'
+                                       f'<b><i>{task["name"]}</i></b>\n\nПоделиться решением'
+                                       f' <i>/code</i>', parse_mode='HTML'),
+                               reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^load\s\w+\s\d+$', call.data))
