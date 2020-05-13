@@ -1557,6 +1557,58 @@ def me_handler(message: Message) -> None:
 # <<< End me >>>
 
 
+# <<< Project Euler >>>
+data_euler = defaultdict(list)
+
+
+@bot.message_handler(commands=['euler'])  # /euler
+def euler_handler(message: Message) -> None:
+    """
+       Enter /logic to get random logic task
+       :param message:
+       :return:
+    """
+    global data_euler
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        keyboard = InlineKeyboardMarkup()
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        if message.chat.id not in data_euler or len(data_euler[message.chat.id]) == 1:
+            data_euler[message.chat.id] = db.get_all('Project_Euler')
+        task = data_euler[message.chat.id].pop(random.choice(range(len(data_euler[message.chat.id]) - 1)))
+        try:
+            keyboard.add(InlineKeyboardButton('Ссылка', url=task['url']),
+                         InlineKeyboardButton('Удалить', callback_data=f'del {message.message_id}'))
+            if task['other'] != 'False':
+                name_file = task['other'].split('/')[-1]
+                keyboard.add(InlineKeyboardButton(name_file, callback_data=f'load doc {task["id"]}'))
+            bot.send_photo(message.chat.id, task['image_url'], caption=f'<b>Задача</b> <i>№{task["id"]}</i>\n'
+                                                                       f'<i>{task["name"]}</i>\nПоделиться решением'
+                                                                       f' <i>/code</i>',
+                                                                        reply_markup=keyboard, parse_mode='HTML')
+        except Exception:
+            print(task['id'], task['url'])
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^load\s\w+\s\d+$', call.data))
+def answer_query(call):
+    type_, id_ = call.data.split()[1:]
+    url = db.get_doc(id_)
+    name = url.split('/')[-1]
+    if type_ == 'doc':
+        with open(name, 'wb') as f:
+            req = requests.get(url, stream=True)
+            for i in req.iter_content(1024):
+                f.write(i)
+        bot.send_document(call.message.chat.id, open(f'file.txt', 'rb'))
+        try:
+            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), name))
+        except (FileNotFoundError, NameError):
+            log('Error! Can\'t remove file', 'warning')
+        bot.send_document(call.message.chat.id, )
+# <<< End project Euler >>>
+
+
 # <<< Logic tasks >>>
 data_logic_tasks = defaultdict(dict)
 

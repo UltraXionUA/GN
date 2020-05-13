@@ -13,6 +13,61 @@ def start_connection():  # Connection to DB
     except pymysql.err.OperationalError:
         log('Ошибка подключения к БД!', 'error')
 
+
+data = '''[url=https://ibb.co/XSFtf0C][img]https://i.ibb.co/3BSc56C/14.png[/img][/url]
+[url=https://ibb.co/5cskM4Z][img]https://i.ibb.co/cT2wg3q/15.png[/img][/url]
+[url=https://ibb.co/wC4xvTq][img]https://i.ibb.co/5vLf7d3/16.png[/img][/url]
+[url=https://ibb.co/80Wt4Lg][img]https://i.ibb.co/Vt75pcY/17.png[/img][/url]
+[url=https://ibb.co/rMjvyFy][img]https://i.ibb.co/jGNH4b4/18.png[/img][/url]
+[url=https://ibb.co/ZXb8RQh][img]https://i.ibb.co/T2N8DQH/19.png[/img][/url]
+[url=https://ibb.co/f80qvK3][img]https://i.ibb.co/q01754H/20.png[/img][/url]
+[url=https://ibb.co/h7bjjzW][img]https://i.ibb.co/bWTZZ9B/21.png[/img][/url]
+[url=https://ibb.co/7r6fxMQ][img]https://i.ibb.co/zP0MW9F/22.png[/img][/url]
+[url=https://ibb.co/vHsLbsn][img]https://i.ibb.co/f28rb8w/23.png[/img][/url]
+[url=https://ibb.co/MphkBR7][img]https://i.ibb.co/CvtKPnQ/24.png[/img][/url]
+[url=https://ibb.co/89kdqgP][img]https://i.ibb.co/SBSdbwV/25.png[/img][/url]
+[url=https://ibb.co/SQ0pF6x][img]https://i.ibb.co/jVGFn85/26.png[/img][/url]
+[url=https://ibb.co/VYkMjB0][img]https://i.ibb.co/1G4Rv2Y/27.png[/img][/url]
+[url=https://ibb.co/PY96pBs][img]https://i.ibb.co/qnWrGbL/28.png[/img][/url]
+[url=https://ibb.co/ZK8Kkd3][img]https://i.ibb.co/wCWCxyT/29.png[/img][/url]
+[url=https://ibb.co/5LxhTbc][img]https://i.ibb.co/rHf2kDy/30.png[/img][/url]
+[url=https://ibb.co/f1Ch6h4][img]https://i.ibb.co/98qFKFs/31.png[/img][/url]
+[url=https://ibb.co/fdYYc3V][img]https://i.ibb.co/r2GGWBK/32.png[/img][/url]
+[url=https://ibb.co/DR923t9][img]https://i.ibb.co/yQ6jLX6/33.png[/img][/url]
+[url=https://ibb.co/fdgnp8R][img]https://i.ibb.co/VY1QSHy/34.png[/img][/url]
+[url=https://ibb.co/ZX8nShb][img]https://i.ibb.co/qjstCR2/35.png[/img][/url]
+[url=https://ibb.co/XWk2wVs][img]https://i.ibb.co/Rg4v570/36.png[/img][/url]
+[url=https://ibb.co/nQMQcDr][img]https://i.ibb.co/qmYmsRB/37.png[/img][/url]
+[url=https://ibb.co/9pBMgBk][img]https://i.ibb.co/sgcBRcd/38.png[/img][/url]
+[url=https://ibb.co/PD8jLHX][img]https://i.ibb.co/41xtqrv/39.png[/img][/url]
+[url=https://ibb.co/QndDkLy][img]https://i.ibb.co/rMsd3YD/40.png[/img][/url]
+[url=https://ibb.co/Kzy9XGc][img]https://i.ibb.co/2YKjy60/41.png[/img][/url]
+[url=https://ibb.co/1Q8dknx][img]https://i.ibb.co/B3qr9PR/42.png[/img][/url]
+[url=https://ibb.co/0rg3Ld8][img]https://i.ibb.co/JHfPTM0/43.png[/img][/url]
+[url=https://ibb.co/9Y1J4dK][img]https://i.ibb.co/s3Nh1Xx/44.png[/img][/url]
+[url=https://ibb.co/w6x4hMz][img]https://i.ibb.co/vzKk4Zj/45.png[/img][/url]
+[url=https://ibb.co/fvdrb5N][img]https://i.ibb.co/HdTG0sP/46.png[/img][/url]
+[url=https://ibb.co/bPQ5s1f][img]https://i.ibb.co/CzmKbBr/47.png[/img][/url]
+[url=https://ibb.co/HXXZkJK][img]https://i.ibb.co/0QQ5dwn/48.png[/img][/url]
+[url=https://ibb.co/K2nQF01][img]https://i.ibb.co/5rZzBM7/49.png[/img][/url]
+[url=https://ibb.co/6tR7N7P][img]https://i.ibb.co/3Fy9k9N/50.png[/img][/url]'''
+
+
+def set_img():
+    import re
+    strings = data.split('\n')
+    connection = start_connection()
+    for en, i in enumerate(strings, 14):
+        link = re.search(r'https?://i.ibb.co/.+/\d+.\w+', i).group(0)
+        print(en, link)
+        with connection.cursor() as cursor:
+            cursor.execute(f'UPDATE Project_Euler SET image_url=\'{link}\' WHERE id={en};')
+        connection.commit()
+    connection.close()
+
+set_img()
+
+
 def get_user(user, chat) -> dict:
     connection = start_connection()
     with connection.cursor() as cursor:
@@ -197,7 +252,10 @@ def get_code(name: str) -> [dict, None]:  # Get all answers
 def get_all(type_: str) -> list:
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM {type_};')
+        if type_ == 'Project_Euler':
+            cursor.execute(f'SELECT * FROM {type_} WHERE image_url IS NOT NULL;')
+        else:
+            cursor.execute(f'SELECT * FROM {type_};')
         result = cursor.fetchall()
     return result
 
@@ -217,8 +275,15 @@ def get_forbidden(type_: str) -> str:
     count_ = r.get(f'len_{type_}')
     return r.get(f'{type_}{random.randint(1, int(count_))}').decode('utf-8')
 
+def get_doc(id_: str) -> str:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT other FROM Project_Euler WHERE id={id_};')
+        result = cursor.fetchone()
+    return result['other']
 
-def get_task_answer(id_: str) -> list:
+
+def get_task_answer(id_: str) -> str:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT answer FROM Logic_Tasks WHERE id={id_};')
