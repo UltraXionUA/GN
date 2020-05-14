@@ -198,10 +198,7 @@ def get_code(name: str) -> [dict, None]:  # Get all answers
 def get_all(type_: str) -> list:
     connection = start_connection()
     with connection.cursor() as cursor:
-        if type_ == 'Project_Euler':
-            cursor.execute(f'SELECT * FROM {type_} WHERE image_url IS NOT NULL;')
-        else:
-            cursor.execute(f'SELECT * FROM {type_};')
+        cursor.execute(f'SELECT * FROM {type_};')
         result = cursor.fetchall()
     return result
 
