@@ -1577,29 +1577,17 @@ def euler_handler(message: Message) -> None:
             data_euler[message.chat.id] = db.get_all('Project_Euler')
         task = data_euler[message.chat.id].pop(random.choice(range(len(data_euler[message.chat.id]) - 1)))
         images = task['image_url'].split(',')
-        id_s = None
-        if len(images) == 1:
-            msg = bot.send_photo(message.chat.id, task['image_url'])
-            id_s = str(msg.message_id)
-        elif len(images) == 2:
-            msg1 = bot.send_photo(message.chat.id, images[0])
-            msg = bot.send_photo(message.chat.id, images[1])
-            id_s = f'{msg.message_id} {msg1.message_id}'
-        else:
-            msg1 = bot.send_photo(message.chat.id, images[0])
-            msg2 = bot.send_photo(message.chat.id, images[1])
-            msg = bot.send_photo(message.chat.id, images[2])
-            id_s = f'{msg.message_id} {msg1.message_id} {msg2.message_id}'
+        data_msg = [bot.send_photo(message.chat.id, image) for image in images]
+        id_s = f'{message.message_id} '
+        for i in data_msg:
+            id_s += f'{i.message_id} '
         keyboard.add(InlineKeyboardButton('Ссылка', url=task['url']),
                      InlineKeyboardButton('Удалить', callback_data=f'del {id_s}'))
         if task['other'] != 'False':
-            if len(task['other'].split(',')) == 1:
-                name_file = task['other'].split('/')[-1]
-                keyboard.add(InlineKeyboardButton(name_file, callback_data=f'load doc {task["id"]}'))
-            else:
-                keyboard.add(InlineKeyboardButton('Документы', callback_data=f'load doc {task["id"]}'))
-        bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
-                               media=InputMediaPhoto(msg.photo[-1].file_id,
+            keyboard.add(InlineKeyboardButton(task['other'].split('/')[-1] if len(task['other'].split(',')) == 1 else 'Документы',
+                                              callback_data=f'load doc {task["id"]}'))
+        bot.edit_message_media(chat_id=data_msg[-1].chat.id, message_id=data_msg[-1].message_id,
+                               media=InputMediaPhoto(data_msg[-1].photo[-1].file_id,
                                caption=f'<b>Задача</b> <i>№{task["id"]}</i>\n<b><i>{task["name"]}</i></b>'
                                        f'\n\nПоделиться решением <i>/code</i>', parse_mode='HTML'),
                                reply_markup=keyboard)
@@ -1607,9 +1595,8 @@ def euler_handler(message: Message) -> None:
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^load\sdoc\s\d+$', call.data))
 def answer_query(call):
-    id_ = call.data.split()[2]
-    url = db.get_doc(id_)
-    if len(url.split(',')) == 1:
+    urls = db.get_doc(call.data.split()[2]).split(',')
+    for url in urls:
         name = url.split('/')[-1]
         bot.answer_callback_query(call.id, name)
         with open(name, 'wb') as f:
@@ -1621,19 +1608,6 @@ def answer_query(call):
             os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), name))
         except (FileNotFoundError, NameError):
             log('Error! Can\'t remove file', 'warning')
-    else:
-        bot.answer_callback_query(call.id, 'Документы')
-        for q in url.split(','):
-            name = q.split('/')[-1]
-            with open(name, 'wb') as f:
-                req = requests.get(url, stream=True)
-                for i in req.iter_content(1024):
-                    f.write(i)
-                bot.send_document(call.message.chat.id, data=open(name, 'rb'))
-            try:
-                os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), name))
-            except (FileNotFoundError, NameError):
-                log('Error! Can\'t remove file', 'warning')
 # <<< End project Euler >>>
 
 
