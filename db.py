@@ -228,37 +228,37 @@ def get_answer() -> str:
     count_ = r.get(f'len_answer')
     return r.get(f'answer{random.randint(1, int(count_))}').decode('utf-8')
 
-def add_answers():
-    import re
-    with open('answer_databse.txt', 'r') as f:
-        for en, i in enumerate(f.readlines(), 1):
-            if en % 1000 == 0:
-                print(en)
-            try:
-                answer = i.split("\\")[1].replace('\n', '')
-                answer = answer.replace('\'', '\\\'')
-                if re.match(r'^=+', answer) or re.match(r'^⚡+', answer):
-                    continue
-                else:
-                    if len(answer) < 500:
-                        add_answer(answer)
-            except IndexError:
-                continue
-add_answers()
+# def add_answers():
+#     import re
+#     with open('answer_databse.txt', 'r') as f:
+#         for en, i in enumerate(f.readlines(), 1):
+#             if en % 1000 == 0:
+#                 print(en)
+#             try:
+#                 answer = i.split("\\")[1].replace('\n', '')
+#                 answer = answer.replace('\'', '\\\'')
+#                 if re.match(r'^=+', answer) or re.match(r'^⚡+', answer):
+#                     continue
+#                 else:
+#                     if len(answer) < 500:
+#                         add_answer(answer)
+#             except IndexError:
+#                 continue
+# add_answers()
 
-# def add_to_redis():
-#     connection = start_connection()
-#     with connection.cursor() as cursor:
-#         cursor.execute(f'SELECT answer FROM Answer;')
-#         res = cursor.fetchall()
-#     r = redis.Redis(host='localhost', port=6379, db=1)
-#     r.set(f'len_answer', len(res))
-#     print(len(res))
-#     for en, i in enumerate(res, 1):
-#         if en % 1000 == 0:
-#             print(en)
-#         r.set('answer' + str(en), i['answer'])
-#     print('finish')
+def add_to_redis():
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT answer FROM Answer;')
+        res = cursor.fetchall()
+    r = redis.Redis(host='localhost', port=6379, db=1)
+    r.set(f'len_answer', len(res))
+    print(len(res))
+    for en, i in enumerate(res, 1):
+        if en % 1000 == 0:
+            print(en)
+        r.set('answer' + str(en), i['answer'])
+    print('finish')
 #
 # add_to_redis()
 # def set_img():
