@@ -153,14 +153,6 @@ def random_sticker(gn=False) -> str:  # Random sticker
     return result
 
 
-def add_answer(answer: str) -> None:  # Add answer
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        cursor.execute(f'INSERT INTO `Answer`(`answer`) VALUES (\'{answer}\');')
-        connection.commit()
-    connection.close()
-
-
 def ban_user(user: str) -> None:  # Ban user
     connection = start_connection()
     with connection.cursor() as cursor:
@@ -246,21 +238,23 @@ def get_answer() -> str:
 #                 continue
 # add_answers()
 
-def add_to_redis():
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        cursor.execute(f'SELECT answer FROM Answer;')
-        res = cursor.fetchall()
-    r = redis.Redis(host='localhost', port=6379, db=1)
-    r.set(f'len_answer', len(res))
-    print(len(res))
-    for en, i in enumerate(res, 1):
-        if en % 1000 == 0:
-            print(en)
-        r.set('answer' + str(en), i['answer'])
-    print('finish')
+# def add_to_redis():
+#     connection = start_connection()
+#     with connection.cursor() as cursor:
+#         cursor.execute(f'SELECT answer FROM Answer;')
+#         res = cursor.fetchall()
+#     r = redis.Redis(host='localhost', port=6379, db=1)
+#     r.set(f'len_answer', len(res))
+#     print(len(res))
+#     for en, i in enumerate(res, 1):
+#         if en % 1000 == 0:
+#             print(en)
+#         r.set('answer' + str(en), i['answer'])
+#     print('finish')
+#
+# add_to_redis()
 
-add_to_redis()
+
 # def set_img():
 #     import re
 #     strings = data.split('\n')

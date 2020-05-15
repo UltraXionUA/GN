@@ -1814,17 +1814,6 @@ def text_handler(message: Message) -> None:
 # <<< End change karma >>>
 
 
-# <<< Add answer >>>
-@bot.message_handler(content_types=['text'], regexp=r'^-\s.+')  # Add answer to DB
-def text_handler(message: Message) -> None:
-    if message.from_user.id == int(Admin_ID):
-        db.add_answer(message.text.replace('-', '').lstrip())
-        bot.reply_to(message, random.choice(['Принял во внимание', 'Услышал', '+', 'Запомнил', 'Твои мольбы услышаны']))
-
-
-# <<< End add answer >>>
-
-
 # <<< Code PasteBin >>>
 leng_msg = 'None'
 
