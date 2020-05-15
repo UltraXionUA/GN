@@ -1564,7 +1564,7 @@ data_euler = defaultdict(list)
 @bot.message_handler(commands=['euler'])  # /euler
 def euler_handler(message: Message) -> None:
     """
-       Enter /logic to get random logic task
+       Enter /euler to get random task from Project Euler
        :param message:
        :return:
     """
@@ -1593,7 +1593,7 @@ def euler_handler(message: Message) -> None:
                                reply_markup=keyboard)
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^load\sdoc\s\d+$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^load\s\w+\s\d+$', call.data))
 def answer_query(call):
     urls = db.get_doc(call.data.split()[2]).split(',')
     for url in urls:
@@ -1603,7 +1603,7 @@ def answer_query(call):
             req = requests.get(url, stream=True)
             for i in req.iter_content(1024):
                 f.write(i)
-            bot.send_document(call.message.chat.id, data=open(name, 'rb'))
+        bot.send_document(call.message.chat.id, data=open(name, 'rb'))
         try:
             os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), name))
         except (FileNotFoundError, NameError):
@@ -2134,16 +2134,16 @@ def text_handler(message: Message) -> None:
             dice_handler(message)
         elif text in ['хентай', 'hentai', 'лоли', 'loli', 'девушка', 'girl', 'баба', 'пизда']:
             forbidden_handler(message)
-        if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
-            if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
-                data_answers[message.chat.id] = db.get_all('Answer')
-            if message.reply_to_message is not None:
-                if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(40):
-                    answer = data_answers[message.chat.id].pop(random.choice(range(len(data_answers[message.chat.id]) - 1)))
-                    bot.reply_to(message, answer['answer'])
-            elif rend_d(5):
-                answer = data_answers[message.chat.id].pop(random.choice(range(len(data_answers[message.chat.id]) - 1)))
-                bot.reply_to(message, answer['answer'])
+        # if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
+        #     if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
+        #         data_answers[message.chat.id] = db.get_all('Answer')
+        #     if message.reply_to_message is not None:
+        #         if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(40):
+        #             answer = data_answers[message.chat.id].pop(random.choice(range(len(data_answers[message.chat.id]) - 1)))
+        #             bot.reply_to(message, answer['answer'])
+        #     elif rend_d(5):
+        #         answer = data_answers[message.chat.id].pop(random.choice(range(len(data_answers[message.chat.id]) - 1)))
+        #         bot.reply_to(message, answer['answer'])
 
 
 # <<< End all message >>>
