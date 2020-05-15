@@ -2126,6 +2126,8 @@ def text_handler(message: Message) -> None:
                     bot.reply_to(message, db.get_answer())
             elif rend_d(15):
                 bot.reply_to(message, db.get_answer())
+            elif rend_d(10):
+                bot.send_sticker(message.chat.id, db.random_sticker(), message.message_id)
 
 
 # <<< End all message >>>
