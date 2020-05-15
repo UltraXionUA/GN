@@ -187,11 +187,14 @@ def get_all(type_: str) -> list:
 
 def add_memes(array: list) -> None:  # Add memes
     connection = start_connection()
+    count = 0
     with connection.cursor() as cursor:
         for i in array:
             if cursor.execute(f'SELECT * FROM Memes WHERE url LIKE \'{i}\'') != 1:
+                count += 1
                 cursor.execute(f'INSERT INTO `Memes`(`url`) VALUES (\'{i}\');')
                 connection.commit()
+    print(f'Мемов добавлено: {count}')
     connection.close()
 
 
