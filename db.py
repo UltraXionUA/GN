@@ -4,6 +4,7 @@ from funcs import log
 from Config_GNBot import config
 import pymysql
 import redis
+import random
 
 
 def start_connection():  # Connection to DB
@@ -177,16 +178,6 @@ def check_ban_user(user: str) -> None:  # Ban user
             return False
 
 
-def get_answer(word) -> str:  # Get random answer with word
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        cursor.execute(
-            f'SELECT answer FROM Word_Answer WHERE word LIKE \'{word}\' ORDER BY RAND() LIMIT 1')
-        result = cursor.fetchone()
-    connection.close()
-    return result['answer']
-
-
 def get_code(name: str) -> [dict, None]:  # Get all answers
     connection = start_connection()
     with connection.cursor() as cursor:
@@ -213,7 +204,6 @@ def add_memes(array: list) -> None:  # Add memes
 
 
 def get_forbidden(type_: str) -> str:
-    import random
     r = redis.Redis(host='localhost', port=6379, db=0)
     count_ = r.get(f'len_{type_}')
     return r.get(f'{type_}{random.randint(1, int(count_))}').decode('utf-8')
@@ -233,7 +223,44 @@ def get_task_answer(id_: str) -> str:
         result = cursor.fetchone()
     return result['answer']
 
+def get_answer() -> str:
+    r = redis.Redis(host='localhost', port=6379, db=1)
+    count_ = r.get(f'len_answer')
+    return r.get(f'answer{random.randint(1, int(count_))}').decode('utf-8')
 
+def add_answers():
+    import re
+    with open('answer_databse.txt', 'r') as f:
+        for en, i in enumerate(f.readlines(), 1):
+            if en % 1000 == 0:
+                print(en)
+            try:
+                answer = i.split("\\")[1].replace('\n', '')
+                answer = answer.replace('\'', '\\\'')
+                if re.match(r'^=+', answer) or re.match(r'^⚡+', answer):
+                    continue
+                else:
+                    if len(answer) < 500:
+                        add_answer(answer)
+            except IndexError:
+                continue
+add_answers()
+
+# def add_to_redis():
+#     connection = start_connection()
+#     with connection.cursor() as cursor:
+#         cursor.execute(f'SELECT answer FROM Answer;')
+#         res = cursor.fetchall()
+#     r = redis.Redis(host='localhost', port=6379, db=1)
+#     r.set(f'len_answer', len(res))
+#     print(len(res))
+#     for en, i in enumerate(res, 1):
+#         if en % 1000 == 0:
+#             print(en)
+#         r.set('answer' + str(en), i['answer'])
+#     print('finish')
+#
+# add_to_redis()
 # def set_img():
 #     import re
 #     strings = data.split('\n')

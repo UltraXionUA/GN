@@ -2105,9 +2105,6 @@ def kick(message: Message, chat=None, user=None):
 
 
 # <<< All message >>>
-data_answers = defaultdict(list)
-
-
 @bot.message_handler(content_types=['text'])
 @bot.edited_message_handler(content_types=['text'])
 def text_handler(message: Message) -> None:
@@ -2134,16 +2131,12 @@ def text_handler(message: Message) -> None:
             dice_handler(message)
         elif text in ['хентай', 'hentai', 'лоли', 'loli', 'девушка', 'girl', 'баба', 'пизда']:
             forbidden_handler(message)
-        # if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
-        #     if message.chat.id not in data_answers or len(data_answers[message.chat.id]) == 1:
-        #         data_answers[message.chat.id] = db.get_all('Answer')
-        #     if message.reply_to_message is not None:
-        #         if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(40):
-        #             answer = data_answers[message.chat.id].pop(random.choice(range(len(data_answers[message.chat.id]) - 1)))
-        #             bot.reply_to(message, answer['answer'])
-        #     elif rend_d(5):
-        #         answer = data_answers[message.chat.id].pop(random.choice(range(len(data_answers[message.chat.id]) - 1)))
-        #         bot.reply_to(message, answer['answer'])
+        if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
+            if message.reply_to_message is not None:
+                if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(40):
+                    bot.reply_to(message, db.get_answer())
+            elif rend_d(5):
+                bot.reply_to(message, db.get_answer())
 
 
 # <<< End all message >>>
