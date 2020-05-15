@@ -1173,7 +1173,6 @@ def get_video(message: Message) -> None:
                                     req = request.Request(i['url'], method='HEAD')
                                     f = request.urlopen(req)
                                     if f.headers['Content-Length'] is not None:
-                                        print(f.headers['Content-Length'])
                                         if int(f.headers['Content-Length']) < 5242880:
                                             list_data.append(InputMediaVideo(i['url']))
                                 else:
