@@ -225,20 +225,19 @@ def get_answer() -> str:
 
 # def add_answers():
 #     import re
+#     count = 0
 #     with open('answer_databse.txt', 'r') as f:
 #         for en, i in enumerate(f.readlines(), 1):
-#             if en % 1000 == 0:
-#                 print(en)
 #             try:
 #                 answer = i.split("\\")[1].replace('\n', '')
-#                 answer = answer.replace('\'', '\\\'')
+#                 word = i.split("\\")[0]
 #                 if re.match(r'^=+', answer) or re.match(r'^⚡+', answer):
 #                     continue
 #                 else:
-#                     if len(answer) < 500:
-#                         add_answer(answer)
+#                     count += 1
 #             except IndexError:
 #                 continue
+#     print(count)
 # add_answers()
 
 # def add_to_redis():

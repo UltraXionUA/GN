@@ -31,7 +31,6 @@ import re
 # <<< End import's>>
 log('Bot is successful running!', 'info')
 
-
 # Turn on parser memes
 Parser = Thread(target=main, name='Parser')
 Parser.start()
@@ -1024,23 +1023,17 @@ def send_audio(message: Message, method: str) -> None:
                         resolution = '480p'
                         yt.streams.filter(res="480p").order_by('resolution').desc()[0].download(
                             filename='video')
-                    except error.HTTPError:
-                        bot.send_message(message.chat.id, 'Не могу найти файл😔')
-                    except IndexError:
+                    except (error.HTTPError, IndexError):
                         try:
                             resolution = '320p'
                             yt.streams.filter(res="320p").order_by('resolution').desc()[0].download(
                                 filename='video')
-                        except error.HTTPError:
-                            bot.send_message(message.chat.id, 'Не могу найти файл😔')
-                        except IndexError:
+                        except (error.HTTPError, IndexError):
                             try:
                                 resolution = '240p'
                                 yt.streams.filter(res="240p").order_by('resolution').desc()[0].download(
                                     filename='video')
-                            except error.HTTPError:
-                                bot.send_message(message.chat.id, 'Не могу найти файл😔')
-                            except IndexError:
+                            except (error.HTTPError, IndexError):
                                 try:
                                     resolution = '144p'
                                     yt.streams.filter(res="144p").order_by('resolution').desc()[0].download(
