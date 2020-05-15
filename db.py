@@ -259,8 +259,8 @@ def add_to_redis():
             print(en)
         r.set('answer' + str(en), i['answer'])
     print('finish')
-#
-# add_to_redis()
+
+add_to_redis()
 # def set_img():
 #     import re
 #     strings = data.split('\n')
