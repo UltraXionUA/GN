@@ -2122,9 +2122,9 @@ def text_handler(message: Message) -> None:
             forbidden_handler(message)
         if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
             if message.reply_to_message is not None:
-                if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(40):
+                if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(60):
                     bot.reply_to(message, db.get_answer())
-            elif rend_d(5):
+            elif rend_d(15):
                 bot.reply_to(message, db.get_answer())
 
 
