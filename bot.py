@@ -279,6 +279,8 @@ def meme_handler(message: Message) -> None:
                     bot.send_photo(message.chat.id, meme['url'])
                 except Exception:
                     continue
+                else:
+                 break
         else:
             meme = requests.get(API['API_Meme']).json()
             bot.send_photo(message.chat.id, meme['url'])
