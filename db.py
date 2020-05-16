@@ -194,7 +194,7 @@ def add_memes(array: list) -> None:  # Add memes
                 count += 1
                 cursor.execute(f'INSERT INTO `Memes`(`url`) VALUES (\'{i}\');')
                 connection.commit()
-    print(f'Мемов добавлено: {count}')
+    log(f'Мемов добавлено: {count}', 'info')
     connection.close()
 
 

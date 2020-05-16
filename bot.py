@@ -6,7 +6,7 @@ from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, I
 from telebot.types import LabeledPrice, PreCheckoutQuery, ShippingQuery
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_video, get_instagram_photos
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time, clear_date
-from Config_GNBot.config import API, URLS, GNBot_ID, Admin_ID, bot, PAYMENT_TOKEN
+from Config_GNBot.config import API, URLS, GNBot_ID, bot, PAYMENT_TOKEN
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from urllib import parse, request, error
 from pytube import YouTube, exceptions
@@ -69,7 +69,7 @@ def help_handler(message: Message) -> None:
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         bot.send_chat_action(message.chat.id, 'typing')
         bot.send_message(message.chat.id, '<b>Тут должна была быть помощь</b>🆘, но её тут не будет🌚\n'
-                                          'Список всех команд можно увидеть введя <b>\" </b>\/<b> \"</b>\n'
+                                          'Список всех команд можно увидеть введя <b>\" </b>/<b> \"</b>\n'
                                           'Также бот имеет ввести учет кармы 😇(<i>работает в группах</i>)\n'
                                           'Админ команды (<b>!ban</b>, <b>!mute {<i>time</i>}</b>, <b>!kick</b>)\n'
                                           'Доступ к запрещенным🔞 командам можно получить написав администрации\n'
