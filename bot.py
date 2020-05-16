@@ -273,8 +273,12 @@ def meme_handler(message: Message) -> None:
         if rend_d(50):
             if message.chat.id not in meme_data or len(meme_data[message.chat.id]) == 1:
                 meme_data[message.chat.id] = db.get_all('Memes')
-            meme = meme_data[message.chat.id].pop(random.choice(range(len(meme_data[message.chat.id]) - 1)))
-            bot.send_photo(message.chat.id, meme['url'])
+            while True:
+                try:
+                    meme = meme_data[message.chat.id].pop(random.choice(range(len(meme_data[message.chat.id]) - 1)))
+                    bot.send_photo(message.chat.id, meme['url'])
+                except Exception:
+                    continue
         else:
             meme = requests.get(API['API_Meme']).json()
             bot.send_photo(message.chat.id, meme['url'])
