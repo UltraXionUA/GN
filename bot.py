@@ -1821,6 +1821,7 @@ def code_handler(message: Message) -> None:
     :param message:
     :return:
     """
+    global setting_msg
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
@@ -1842,10 +1843,13 @@ def callback_query(call):
 
 def set_setting(chat_id) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
-    for en, i in enumerate(db.get_setting(chat_id), 1):
-        if en == 1:
-            keyboard.add(InlineKeyboardButton(f'Разговаривает: {i["speak"]}',
-                                              callback_data=f"Setting {chat_id} speak {'off' if i['speak'] == 'On' else 'on'}"))
+    data = db.get_setting(chat_id)
+    keyboard.add(InlineKeyboardButton(f'Бот разговаривает: {data["speak"]}',
+                                      callback_data=f"Setting {chat_id} speak "
+                                                    f"{'off' if data['speak'] == 'On' else 'on'}"))
+    keyboard.add(InlineKeyboardButton(f'Распознование речи: {data["recognize"].title()}',
+                                      callback_data=f"Setting {chat_id} recognize "
+                                                    f"{'google' if data['recognize'] == 'Wix' else 'wix'}"))
     return keyboard
 # <<< End setting >>>
 
@@ -2156,8 +2160,8 @@ def text_handler(message: Message) -> None:
             dice_handler(message)
         elif text in ['хентай', 'hentai', 'лоли', 'loli', 'девушка', 'girl', 'баба', 'пизда']:
             forbidden_handler(message)
-        if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID and \
-                db.check_setting(message.chat.id, 'speak'):
+        check = db.check_setting(message.chat.id)
+        if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID and check['speak'] == 'On':
             if message.reply_to_message is not None:
                 if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(60):
                     bot.reply_to(message, db.get_answer())
@@ -2234,20 +2238,20 @@ def voice_handler(message: Message) -> None:
     file = sr.AudioFile('file.wav')
     with file as source:
         audio = r.record(source)
+    check = db.check_setting(message.chat.id)
     try:
-        rec = r.recognize_wit(audio, key=API['Wit'])
-        rec = rec[0].title() + rec[1:]
-    except (sr.UnknownValueError, sr.RequestError) as e:
-        log(f"Could not request results from Wit Recognition service; {e}", 'error')
-        try:
+        if check['recognize'] == 'Wix':
+            rec = r.recognize_wit(audio, key=API['Wit'])
+            rec = rec[0].title() + rec[1:]
+        else:
             rec = r.recognize_google(audio, language='ru-RU')
             rec = rec[0].title() + rec[1:]
-        except (sr.UnknownValueError, sr.RequestError, IndexError) as e:
-            log(f"Could not request results from Wit Recognition service; {e}", 'error')
-        else:
-            send_text(message, rec)
+    except (sr.UnknownValueError, sr.RequestError) as e:
+        log(f"Could not request results from Wit Recognition service; {e}", 'error')
     else:
         send_text(message, rec)
+
+
 
 
 def send_text(message: Message, rec: str) -> None:

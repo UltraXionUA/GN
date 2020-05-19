@@ -111,11 +111,11 @@ def add_user(user, chat=None, connection=None) -> None:
                     connection.commit()
 
 
-def get_setting(chat_id: str) -> list:
+def get_setting(chat_id: str) -> dict:
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT speak FROM Setting WHERE id=\'{chat_id}\';')
-        res = cursor.fetchall()
+        cursor.execute(f'SELECT speak, recognize FROM Setting WHERE id=\'{chat_id}\';')
+        res = cursor.fetchone()
     connection.close()
     return res
 
@@ -126,13 +126,13 @@ def change_setting(chat_id: str, method: str, status: str) -> None:
         connection.commit()
     connection.close()
 
-def check_setting(chat_id: str, method: str) -> None:
+def check_setting(chat_id: str) -> None:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM Setting WHERE id=\'{chat_id}\'')
         res = cursor.fetchone()
     connection.close()
-    return True if res[method] == 'On' else False
+    return res
 
 
 def check(user_id: str, check_t: str) -> bool:
