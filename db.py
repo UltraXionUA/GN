@@ -6,6 +6,7 @@ import pymysql
 import redis
 import random
 
+gn_users = ['KKKrava', 'GoluboyNosok', 'BitchesNure', 'Koronafils']
 
 def start_connection():  # Connection to DB
     try:
@@ -139,7 +140,6 @@ def add_sticker(id_, emoji, name) -> None:  # Add sticker
 
 def random_sticker(gn=False) -> str:  # Random sticker
     connection = start_connection()
-    gn_users = ['KKKrava', 'GoluboyNosok', 'BitchesNure', 'Koronafils']
     with connection.cursor() as cursor:
         if gn is False:
             cursor.execute(f'SELECT * FROM Stickers WHERE `set_name`!=\'{gn_users[0]}\' AND'
