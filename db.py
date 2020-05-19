@@ -131,8 +131,7 @@ def change_karma(user, chat, action: list, exp: int) -> dict:  # Change Karma
 def add_sticker(item_id, emoji, name) -> None:  # Add sticker
     connection = start_connection()
     with connection.cursor() as cursor:
-        if cursor.execute(f'SELECT * FROM Stickers WHERE item_id LIKE \'{item_id}\';') == 0 and \
-                cursor.execute(f'SELECT * FROM Stickers_gn WHERE item_id LIKE \'{item_id}\';') == 0:
+        if name not in ['KKKrava', 'GoluboyNosok', 'BitchesNure', 'Koronafils']:
             cursor.execute(f'INSERT INTO `Stickers`(`item_id`, `emoji`, `set_name`) VALUES (\'{item_id}\','
                            f'\'{emoji}\',\'{name}\');')
             connection.commit()
@@ -143,10 +142,16 @@ def random_sticker(gn=False) -> str:  # Random sticker
     connection = start_connection()
     with connection.cursor() as cursor:
         if gn is False:
-            cursor.execute('SELECT `item_id` FROM Stickers ORDER BY RAND() LIMIT 1')
+            while True:
+                cursor.execute('SELECT `item_id` FROM Stickers ORDER BY RAND() LIMIT 1')
+                result = cursor.fetchone()['item_id']
+                if result['set_name'] in ['KKKrava', 'GoluboyNosok', 'BitchesNure', 'Koronafils']:
+                    continue
+                else:
+                    break
         else:
             cursor.execute('SELECT `item_id` FROM Stickers_gn ORDER BY RAND() LIMIT 1')
-        result = cursor.fetchone()['item_id']
+            result = cursor.fetchone()['item_id']
     connection.close()
     return result
 

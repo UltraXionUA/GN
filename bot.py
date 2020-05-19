@@ -1445,7 +1445,6 @@ def sticker_handler(message: Message) -> None:
     :param message:
     :return:
     """
-
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
@@ -1464,8 +1463,6 @@ def add_sticker_handler(message: Message) -> None:
     :param message:
     :return:
     """
-    # print(message.sticker)
-    # db.add_gn_sticker(message.sticker.file_id, message.sticker.emoji, message.sticker.set_name)
     if message.chat.type != 'private':
         db.change_karma(message.from_user, message.chat, ['+'], 1)
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
