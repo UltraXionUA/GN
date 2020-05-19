@@ -58,6 +58,14 @@ def add_user(user, chat=None, connection=None) -> None:
     if connection is None:
         connection = start_connection()
     with connection.cursor() as cursor:
+        if chat is not None:
+            if cursor.execute(f'SELECT * FROM Setting WHERE id=\'{chat.id}\';') == 0:
+                cursor.execute(f'INSERT INTO `Setting`(`id`) VALUES (\'{chat.id}\');')
+                connection.commit()
+        else:
+            if cursor.execute(f'SELECT * FROM Setting WHERE id=\'{user.id}\';') == 0:
+                cursor.execute(f'INSERT INTO `Setting`(`id`) VALUES (\'{user.id}\');')
+                connection.commit()
         if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user.id}\'') == 0:
             if chat is not None:
                 cursor.execute('INSERT INTO Users (`user_id`, `is_bote`, `first_name`, `last_name`, '
@@ -101,6 +109,22 @@ def add_user(user, chat=None, connection=None) -> None:
                                                                    f'AND is_gn = \'False\';') == 0:
                     cursor.execute(f'UPDATE Users SET is_gn = \'True\' WHERE user_id LIKE {user.id}')
                     connection.commit()
+
+
+def get_setting(chat_id: str) -> list:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT speak FROM Setting WHERE id=\'{chat_id}\';')
+        res = cursor.fetchall()
+    connection.close()
+    return res
+
+def change_setting(chat_id: str, method: str, status: str) -> None:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'UPDATE Setting SET `{method}`=\'{status.title()}\' WHERE id={chat_id}')
+        connection.commit()
+    connection.close()
 
 
 def check(user_id: str, check_t: str) -> bool:

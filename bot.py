@@ -1810,6 +1810,43 @@ def text_handler(message: Message) -> None:
 # <<< End change karma >>>
 
 
+# <<< Setting >>>
+setting_msg = defaultdict(Message)
+
+
+@bot.message_handler(commands=['setting'])  # /setting
+def code_handler(message: Message) -> None:
+    """
+    Enter /setting to open setting menu
+    :param message:
+    :return:
+    """
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        setting_msg[message.chat.id] = bot.send_message(message.chat.id, 'Настройки:', reply_markup=set_setting(message.chat.id))
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Setting\s.+\s\w+\s\w+$', call.data))
+def callback_query(call):
+    global setting_msg
+    print(call.data)
+    bot.answer_callback_query(call.id, f'{call.data.split()[2]} {call.data.split()[3]}')
+    db.change_setting(*call.data.split()[1:])
+    chat_id = call.data.split()[1]
+    bot.edit_message_text(chat_id=setting_msg[chat_id].chat.id, message_id=setting_msg[chat_id].message_id,
+                          text=setting_msg[chat_id].text, reply_markup=set_setting(chat_id))
+
+def set_setting(chat_id) -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup()
+    for en, i in enumerate(db.get_setting(chat_id), 1):
+        if en == 1:
+            keyboard.add(InlineKeyboardButton(f'Разговаривает: {i["speak"]}',
+                                              callback_data=f"Setting {chat_id} speak {'off' if i['speak'] == 'On' else 'on'}"))
+    return keyboard
+# <<< End setting >>>
+
+
 # <<< Code PasteBin >>>
 leng_msg = 'None'
 
