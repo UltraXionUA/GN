@@ -131,10 +131,8 @@ def change_karma(user, chat, action: list, exp: int) -> dict:  # Change Karma
 def add_sticker(item_id, emoji, name) -> None:  # Add sticker
     connection = start_connection()
     with connection.cursor() as cursor:
-        if cursor.execute(f'SELECT * FROM Stickers WHERE emoji LIKE \'{emoji}\''
-                          f'AND set_name LIKE \'{name}\';') == 0 and \
-                cursor.execute(f'SELECT * FROM Stickers_gn WHERE emoji LIKE \'{emoji}\''
-                               f'AND set_name LIKE \'{name}\';') == 0:
+        if cursor.execute(f'SELECT * FROM Stickers WHERE item_id LIKE \'{item_id}\';') == 0 and \
+                cursor.execute(f'SELECT * FROM Stickers_gn WHERE item_id LIKE \'{item_id}\';') == 0:
             cursor.execute(f'INSERT INTO `Stickers`(`item_id`, `emoji`, `set_name`) VALUES (\'{item_id}\','
                            f'\'{emoji}\',\'{name}\');')
             connection.commit()
