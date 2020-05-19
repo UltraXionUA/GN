@@ -1830,12 +1830,15 @@ def code_handler(message: Message) -> None:
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Setting\s.+\s\w+\s\w+$', call.data))
 def callback_query(call):
     global setting_msg
-    print(call.data)
-    bot.answer_callback_query(call.id, f'{call.data.split()[2]} {call.data.split()[3]}')
-    db.change_setting(*call.data.split()[1:])
-    chat_id = call.data.split()[1]
-    bot.edit_message_text(chat_id=setting_msg[chat_id].chat.id, message_id=setting_msg[chat_id].message_id,
-                          text=setting_msg[chat_id].text, reply_markup=set_setting(chat_id))
+    if int(call.data.split()[1]) in setting_msg:
+        bot.answer_callback_query(call.id, f'{call.data.split()[2]} {call.data.split()[3]}')
+        db.change_setting(*call.data.split()[1:])
+        chat_id = int(call.data.split()[1])
+        bot.edit_message_text(chat_id=chat_id, message_id=setting_msg[chat_id].message_id,
+                              text=setting_msg[chat_id].text, reply_markup=set_setting(chat_id))
+    else:
+        bot.answer_callback_query(call.id, '⛔️')
+
 
 def set_setting(chat_id) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
@@ -2153,7 +2156,8 @@ def text_handler(message: Message) -> None:
             dice_handler(message)
         elif text in ['хентай', 'hentai', 'лоли', 'loli', 'девушка', 'girl', 'баба', 'пизда']:
             forbidden_handler(message)
-        if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID:
+        if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID and \
+                db.check_setting(message.chat.id, 'speak'):
             if message.reply_to_message is not None:
                 if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(60):
                     bot.reply_to(message, db.get_answer())

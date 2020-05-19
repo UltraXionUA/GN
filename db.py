@@ -126,6 +126,14 @@ def change_setting(chat_id: str, method: str, status: str) -> None:
         connection.commit()
     connection.close()
 
+def check_setting(chat_id: str, method: str) -> None:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT * FROM Setting WHERE id=\'{chat_id}\'')
+        res = cursor.fetchone()
+    connection.close()
+    return True if res[method] == 'On' else False
+
 
 def check(user_id: str, check_t: str) -> bool:
     connection = start_connection()
