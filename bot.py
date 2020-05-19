@@ -2248,6 +2248,7 @@ def voice_handler(message: Message) -> None:
             rec = rec[0].title() + rec[1:]
     except (sr.UnknownValueError, sr.RequestError) as e:
         log(f"Could not request results from Wit Recognition service; {e}", 'error')
+        bot.send_message(message.chat.id, 'Не смог распознать голос😞')
     else:
         send_text(message, rec)
 

@@ -126,7 +126,7 @@ def change_setting(chat_id: str, method: str, status: str) -> None:
         connection.commit()
     connection.close()
 
-def check_setting(chat_id: str) -> None:
+def check_setting(chat_id: str) -> dict:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM Setting WHERE id=\'{chat_id}\'')
