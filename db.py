@@ -128,32 +128,32 @@ def change_karma(user, chat, action: list, exp: int) -> dict:  # Change Karma
     return karma
 
 
-def add_sticker(item_id, emoji, name) -> None:  # Add sticker
+def add_sticker(id_, emoji, name) -> None:  # Add sticker
     connection = start_connection()
     with connection.cursor() as cursor:
-        if name not in ['KKKrava', 'GoluboyNosok', 'BitchesNure', 'Koronafils']:
-            cursor.execute(f'INSERT INTO `Stickers`(`item_id`, `emoji`, `set_name`) VALUES (\'{item_id}\','
-                           f'\'{emoji}\',\'{name}\');')
+        if cursor.execute(f'SELECT * FROM Stickers WHERE `set_name`=\'{name}\' AND emoji=\'{emoji}\';') == 0:
+            cursor.execute(f'INSERT INTO `Stickers`(`item_id`, `emoji`, `set_name`) VALUES (\'{id_}\','
+                               f'\'{emoji}\',\'{name}\');')
             connection.commit()
     connection.close()
 
-
 def random_sticker(gn=False) -> str:  # Random sticker
     connection = start_connection()
+    gn_users = ['KKKrava', 'GoluboyNosok', 'BitchesNure', 'Koronafils']
     with connection.cursor() as cursor:
         if gn is False:
             while True:
-                cursor.execute('SELECT `item_id` FROM Stickers ORDER BY RAND() LIMIT 1')
-                result = cursor.fetchone()['item_id']
-                if result['set_name'] in ['KKKrava', 'GoluboyNosok', 'BitchesNure', 'Koronafils']:
-                    continue
-                else:
+                cursor.execute('SELECT * FROM Stickers ORDER BY RAND() LIMIT 1')
+                result = cursor.fetchone()
+                if result['set_name'] not in gn_users:
                     break
         else:
-            cursor.execute('SELECT `item_id` FROM Stickers_gn ORDER BY RAND() LIMIT 1')
-            result = cursor.fetchone()['item_id']
+            cursor.execute(f"SELECT `item_id` FROM Stickers WHERE `set_name`"
+                           f"=\'{random.choice(gn_users)}\'"
+                           f" ORDER BY RAND() LIMIT 1")
+            result = cursor.fetchone()
     connection.close()
-    return result
+    return result['item_id']
 
 
 def ban_user(user: str) -> None:  # Ban user
