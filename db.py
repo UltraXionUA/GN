@@ -171,7 +171,7 @@ def check_ban_user(user: str) -> None:  # Ban user
             return False
 
 
-def get_code(name: str) -> [dict, None]:  # Get all answers
+def get_code(name: str) -> [dict, None]:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT code FROM PasteBin WHERE name LIKE \'{name}\'')
@@ -222,7 +222,8 @@ def get_task_answer(id_: str) -> str:
 def get_answer() -> str:
     r = redis.Redis(host='localhost', port=6379, db=1)
     count_ = r.get(f'len_answer')
-    return r.get(f'answer{random.randint(1, int(count_))}').decode('utf-8')
+    answer = r.get(f'answer{random.randint(1, int(count_))}').decode('utf-8')
+    return answer[1:] if answer[0] == '.' else answer
 
 # def add_answers():
 #     import re
