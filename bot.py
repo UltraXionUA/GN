@@ -2122,9 +2122,9 @@ def text_handler(message: Message) -> None:
             if message.reply_to_message is not None:
                 if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(60):
                     bot.reply_to(message, db.get_answer())
-            elif rend_d(15):
+            elif rend_d(13):
                 bot.reply_to(message, db.get_answer())
-            elif rend_d(10):
+            elif rend_d(7):
                 bot.send_sticker(message.chat.id, db.random_sticker(), message.message_id)
 
 
