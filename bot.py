@@ -1832,7 +1832,7 @@ def code_handler(message: Message) -> None:
 def callback_query(call):
     global setting_msg
     if int(call.data.split()[1]) in setting_msg:
-        bot.answer_callback_query(call.id, f'{call.data.split()[2]} {call.data.split()[3]}')
+        bot.answer_callback_query(call.id, f'{call.data.split()[2].title()} {call.data.split()[3].title()}')
         db.change_setting(*call.data.split()[1:])
         chat_id = int(call.data.split()[1])
         bot.edit_message_text(chat_id=chat_id, message_id=setting_msg[chat_id].message_id,
