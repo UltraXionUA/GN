@@ -1428,7 +1428,6 @@ def gn_sticker_handler(message: Message) -> None:
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if db.check(message.from_user.id, 'is_gn'):
-            bot.send_chat_action(message.chat.id, 'upload_photo')
             bot.send_sticker(message.chat.id, db.random_sticker(True))
         else:
             bot.send_message(message.chat.id, 'Эта функция вам недоступна😔')
@@ -1448,7 +1447,6 @@ def sticker_handler(message: Message) -> None:
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-        bot.send_chat_action(message.chat.id, 'upload_photo')
         bot.send_sticker(message.chat.id, db.random_sticker())
 
 

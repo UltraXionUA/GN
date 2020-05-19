@@ -142,16 +142,14 @@ def random_sticker(gn=False) -> str:  # Random sticker
     gn_users = ['KKKrava', 'GoluboyNosok', 'BitchesNure', 'Koronafils']
     with connection.cursor() as cursor:
         if gn is False:
-            while True:
-                cursor.execute('SELECT * FROM Stickers ORDER BY RAND() LIMIT 1')
-                result = cursor.fetchone()
-                if result['set_name'] not in gn_users:
-                    break
+            cursor.execute(f'SELECT * FROM Stickers WHERE `set_name`!=\'{gn_users[0]}\' AND'
+                           f'`set_name`!=\'{gn_users[1]}\' AND `set_name`!=\'{gn_users[2]}\' AND'
+                           f'`set_name`!=\'{gn_users[3]}\' ORDER BY RAND() LIMIT 1')
         else:
             cursor.execute(f"SELECT `item_id` FROM Stickers WHERE `set_name`"
                            f"=\'{random.choice(gn_users)}\'"
                            f" ORDER BY RAND() LIMIT 1")
-            result = cursor.fetchone()
+    result = cursor.fetchone()
     connection.close()
     return result['item_id']
 
