@@ -248,38 +248,55 @@ def get_answer() -> str:
     answer = r.get(f'answer{random.randint(1, int(r.get("len_answer")))}').decode('utf-8')
     return answer[1:] if answer[0] == '.' else answer
 
-# def add_answers():
-#     import re
-#     count = 0
-#     with open('answer_databse.txt', 'r') as f:
-#         for en, i in enumerate(f.readlines(), 1):
-#             try:
-#                 answer = i.split("\\")[1].replace('\n', '')
-#                 word = i.split("\\")[0]
-#                 if re.match(r'^=+', answer) or re.match(r'^⚡+', answer):
-#                     continue
-#                 else:
-#                     count += 1
-#             except IndexError:
-#                 continue
-#     print(count)
-# add_answers()
+def add_answers():
+    import re
+    data = []
+    with open('answer_databse.txt', 'r') as f:
+        for en, i in enumerate(f.readlines(), 1):
+            try:
+                answer = i.split("\\")[1].replace('\n', '')
+                if re.match(r'^=+', answer) or re.match(r'^⚡+', answer) or len(answer) > 499:
+                    continue
+                else:
+                    if answer[0] == '.':
+                        answer = answer[1:]
+                    answer = re.sub(r'=+', '', answer)
+                    answer = re.sub(r'⚡+', '', answer)
+                    data.append(answer)
+            except IndexError:
+                continue
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        for en, i in enumerate(set(data), 1):
+            if en % 1000 == 0:
+                print(en)
+            word = i.replace('\'', '\\\'')
+            cursor.execute(f"INSERT INTO `Answer`(`answer`) VALUES (\'{word}\');")
+            connection.commit()
+    connection.close()
+    print('finish')
 
-# def add_to_redis():
-#     connection = start_connection()
-#     with connection.cursor() as cursor:
-#         cursor.execute(f'SELECT answer FROM Answer;')
-#         res = cursor.fetchall()
-#     r = redis.Redis(host='localhost', port=6379, db=1)
-#     r.set(f'len_answer', len(res))
-#     print(len(res))
-#     for en, i in enumerate(res, 1):
-#         if en % 1000 == 0:
-#             print(en)
-#         r.set('answer' + str(en), i['answer'])
-#     print('finish')
-#
-# add_to_redis()
+def add_to_redis():
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT answer FROM Answer;')
+        res = cursor.fetchall()
+    r = redis.Redis(host='localhost', port=6379, db=1)
+    r.set(f'len_answer', len(res))
+    print(len(res))
+    for en, i in enumerate(res, 1):
+        if en % 1000 == 0:
+            print(en)
+        r.set('answer' + str(en), i['answer'])
+    print('finish')
+
+add_answers()
+add_to_redis()
+
+
+
+
+
 
 
 # def set_img():
