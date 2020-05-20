@@ -1871,6 +1871,11 @@ def set_settings(chat_id) -> InlineKeyboardMarkup:
     keyboard.add(InlineKeyboardButton(f'Распознавание речи: {"Wix🎤" if data["recognize"] == "Wix" else "Google🎙"}',
                                       callback_data=f"Settings {chat_id} recognize "
                                                     f"{'google' if data['recognize'] == 'Wix' else 'wix'}"))
+    if data['recognize'] == 'Google':
+        keyboard.add(
+            InlineKeyboardButton(f'Язык: {"RU🇷🇺" if data["leng_speak"] == "Ru" else "UA🇺🇦"}',
+                                 callback_data=f"Settings {chat_id} leng_speak "
+                                               f"{'ru' if data['leng_speak'] == 'Ua' else 'Ua'}"))
     keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {setting_msg[chat_id].message_id} '
                                                                f'{msg_setting[chat_id].message_id}'))
     bot.edit_message_text(chat_id=chat_id, message_id=setting_msg[chat_id].message_id,
@@ -2272,7 +2277,8 @@ def voice_handler(message: Message) -> None:
             rec = r.recognize_wit(audio, key=API['Wit'])
             rec = rec[0].title() + rec[1:]
         else:
-            rec = r.recognize_google(audio, language='ru-RU')
+            setting = db.get_setting(message.chat.id)
+            rec = r.recognize_google(audio, language=f"{'ru-RU' if setting['leng_speak'] == 'Ru' else 'uk-UA'}")
             rec = rec[0].title() + rec[1:]
     except (sr.UnknownValueError, sr.RequestError) as e:
         log(f"Could not request results from Wit Recognition service; {e}", 'error')
