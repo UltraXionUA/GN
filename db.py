@@ -341,14 +341,14 @@ def get_answer() -> str:
 # get_all()
 
 
-def add_logic_tasks(tasks: dict) -> None:
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        for i, q in tasks.items():
-            print(i, '\n', q, '\n\n')
-            cursor.execute(f'INSERT INTO `Logic_Tasks`(`question`, `answer`) VALUES (\'{i}\', \'{q}\');')
-            connection.commit()
-        connection.close()
+# def add_logic_tasks(tasks: dict) -> None:
+#     connection = start_connection()
+#     with connection.cursor() as cursor:
+#         for i, q in tasks.items():
+#             print(i, '\n', q, '\n\n')
+#             cursor.execute(f'INSERT INTO `Logic_Tasks`(`question`, `answer`) VALUES (\'{i}\', \'{q}\');')
+#             connection.commit()
+#         connection.close()
 
 
 # def add_girls(girls: list) -> None:

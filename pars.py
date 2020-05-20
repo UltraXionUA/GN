@@ -4,7 +4,7 @@
 from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from db import add_memes, add_logic_tasks
+from db import add_memes
 from Config_GNBot.config import URLS
 from funcs import log
 import requests
@@ -132,19 +132,6 @@ def parser_memes() -> None:  # Main parser
         add_memes(links)
         log('Parser is done', 'info')
 
-def get_tasks():
-    data = {}
-    print('tut')
-    soup = BeautifulSoup(requests.get(URLS['logic_tasks']['main'],
-                                      headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
-    div = soup.find('div', class_='article-single-content main-page-content')
-    questions = div.find_all_next('p', style='text-align: left')
-    answers = div.find_all_next('div', id='reply')
-    for question, answer in zip(answers, questions):
-        data[re.sub(r'^\d+.\s', '', answer.find('strong').get_text())] = question.get_text()
-    add_logic_tasks(data)
-
-get_tasks()
 
 def main():
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
@@ -173,7 +160,17 @@ if __name__ == "__main__":
 #     set_eluler(data)
 
 
-
+# def get_tasks() -> dict:
+#     data = {}
+#     soup = BeautifulSoup(requests.get(URLS['logic_tasks']['main'],
+#                                       headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+#     div = soup.find('div', class_='article-single-content main-page-content')
+#     questions = div.find_all_next('p', style='text-align: left')
+#     answers = div.find_all_next('div', id='reply')
+#     for question, answer in zip(answers, questions):
+#         data[re.sub(r'^\d+.\s', '', answer.find('strong').get_text())] = question.get_text()
+#     add_logic_tasks(data)
+#
 
 
 
