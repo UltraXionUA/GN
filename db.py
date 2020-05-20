@@ -317,7 +317,6 @@ def get_answer() -> str:
 #                 connection.commit()
 #             connection.close()
 
-
 # def add_to_redis(data: list, type_: str):
 #     r = redis.Redis(host='localhost', port=6379, db=0)
 #     r.set(f'len_{type_}', len(data))
@@ -342,14 +341,14 @@ def get_answer() -> str:
 # get_all()
 
 
-# def add_logic_tasks(tasks: dict) -> None:
-#     connection = start_connection()
-#     with connection.cursor() as cursor:
-#         for i, q in tasks.items():
-#             print(i, '\n', q, '\n\n')
-#             cursor.execute(f'INSERT INTO `Logic_Tasks`(`question`, `answer`) VALUES (\'{i}\', \'{q}\');')
-#             connection.commit()
-#         connection.close()
+def add_logic_tasks(tasks: dict) -> None:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        for i, q in tasks.items():
+            print(i, '\n', q, '\n\n')
+            cursor.execute(f'INSERT INTO `Logic_Tasks`(`question`, `answer`) VALUES (\'{i}\', \'{q}\');')
+            connection.commit()
+        connection.close()
 
 
 # def add_girls(girls: list) -> None:
