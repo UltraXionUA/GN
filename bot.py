@@ -1868,9 +1868,9 @@ def set_settings(chat_id) -> InlineKeyboardMarkup:
     keyboard.add(InlineKeyboardButton(f'Мемы: {"RU🇷🇺" if data["meme"] == "Ru" else "EN🇺🇸"}',
                                       callback_data=f"Settings {chat_id} meme "
                                                     f"{'ru' if data['meme'] == 'En' else 'en'}"))
-    keyboard.add(InlineKeyboardButton(f'Распознавание речи: {"Wix🎤" if data["recognize"] == "Wix" else "Google🎙"}',
+    keyboard.add(InlineKeyboardButton(f'Распознавание речи: {"Wix🎤" if data["recognize"] == "Wix" else "Google🎙" if data["recognize"] == "Google" else "Off🔴"}',
                                       callback_data=f"Settings {chat_id} recognize "
-                                                    f"{'google' if data['recognize'] == 'Wix' else 'wix'}"))
+                    f"{'off' if data['recognize'] == 'Google' else 'wix' if data['recognize'] == 'Off' else 'google'}"))
     if data['recognize'] == 'Google':
         keyboard.add(
             InlineKeyboardButton(f'Язык: {"RU🇷🇺" if data["leng_speak"] == "Ru" else "UA🇺🇦"}',
@@ -2262,29 +2262,31 @@ def left_member_handler(message: Message) -> None:
 
 @bot.message_handler(content_types=['voice'])  # Answer on voice
 def voice_handler(message: Message) -> None:
-    r = sr.Recognizer()
-    data = request.urlopen(bot.get_file_url(message.voice.file_id)).read()
-    with tempfile.NamedTemporaryFile(delete=False) as f:
-        f.write(data)
-    audio = AudioSegment.from_ogg(f.name)
-    audio.export(f'file.wav', format='wav')
-    file = sr.AudioFile('file.wav')
-    with file as source:
-        audio = r.record(source)
     check = db.get_setting(message.chat.id)
-    try:
-        if check['recognize'] == 'Wix':
-            rec = r.recognize_wit(audio, key=API['Wit'])
-            rec = rec[0].title() + rec[1:]
+    if check['recognize'] != 'Off':
+        r = sr.Recognizer()
+        data = request.urlopen(bot.get_file_url(message.voice.file_id)).read()
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            f.write(data)
+        audio = AudioSegment.from_ogg(f.name)
+        audio.export(f'file.wav', format='wav')
+        file = sr.AudioFile('file.wav')
+        with file as source:
+            audio = r.record(source)
+
+        try:
+            if check['recognize'] == 'Wix':
+                rec = r.recognize_wit(audio, key=API['Wit'])
+                rec = rec[0].title() + rec[1:]
+            else:
+                setting = db.get_setting(message.chat.id)
+                rec = r.recognize_google(audio, language=f"{'ru-RU' if setting['leng_speak'] == 'Ru' else 'uk-UA'}")
+                rec = rec[0].title() + rec[1:]
+        except (sr.UnknownValueError, sr.RequestError) as e:
+            log(f"Could not request results from Wit Recognition service; {e}", 'error')
+            bot.send_message(message.chat.id, 'Не смог распознать голос😞')
         else:
-            setting = db.get_setting(message.chat.id)
-            rec = r.recognize_google(audio, language=f"{'ru-RU' if setting['leng_speak'] == 'Ru' else 'uk-UA'}")
-            rec = rec[0].title() + rec[1:]
-    except (sr.UnknownValueError, sr.RequestError) as e:
-        log(f"Could not request results from Wit Recognition service; {e}", 'error')
-        bot.send_message(message.chat.id, 'Не смог распознать голос😞')
-    else:
-        send_text(message, rec)
+            send_text(message, rec)
 
 
 

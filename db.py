@@ -122,7 +122,7 @@ def get_setting(chat_id: str) -> dict:
 def change_setting(chat_id: str, method: str, status: str) -> None:
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'UPDATE Setting SET `{method}`=\'{status.title()}\' WHERE id={chat_id}')
+        cursor.execute(f'UPDATE Setting SET `{method}`=\'{status.title()}\' WHERE id LIKE \'{chat_id}\'')
         connection.commit()
     connection.close()
 
