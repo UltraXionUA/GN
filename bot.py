@@ -840,7 +840,7 @@ def main_news(message: Message, news_type: str) -> None:
     global news
     global news_msg
     setting = db.get_setting(message.chat.id)
-    api = API['News']['URL'].replace('Country', f'{"ua" if setting["news"] == "Ua" else "ru"}')
+    api = API['News']['URL'].replace('Country', f'{"ua" if setting["news"] == "Ua" else "ru" if setting["news"] == "Ru" else "us"}')
     res = requests.get(api.replace('Method', f'{news_type}') + API['News']['Api_Key']).json()
     if res['status'] == 'ok':
         news[message.chat.id] = [{'title': i['title'], 'description': i['description'],
@@ -856,10 +856,6 @@ def main_news(message: Message, news_type: str) -> None:
 
 
 def send_news(message: Message, index: int) -> None:
-    def send_next_news():
-        news[message.chat.id].pop(index)
-        send_news(message, index + 1)
-        return
     keyboard2 = InlineKeyboardMarkup()
     keyboard2.add(
         InlineKeyboardButton(text="⬅️️", callback_data=f"news_move_to {index - 1 if index > 0 else 'pass'}"),
@@ -871,10 +867,7 @@ def send_news(message: Message, index: int) -> None:
         return
     else:
         try:
-            t = Timer(5.0, send_next_news)
-            t.start()
             if requests.get(news[message.chat.id][index]['url']).ok:
-                t.cancel()
                 keyboard2.add(InlineKeyboardButton('Читать', url=news[message.chat.id][index]['url']))
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema):
             news[message.chat.id].pop(index)
@@ -895,17 +888,14 @@ def send_news(message: Message, index: int) -> None:
                 bot.edit_message_media(chat_id=news_msg[message.chat.id].chat.id,
                                        message_id=news_msg[message.chat.id].message_id,
                                        media=InputMediaPhoto(API['News']['image'],
-                                                             caption=f"<b>{news[message.chat.id][index]['title']}</b>\n<i>"
+                                                             caption=f"<b>{news[message.chat.id][index]['title']}</b>\n<i>\n"
                                                                      f"{clear_date(news[message.chat.id][index]['published'])}</i>",
                                                              parse_mode='HTML'), reply_markup=keyboard2)
         else:
             try:
                 if requests.get(news[message.chat.id][index]['image']).ok is True:
-                    t = Timer(5.0, send_next_news)
-                    t.start()
                     req = request.Request(news[message.chat.id][index]['image'], method='HEAD')
                     f = request.urlopen(req)
-                    t.cancel()
                     if f.headers['Content-Length'] is not None:
                         if int(f.headers['Content-Length']) > 5242880:
                             news[message.chat.id].pop(index)
@@ -1510,7 +1500,7 @@ def stat_handler(message: Message) -> None:
                                 f" {i['last_name'] if i['last_name'] != 'None' else ''} - <i>{i['karma']}</i>{medal}\n"
                 text += '...\nНажмите /me что бы увидеть себя'
                 msg = bot.send_message(message.chat.id, text, parse_mode='HTML')
-                keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {message.message_id}'))
+                keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
                 bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
                                       text=msg.text,
                                       reply_markup=keyboard)
@@ -1545,7 +1535,7 @@ def me_handler(message: Message) -> None:
                                                             f'<b>{user}</b> - '
                                                             f'<i>{data_user["karma"]}</i>🏆',
                                                              parse_mode='HTML')
-                    keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {message.message_id}'))
+                    keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
                     bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
                                           text=msg.text,
                                           reply_markup=keyboard)
@@ -1856,26 +1846,27 @@ def set_settings(chat_id) -> InlineKeyboardMarkup:
                                           callback_data=f"Settings {chat_id} speak "
                                                         f"{'off' if data['speak'] == 'On' else 'on'}"))
     if data['speak'] == 'On' and setting_msg[chat_id].chat.type != 'private':
-        keyboard.add(InlineKeyboardButton(f'Переодичность: {"Редко🔻" if data["periodicity"] == "Rarely" else "Часто🔺"}',
+        keyboard.add(InlineKeyboardButton(f'Переодичность: {"Редко🔻" if data["periodicity"] == "Rarely" else "Часто🔺" if data["periodicity"] == "Often" else "Нормально" + "♦️"}',
                                  callback_data=f"Settings {chat_id} periodicity "
-                                               f"{'rarely' if data['periodicity'] == 'Often' else 'often'}"))
+                                               f"{'rarely' if data['periodicity'] == 'Often' else 'often' if data['periodicity'] == 'Normal' else 'normal'}"))
     keyboard.add(InlineKeyboardButton(f'Цензура: {"On🟢" if data["censure"] == "On" else "Off🔴"}',
                                       callback_data=f"Settings {chat_id} censure "
                                                     f"{'off' if data['censure'] == 'On' else 'on'}"))
-    keyboard.add(InlineKeyboardButton(f'Новости: {"UA🇺🇦" if data["news"] == "Ua" else "RU🇷🇺"}',
+    keyboard.add(InlineKeyboardButton(f'Новости: {"UA🇺🇦" if data["news"] == "Ua" else "RU🇷🇺" if data["news"] == "Ru" else "US🇺🇸"}',
                                       callback_data=f"Settings {chat_id} news "
-                                                    f"{'ru' if data['news'] == 'Ua' else 'ua'}"))
-    keyboard.add(InlineKeyboardButton(f'Мемы: {"RU🇷🇺" if data["meme"] == "Ru" else "EN🇺🇸"}',
+                                                    f"{'ru' if data['news'] == 'Ua' else 'ua' if data['news'] == 'Us' else 'us'}"))
+    keyboard.add(InlineKeyboardButton(f'Мемы: {"RU🇷🇺" if data["meme"] == "Ru" else "US🇺🇸"}',
                                       callback_data=f"Settings {chat_id} meme "
                                                     f"{'ru' if data['meme'] == 'En' else 'en'}"))
-    keyboard.add(InlineKeyboardButton(f'Распознавание речи: {"Wix🎤" if data["recognize"] == "Wix" else "Google🎙" if data["recognize"] == "Google" else "Off🔴"}',
+    keyboard.add(InlineKeyboardButton(f'Распознавание речи: '
+                f'{"Wix🎤" if data["recognize"] == "Wix" else "Google🎙" if data["recognize"] == "Google" else "Off🔴"}',
                                       callback_data=f"Settings {chat_id} recognize "
                     f"{'off' if data['recognize'] == 'Google' else 'wix' if data['recognize'] == 'Off' else 'google'}"))
     if data['recognize'] == 'Google':
         keyboard.add(
-            InlineKeyboardButton(f'Язык: {"RU🇷🇺" if data["leng_speak"] == "Ru" else "UA🇺🇦"}',
+            InlineKeyboardButton(f'Язык: {"RU🇷🇺" if data["leng_speak"] == "Ru" else "UA🇺🇦" if data["leng_speak"] == "Ua" else "US🇺🇸"}',
                                  callback_data=f"Settings {chat_id} leng_speak "
-                                               f"{'ru' if data['leng_speak'] == 'Ua' else 'Ua'}"))
+                                               f"{'ru' if data['leng_speak'] == 'Ua' else 'ua' if data['leng_speak'] == 'Us' else 'us'}"))
     keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {setting_msg[chat_id].message_id} '
                                                                f'{msg_setting[chat_id].message_id}'))
     bot.edit_message_text(chat_id=chat_id, message_id=setting_msg[chat_id].message_id,
@@ -2191,9 +2182,11 @@ def text_handler(message: Message) -> None:
             forbidden_handler(message)
         check = db.get_setting(message.chat.id)
         if check['periodicity'] == 'Rarely':
-            percent = [6, 2, 30]
+            percent = [4, 1, 30]
+        elif check['periodicity'] == 'Normal':
+            percent = [7, 3, 45]
         else:
-            percent = [10, 5, 60]
+            percent = [15, 5, 60]
         if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID and check['speak'] == 'On':
             if message.reply_to_message is not None:
                 if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(percent[3]):
@@ -2280,7 +2273,8 @@ def voice_handler(message: Message) -> None:
                 rec = rec[0].title() + rec[1:]
             else:
                 setting = db.get_setting(message.chat.id)
-                rec = r.recognize_google(audio, language=f"{'ru-RU' if setting['leng_speak'] == 'Ru' else 'uk-UA'}")
+                rec = r.recognize_google(audio,
+                                         language=f"{'ru-RU' if setting['leng_speak'] == 'Ru' else 'uk-UA' if setting['leng_speak'] == 'Ua' else 'en-US'}")
                 rec = rec[0].title() + rec[1:]
         except (sr.UnknownValueError, sr.RequestError) as e:
             log(f"Could not request results from Wit Recognition service; {e}", 'error')
