@@ -270,7 +270,8 @@ def meme_handler(message: Message) -> None:
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         bot.send_chat_action(message.chat.id, 'upload_photo')
-        if rend_d(50):
+        data = db.get_setting(message.chat.id)
+        if data['meme'] == 'Ru':
             if message.chat.id not in meme_data or len(meme_data[message.chat.id]) == 1:
                 meme_data[message.chat.id] = db.get_all('Memes')
             while True:
@@ -837,7 +838,9 @@ def news_handler(message: Message) -> None:
 def main_news(message: Message, news_type: str) -> None:
     global news
     global news_msg
-    res = requests.get(API['News']['URL'].replace('Method', f'{news_type}') + API['News']['Api_Key']).json()
+    setting = db.get_setting(message.chat.id)
+    api = API['News']['URL'].replace('Country', f'{"ua" if setting["news"] == "Ua" else "ru"}')
+    res = requests.get(api.replace('Method', f'{news_type}') + API['News']['Api_Key']).json()
     if res['status'] == 'ok':
         news[message.chat.id] = [{'title': i['title'], 'description': i['description'],
                                   'url': i['url'], 'image': i['urlToImage'], 'published': i['publishedAt']} for i in
@@ -1810,14 +1813,15 @@ def text_handler(message: Message) -> None:
 # <<< End change karma >>>
 
 
-# <<< Setting >>>
+# <<< Settings >>>
 setting_msg = defaultdict(Message)
+msg_setting = defaultdict(Message)
 
 
-@bot.message_handler(commands=['setting'])  # /setting
+@bot.message_handler(commands=['settings'])  # /settings
 def code_handler(message: Message) -> None:
     """
-    Enter /setting to open setting menu
+    Enter /settings to open setting menu
     :param message:
     :return:
     """
@@ -1825,33 +1829,50 @@ def code_handler(message: Message) -> None:
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-        setting_msg[message.chat.id] = bot.send_message(message.chat.id, 'Настройки:', reply_markup=set_setting(message.chat.id))
+        msg_setting[message.chat.id] = message
+        setting_msg[message.chat.id] = bot.send_message(message.chat.id, 'Загрузка...')
+        set_settings(message.chat.id)
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Setting\s.+\s\w+\s\w+$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Settings\s.+\s\w+\s\w+$', call.data))
 def callback_query(call):
     global setting_msg
-    if int(call.data.split()[1]) in setting_msg:
-        bot.answer_callback_query(call.id, f'{call.data.split()[2].title()} {call.data.split()[3].title()}')
+    chat_id = int(call.data.split()[1])
+    print(call.data)
+    if chat_id in setting_msg:
+        bot.answer_callback_query(call.id, f'{call.data.split()[3].title()}')
         db.change_setting(*call.data.split()[1:])
-        chat_id = int(call.data.split()[1])
-        bot.edit_message_text(chat_id=chat_id, message_id=setting_msg[chat_id].message_id,
-                              text=setting_msg[chat_id].text, reply_markup=set_setting(chat_id))
+        set_settings(chat_id)
     else:
         bot.answer_callback_query(call.id, '⛔️')
 
 
-def set_setting(chat_id) -> InlineKeyboardMarkup:
+def set_settings(chat_id) -> InlineKeyboardMarkup:
+    global setting_msg, msg_setting
     keyboard = InlineKeyboardMarkup()
     data = db.get_setting(chat_id)
-    keyboard.add(InlineKeyboardButton(f'Бот разговаривает: {data["speak"]}',
-                                      callback_data=f"Setting {chat_id} speak "
-                                                    f"{'off' if data['speak'] == 'On' else 'on'}"))
-    keyboard.add(InlineKeyboardButton(f'Распознование речи: {data["recognize"].title()}',
-                                      callback_data=f"Setting {chat_id} recognize "
+    if setting_msg[chat_id].chat.type != 'private':
+        keyboard.add(InlineKeyboardButton(f'Бот разговаривает: {data["speak"]}{"🟢" if data["speak"] == "On" else "🔴"}',
+                                          callback_data=f"Settings {chat_id} speak "
+                                                        f"{'off' if data['speak'] == 'On' else 'on'}"))
+    if data['speak'] == 'On' and setting_msg[chat_id].chat.type != 'private':
+        keyboard.add(InlineKeyboardButton(f'Переодичность: {"Редко🔻" if data["periodicity"] == "Rarely" else "Часто🔺"}',
+                                 callback_data=f"Settings {chat_id} periodicity "
+                                               f"{'rarely' if data['periodicity'] == 'Often' else 'often'}"))
+    keyboard.add(InlineKeyboardButton(f'Новости: {"UA🇺🇦" if data["news"] == "Ua" else "RU🇷🇺"}',
+                                      callback_data=f"Settings {chat_id} news "
+                                                    f"{'ru' if data['news'] == 'Ua' else 'ua'}"))
+    keyboard.add(InlineKeyboardButton(f'Мемы: {"RU🇷🇺" if data["meme"] == "Ru" else "EN🇺🇸"}',
+                                      callback_data=f"Settings {chat_id} meme "
+                                                    f"{'ru' if data['meme'] == 'En' else 'en'}"))
+    keyboard.add(InlineKeyboardButton(f'Распознавание речи: {"Wix🎤" if data["recognize"] == "Wix" else "Google🎙"}',
+                                      callback_data=f"Settings {chat_id} recognize "
                                                     f"{'google' if data['recognize'] == 'Wix' else 'wix'}"))
-    return keyboard
-# <<< End setting >>>
+    keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {setting_msg[chat_id].message_id} '
+                                                               f'{msg_setting[chat_id].message_id}'))
+    bot.edit_message_text(chat_id=chat_id, message_id=setting_msg[chat_id].message_id,
+                          text='Настройки:', reply_markup=keyboard)
+# <<< End settings >>>
 
 
 # <<< Code PasteBin >>>
@@ -2160,15 +2181,19 @@ def text_handler(message: Message) -> None:
             dice_handler(message)
         elif text in ['хентай', 'hentai', 'лоли', 'loli', 'девушка', 'girl', 'баба', 'пизда']:
             forbidden_handler(message)
-        check = db.check_setting(message.chat.id)
+        check = db.get_setting(message.chat.id)
+        if check['periodicity'] == 'Rarely':
+            percent = [7, 3]
+        else:
+            percent = [14, 6]
         if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID and check['speak'] == 'On':
             if message.reply_to_message is not None:
                 if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(60):
                     bot.reply_to(message, db.get_answer())
-            elif rend_d(7):
+            elif rend_d(percent[0]):
                 bot.reply_to(message, db.get_answer())
-            elif rend_d(3):
-                bot.send_sticker(message.chat.id, db.random_sticker(), message.message_id)
+            elif rend_d(percent[1]):
+                    bot.send_sticker(message.chat.id, db.random_sticker(), message.message_id)
 
 
 # <<< End all message >>>
@@ -2238,7 +2263,7 @@ def voice_handler(message: Message) -> None:
     file = sr.AudioFile('file.wav')
     with file as source:
         audio = r.record(source)
-    check = db.check_setting(message.chat.id)
+    check = db.get_setting(message.chat.id)
     try:
         if check['recognize'] == 'Wix':
             rec = r.recognize_wit(audio, key=API['Wit'])
