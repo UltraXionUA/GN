@@ -2186,12 +2186,12 @@ def text_handler(message: Message) -> None:
             forbidden_handler(message)
         check = db.get_setting(message.chat.id)
         if check['periodicity'] == 'Rarely':
-            percent = [7, 3]
+            percent = [6, 2, 30]
         else:
-            percent = [14, 6]
+            percent = [10, 5, 60]
         if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID and check['speak'] == 'On':
             if message.reply_to_message is not None:
-                if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(60):
+                if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(percent[3]):
                     bot.reply_to(message, db.get_answer())
             elif rend_d(percent[0]):
                 bot.reply_to(message, db.get_answer())
