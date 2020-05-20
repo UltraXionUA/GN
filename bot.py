@@ -777,7 +777,8 @@ def forbidden_handler(message: Message) -> None:
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-        if db.check(message.from_user.id, 'off_censure'):
+        setting = db.get_setting(message.chat.id)
+        if setting['censure'] == 'Off':
             if message.chat.type != 'private':
                 db.change_karma(message.from_user, message.chat, ['-'], 10)
             while True:
@@ -804,7 +805,7 @@ def forbidden_handler(message: Message) -> None:
                                        reply_markup=keyboard)
         else:
             bot.send_message(message.chat.id, 'Эта функция вам недоступна😔\n'
-                                                  'Вы можете активировать эту функцию написав администратору')
+                                                  'Вы можете активировать её в настройках')
 
 # <<< End loli&hentai&girl >>>
 
@@ -1838,7 +1839,6 @@ def code_handler(message: Message) -> None:
 def callback_query(call):
     global setting_msg
     chat_id = int(call.data.split()[1])
-    print(call.data)
     if chat_id in setting_msg:
         bot.answer_callback_query(call.id, f'{call.data.split()[3].title()}')
         db.change_setting(*call.data.split()[1:])
@@ -1852,13 +1852,16 @@ def set_settings(chat_id) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
     data = db.get_setting(chat_id)
     if setting_msg[chat_id].chat.type != 'private':
-        keyboard.add(InlineKeyboardButton(f'Бот разговаривает: {data["speak"]}{"🟢" if data["speak"] == "On" else "🔴"}',
+        keyboard.add(InlineKeyboardButton(f'Бот отвечает: {"On🟢" if data["speak"] == "On" else "Off🔴"}',
                                           callback_data=f"Settings {chat_id} speak "
                                                         f"{'off' if data['speak'] == 'On' else 'on'}"))
     if data['speak'] == 'On' and setting_msg[chat_id].chat.type != 'private':
         keyboard.add(InlineKeyboardButton(f'Переодичность: {"Редко🔻" if data["periodicity"] == "Rarely" else "Часто🔺"}',
                                  callback_data=f"Settings {chat_id} periodicity "
                                                f"{'rarely' if data['periodicity'] == 'Often' else 'often'}"))
+    keyboard.add(InlineKeyboardButton(f'Цензура: {"On🟢" if data["censure"] == "On" else "Off🔴"}',
+                                      callback_data=f"Settings {chat_id} censure "
+                                                    f"{'off' if data['censure'] == 'On' else 'on'}"))
     keyboard.add(InlineKeyboardButton(f'Новости: {"UA🇺🇦" if data["news"] == "Ua" else "RU🇷🇺"}',
                                       callback_data=f"Settings {chat_id} news "
                                                     f"{'ru' if data['news'] == 'Ua' else 'ua'}"))
