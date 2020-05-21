@@ -4,7 +4,7 @@
 from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from Config_GNBot.config import URLS
+from Config_GNBot.config import URLS, bot
 from funcs import log
 import requests
 import schedule
@@ -138,15 +138,14 @@ def reset_daily():
     db.reset_users()
 
 def send_bad_guy():
-    from Config_GNBot.config import bot
     log('Send bad guy is done', 'info')
     bad_guys = db.get_bad_guy()
     for i in bad_guys.keys():
         settings = db.get_setting(i)
         if settings is not  None:
             if settings['bad_guy'] == 'On':
-                print(bad_guys[i]["first_name"] + ' ' + bad_guys[i]["last_name"])
-                bot.send_message(i, f'Пидор дня: {bad_guys[i]["first_name"]} {bad_guys[i]["last_name"]}')
+                bot.send_message(i, f'🎉Пидор дня🎉\n🎊💙{bad_guys[i]["first_name"]} {bad_guys[i]["last_name"]}💙🎊\n'
+                                    f'Приймите наши поздравления👍')
 
 
 def main():
