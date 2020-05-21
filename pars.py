@@ -144,6 +144,7 @@ def send_bad_guy():
         settings = db.get_setting(i)
         keyboard = InlineKeyboardMarkup()
         if settings is not None and settings['bad_guy'] == 'On':
+            print(item)
             text = '🎉<b>Пидор' + f"{'ы' if len(item) > 1 else ''}" + ' дня</b>🎉\n'
             for q in item:
                 if q['first_name'] is not None:

@@ -157,6 +157,7 @@ def get_bad_guy():
                 losers.pop(0)
             elif i['group'] == q and losers[q][0]['karma'] - losers[q][0]['daily'] == i['karma'] - i['daily']:
                 losers[q].append(i)
+    print(losers)
     return losers
 
 
