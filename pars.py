@@ -142,10 +142,14 @@ def send_bad_guy():
     bad_guys = db.get_bad_guy()
     for i in bad_guys.keys():
         settings = db.get_setting(i)
-        if settings is not  None:
+        if settings is not None:
             if settings['bad_guy'] == 'On':
-                bot.send_message(i, f'🎉Пидор дня🎉\n🎊💙{bad_guys[i]["first_name"]} {bad_guys[i]["last_name"]}💙🎊\n'
-                                    f'Приймите наши поздравления👍')
+                if bad_guys[i]['first_name'] is not None:
+                    user = bad_guys[i]['first_name']
+                    if bad_guys[i]['last_name'] is not None:
+                        user += ' ' + bad_guys[i]['last_name']
+                    bot.send_message(i, f'🎉Пидор дня🎉\n🎊💙{user}💙🎊\n'
+                                        f'Приймите наши поздравления👍')
 
 
 def main():

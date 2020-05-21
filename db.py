@@ -125,7 +125,7 @@ def reset_users() -> None:
 def get_bad_guy():
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM Users WHERE supergroup IS NOT NULL;')
+        cursor.execute(f'SELECT * FROM Users WHERE supergroup IS NOT NULL AND is_bote=\'False\';')
         res = cursor.fetchall()
     connection.close()
     groups = set()
