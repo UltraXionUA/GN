@@ -144,16 +144,19 @@ def send_bad_guy():
         settings = db.get_setting(i)
         if settings is not None:
             if settings['bad_guy'] == 'On':
-                if bad_guys[i]['first_name'] is not None:
-                    user = bad_guys[i]['first_name']
-                    if bad_guys[i]['last_name'] is not None:
-                        user += ' ' + bad_guys[i]['last_name']
-                    bot.send_message(i, f'🎉Пидор дня🎉\n🎊💙{user}💙🎊\n'
-                                        f'Приймите наши поздравления👍')
+                text = '🎉Пидор дня🎉\n'
+                for q in i:
+                    if q['first_name'] is not None:
+                        user = q['first_name']
+                        if q['last_name'] is not None:
+                            user += f" {q['last_name']}"
+                        text += user + '\n'
+                text += 'Приймите наши поздравления👍'
+                bot.send_message(i, text)
 
 
 def main():
-    schedule.every().day.at("22:00").do(send_bad_guy)
+    schedule.every().day.at("22:31").do(send_bad_guy)
     schedule.every().day.at("06:00").do(reset_daily)
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
     schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00

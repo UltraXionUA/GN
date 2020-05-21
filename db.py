@@ -144,9 +144,12 @@ def get_bad_guy():
     for q in groups:
         for i in data:
             if i['group'] == q and i['group'] not in losers:
-                losers[q] = i
+                losers[q] = [i]
             elif i['group'] == q and losers[q]['karma'] - losers[q]['daily'] > i['karma'] - i['daily']:
-                losers[q] = i
+                losers[q].append(i)
+                losers.pop(0)
+            elif i['group'] == q and losers[q]['karma'] - losers[q]['daily'] == i['karma'] - i['daily']:
+                losers[q].append(i)
     return losers
 
 
