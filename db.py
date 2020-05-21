@@ -111,14 +111,21 @@ def add_user(user, chat=None, connection=None) -> None:
                     connection.commit()
 
 
-def reset_users() -> None:
+def reset_users(chat_id=None) -> None:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM Users WHERE supergroup IS NOT NULL;')
         res = cursor.fetchall()
-        for i in res:
-            cursor.execute(f'UPDATE Users SET daily={i["karma"]} WHERE id={i["id"]};')
-            connection.commit()
+        if chat_id is None:
+            for i in res:
+                cursor.execute(f'UPDATE Users SET daily={i["karma"]} WHERE id={i["id"]};')
+                connection.commit()
+        else:
+            for i in res:
+                 for q in i['supergroup'].split(','):
+                     if q == chat_id:
+                         cursor.execute(f'UPDATE Users SET daily={i["karma"]} WHERE id={i["id"]};')
+                         connection.commit()
     connection.close()
 
 
@@ -164,6 +171,8 @@ def get_setting(chat_id: str) -> dict:
 def change_setting(chat_id: str, method: str, status: str) -> None:
     connection = start_connection()
     with connection.cursor() as cursor:
+        if method == 'bad_guy' and status == 'on':
+            reset_users(chat_id)
         cursor.execute(f'UPDATE Setting SET `{method}`=\'{status.title()}\' WHERE id LIKE \'{chat_id}\'')
         connection.commit()
     connection.close()
