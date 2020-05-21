@@ -5,6 +5,7 @@ from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
 from Config_GNBot.config import URLS, bot
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from funcs import log
 import requests
 import schedule
@@ -141,16 +142,20 @@ def send_bad_guy():
     log('Send bad guy is done', 'info')
     for i, item in db.get_bad_guy().items():
         settings = db.get_setting(i)
+        keyboard = InlineKeyboardMarkup()
         if settings is not None and settings['bad_guy'] == 'On':
-            text = '🎉Пидор дня🎉\n'
+            text = '🎉<b>Пидор' + f"{'ы' if len(item) > 1 else ''}" + ' дня</b>🎉\n'
             for q in item:
                 if q['first_name'] is not None:
-                    user = '🎊💙' + q['first_name']
+                    user = '🎊💙<i>' + q['first_name']
                     if q['last_name'] is not None:
                         user += f" {q['last_name']}"
-                    text += user + '💙🎊\n'
+                    text += user + '</i>💙🎊\n'
                 text += 'Приймите наши поздравления👍'
-                bot.send_message(i, text)
+                msg = bot.send_message(i, text)
+                keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id}'))
+                bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
+                                      text=msg.text, reply_markup=keyboard, parse_mode='HTML')
 
 send_bad_guy()
 
