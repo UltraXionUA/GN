@@ -117,14 +117,14 @@ def reset_users(chat_id=None) -> None:
         cursor.execute(f'SELECT * FROM Users WHERE supergroup IS NOT NULL;')
         res = cursor.fetchall()
         if chat_id is None:
-            for i in res:
-                cursor.execute(f'UPDATE Users SET daily={i["karma"]} WHERE id={i["id"]};')
+            for user in res:
+                cursor.execute(f'UPDATE Users SET daily={user["karma"]} WHERE id={user["id"]};')
                 connection.commit()
         else:
-            for i in res:
-                 for q in i['supergroup'].split(','):
+            for user in res:
+                 for q in user['supergroup'].split(','):
                      if q == chat_id:
-                         cursor.execute(f'UPDATE Users SET daily={i["karma"]} WHERE id={i["id"]};')
+                         cursor.execute(f'UPDATE Users SET daily={user["karma"]} WHERE id={user["id"]};')
                          connection.commit()
     connection.close()
 
