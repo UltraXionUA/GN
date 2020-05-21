@@ -139,21 +139,20 @@ def reset_daily():
 
 def send_bad_guy():
     log('Send bad guy is done', 'info')
-    bad_guys = db.get_bad_guy()
-    for i in bad_guys.keys():
+    for i, item in db.get_bad_guy().items():
         settings = db.get_setting(i)
-        if settings is not None:
-            if settings['bad_guy'] == 'On':
-                text = '🎉Пидор дня🎉\n'
-                for q in i:
-                    if q['first_name'] is not None:
-                        user = q['first_name']
-                        if q['last_name'] is not None:
-                            user += f" {q['last_name']}"
-                        text += user + '\n'
+        if settings is not None and settings['bad_guy'] == 'On':
+            text = '🎉Пидор дня🎉\n'
+            for q in item:
+                if q['first_name'] is not None:
+                    user = '🎊💙' + q['first_name']
+                    if q['last_name'] is not None:
+                        user += f" {q['last_name']}"
+                    text += user + '💙🎊\n'
                 text += 'Приймите наши поздравления👍'
                 bot.send_message(i, text)
 
+send_bad_guy()
 
 def main():
     schedule.every().day.at("22:31").do(send_bad_guy)
