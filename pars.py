@@ -148,7 +148,6 @@ def send_bad_guy():
                 print(bad_guys[i]["first_name"] + ' ' + bad_guys[i]["last_name"])
                 bot.send_message(i, f'Пидор дня: {bad_guys[i]["first_name"]} {bad_guys[i]["last_name"]}')
 
-reset_daily()
 
 def main():
     schedule.every().day.at("20:00").do(send_bad_guy)
