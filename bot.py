@@ -1854,6 +1854,10 @@ def set_settings(chat_id) -> InlineKeyboardMarkup:
     keyboard.add(InlineKeyboardButton(f'Цензура: {"On🟢" if data["censure"] == "On" else "Off🔴"}',
                                       callback_data=f"Settings {chat_id} censure "
                                                     f"{'off' if data['censure'] == 'On' else 'on'}"))
+    if data['speak'] == 'On' and setting_msg[chat_id].chat.type != 'private':
+        keyboard.add(InlineKeyboardButton(f'Пидор дня: {"On🟢" if data["bad_guy"] == "On" else "Off🔴"}',
+                                          callback_data=f"Settings {chat_id} bad_guy "
+                                                        f"{'off' if data['bad_guy'] == 'On' else 'on'}"))
     keyboard.add(InlineKeyboardButton(f'Новости: {"UA🇺🇦" if data["news"] == "Ua" else "RU🇷🇺" if data["news"] == "Ru" else "US🇺🇸"}',
                                       callback_data=f"Settings {chat_id} news "
                                                     f"{'ru' if data['news'] == 'Ua' else 'ua' if data['news'] == 'Us' else 'us'}"))

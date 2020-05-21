@@ -111,6 +111,45 @@ def add_user(user, chat=None, connection=None) -> None:
                     connection.commit()
 
 
+def reset_users() -> None:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT * FROM Users WHERE supergroup IS NOT NULL;')
+        res = cursor.fetchall()
+        for i in res:
+            cursor.execute(f'UPDATE Users SET daily={i["karma"]} WHERE id={i["id"]};')
+            connection.commit()
+    connection.close()
+
+
+def get_bad_guy():
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT * FROM Users WHERE supergroup IS NOT NULL;')
+        res = cursor.fetchall()
+    connection.close()
+    groups = set()
+    for i in res:
+        for q in i['supergroup'].split(','):
+            if q != '':
+                groups.add(q)
+    data = []
+    for i in res:
+        for q in i['supergroup'].split(','):
+            for f in groups:
+                if q == f:
+                    data.append({'id': i['id'], 'group': q, 'karma': i['karma'], 'daily': i['daily'],
+                                 'first_name': i['first_name'], 'last_name': i['last_name']})
+    losers = {}
+    for q in groups:
+        for i in data:
+            if i['group'] == q and i['group'] not in losers:
+                losers[q] = i
+            elif i['group'] == q and losers[q]['karma'] - losers[q]['daily'] > i['karma'] - i['daily']:
+                losers[q] = i
+    return losers
+
+
 def get_setting(chat_id: str) -> dict:
     connection = start_connection()
     with connection.cursor() as cursor:

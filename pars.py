@@ -4,11 +4,11 @@
 from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from db import add_memes
 from Config_GNBot.config import URLS
 from funcs import log
 import requests
 import schedule
+import db
 import time
 import re
 
@@ -129,11 +129,30 @@ def parser_memes() -> None:  # Main parser
             url = link.get('href')
             if re.fullmatch(r'https?://i.redd.it/?\.?\w+.?\w+', url):
                 links.add(url)
-        add_memes(links)
+        db.add_memes(links)
         log('Parser is done', 'info')
 
 
+def reset_daily():
+    log('Reset daily karama is done', 'info')
+    db.reset_users()
+
+def send_bad_guy():
+    from Config_GNBot.config import bot
+    log('Send bad guy is done', 'info')
+    bad_guys = db.get_bad_guy()
+    for i in bad_guys.keys():
+        settings = db.get_setting(i)
+        if settings is not  None:
+            if settings['bad_guy'] == 'On':
+                print(bad_guys[i]["first_name"] + ' ' + bad_guys[i]["last_name"])
+                bot.send_message(i, f'Пидор дня: {bad_guys[i]["first_name"]} {bad_guys[i]["last_name"]}')
+
+reset_daily()
+
 def main():
+    schedule.every().day.at("20:00").do(send_bad_guy)
+    schedule.every().day.at("06:00").do(reset_daily)
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
     schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
     schedule.every().day.at("06:00").do(parser_memes)  # Do pars every 06:00
