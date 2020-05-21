@@ -134,10 +134,6 @@ def parser_memes() -> None:  # Main parser
         log('Parser is done', 'info')
 
 
-def reset_daily():
-    log('Reset daily karama is done', 'info')
-    db.reset_users()
-
 def send_bad_guy():
     log('Send bad guy is done', 'info')
     for i, item in db.get_bad_guy().items():
@@ -157,10 +153,9 @@ def send_bad_guy():
                 bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
                                       text=msg.text, reply_markup=keyboard, parse_mode='HTML')
 
-
 def main():
     schedule.every().day.at("22:00").do(send_bad_guy)
-    schedule.every().day.at("22:01").do(reset_daily)
+    schedule.every().day.at("22:01").do(db.reset_users)
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
     schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
     schedule.every().day.at("06:00").do(parser_memes)  # Do pars every 06:00

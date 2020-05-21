@@ -136,29 +136,29 @@ def get_bad_guy():
         res = cursor.fetchall()
     connection.close()
     groups = set()
-    for i in res:
-        for q in i['supergroup'].split(','):
-            if q != '':
-                groups.add(q)
-    data = []
-    for i in res:
-        for q in i['supergroup'].split(','):
-            for f in groups:
-                if q == f:
-                    data.append({'id': i['id'], 'group': q, 'karma': i['karma'], 'daily': i['daily'],
-                                 'first_name': i['first_name'], 'last_name': i['last_name']})
-    losers = {}
-    for q in groups:
-        for i in data:
-            if i['group'] == q:
-                if  i['group'] not in losers:
-                    losers[q] = [i]
-                elif losers[q][0]['karma'] - losers[q][0]['daily'] > i['karma'] - i['daily']:
-                    losers[q].append(i)
-                    losers[q].pop(0)
-                elif losers[q][0]['karma'] - losers[q][0]['daily'] == i['karma'] - i['daily']:
-                    losers[q].append(i)
-    return losers
+    for user in res:
+        for group in user['supergroup'].split(','):
+            if group != '':
+                groups.add(group)
+    users = []
+    for user in res:
+        for group_u in user['supergroup'].split(','):
+            for group in groups:
+                if group == group_u:
+                    users.append({'id': user['id'], 'group': group_u, 'karma': user['karma'], 'daily': user['daily'],
+                                 'first_name': user['first_name'], 'last_name': user['last_name']})
+    bag_guys = {}
+    for group in groups:
+        for user in users:
+            if user['group'] == group:
+                if  user['group'] not in bag_guys:
+                    bag_guys[group] = [user]
+                elif bag_guys[group][0]['karma'] - bag_guys[group][0]['daily'] > user['karma'] - user['daily']:
+                    bag_guys[group].append(user)
+                    bag_guys[group].pop(0)
+                elif bag_guys[group][0]['karma'] - bag_guys[group][0]['daily'] == user['karma'] - user['daily']:
+                    bag_guys[group].append(user)
+    return bag_guys
 
 
 def get_setting(chat_id: str) -> dict:
