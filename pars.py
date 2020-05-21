@@ -157,6 +157,7 @@ def send_bad_guy():
                 bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
                                       text=msg.text, reply_markup=keyboard, parse_mode='HTML')
 
+send_bad_guy()
 
 def main():
     schedule.every().day.at("01:14").do(send_bad_guy)
