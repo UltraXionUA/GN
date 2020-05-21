@@ -157,11 +157,10 @@ def send_bad_guy():
                 bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
                                       text=msg.text, reply_markup=keyboard, parse_mode='HTML')
 
-send_bad_guy()
 
 def main():
-    schedule.every().day.at("22:31").do(send_bad_guy)
-    schedule.every().day.at("06:00").do(reset_daily)
+    schedule.every().day.at("22:00").do(send_bad_guy)
+    schedule.every().day.at("22:01").do(reset_daily)
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
     schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
     schedule.every().day.at("06:00").do(parser_memes)  # Do pars every 06:00
