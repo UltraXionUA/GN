@@ -604,14 +604,16 @@ def callback_query(call):
     else:
         bot.answer_callback_query(call.id, 'Вы выбрали поиск по треку')
         msg = bot.send_message(call.message.chat.id, 'Введите название трека🖊')
-    bot.register_next_step_handler(msg, get_song, call.data)
+    bot.register_next_step_handler(msg, get_song, call.data, msg.message_id)
 
 
-def get_song(message: Message, choice: str) -> None:  # Get song
+def get_song(message: Message, choice: str, message_id: str) -> None:  # Get song
     global data_songs, song_msg
     if message.content_type != 'text':
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
+        bot.delete_message(message.chat.id, message.message_id)
+        bot.delete_message(message.chat.id, message_id)
         res = requests.get(API['API_Deezer'] + choice + message.text.replace(' ', '+')).json()
         try:
             if res['data']:
@@ -2176,18 +2178,18 @@ def text_handler(message: Message) -> None:
             meme_handler(message)
         elif text in ['шутка', 'шутку', 'joke', 'joke']:
             joke_handler(message)
-        elif text in ['кубик', 'зарик', 'кость', 'хуюбик', 'dice']:
+        elif text in ['кубик', 'зарик', 'кость', 'dice']:
             dice_handler(message)
         elif text in ['хентай', 'hentai', 'лоли', 'loli', 'девушка', 'girl', 'баба', 'пизда']:
             forbidden_handler(message)
         check = db.get_setting(message.chat.id)
-        if check['periodicity'] == 'Rarely':
-            percent = [4, 1, 30]
-        elif check['periodicity'] == 'Normal':
-            percent = [7, 3, 45]
-        else:
-            percent = [15, 5, 60]
         if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID and check['speak'] == 'On':
+            if check['periodicity'] == 'Rarely':
+                percent = [4, 1, 30]
+            elif check['periodicity'] == 'Normal':
+                percent = [7, 3, 45]
+            else:
+                percent = [15, 5, 60]
             if message.reply_to_message is not None:
                 if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(percent[2]):
                     bot.reply_to(message, db.get_answer())
