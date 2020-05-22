@@ -35,21 +35,21 @@ def get_instagram_video(link: str) -> list:
 
 def get_instagram_photos(link: str) -> list:
     data = []
-    res = requests.get(link + '?__a=1').json()
+    res = requests.get(link + '?__a=1').text
     print(res)
-    try:
-        list_photos = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
-    except KeyError:
-        try:
-            data.append(res['graphql']['shortcode_media']['display_resources'][2]['src'])
-        except KeyError:
-            return data
-    else:
-        for i in list_photos:
-            data.append(i['node']['display_resources'][2]['src'])
-    return data
+    # try:
+    #     list_photos = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
+    # except KeyError:
+    #     try:
+    #         data.append(res['graphql']['shortcode_media']['display_resources'][2]['src'])
+    #     except KeyError:
+    #         return data
+    # else:
+    #     for i in list_photos:
+    #         data.append(i['node']['display_resources'][2]['src'])
+    # return data
 
-get_instagram_photos('https://www.instagram.com/p/CAc721DB83o')
+get_instagram_photos('https://www.instagram.com/p/CAc721DB83o/')
 
 def get_torrents3(search: str) -> list:
     data = []
