@@ -1225,20 +1225,16 @@ def get_instagram_photo(message: Message, message_id: str) -> None:
         url = re.search(r'^https?://(www.)?instagram.com/\w+/.+/', message.text)
         if url is not None:
             url = url.group(0)
-            try:
-                data = get_instagram_photos(url)
-            except JSONDecodeError:
-                bot.send_message(message.chat.id, 'Не поддерживаются работа закрытыми аккаунтами😔')
-            else:
-                if data:
-                    if len(data) == 1:
-                        keyboard = InlineKeyboardMarkup()
-                        keyboard.add(InlineKeyboardButton('Instagram', url=url))
-                        bot.send_photo(message.chat.id, data[0], reply_markup=keyboard)
-                    else:
-                        bot.send_media_group(message.chat.id, [InputMediaPhoto(photo) for photo in data])
+            data = get_instagram_photos(url)
+            if data:
+                if len(data) == 1:
+                    keyboard = InlineKeyboardMarkup()
+                    keyboard.add(InlineKeyboardButton('Instagram', url=url))
+                    bot.send_photo(message.chat.id, data[0], reply_markup=keyboard)
                 else:
-                    bot.send_message(message.chat.id, 'По данной ссылке фотографий не найдено😔')
+                    bot.send_media_group(message.chat.id, [InputMediaPhoto(photo) for photo in data])
+            else:
+                bot.send_message(message.chat.id, 'По данной ссылке фотографий не найдено😔')
         else:
             bot.send_message(message.chat.id, 'Не смог получить данные😔')
     else:
