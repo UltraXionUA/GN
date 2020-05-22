@@ -23,7 +23,7 @@ def get_instagram_video(link: str) -> list:
             data.append({'url': res['graphql']['shortcode_media']['video_url'],
                         'is_video': res['graphql']['shortcode_media']['is_video']})
         except KeyError:
-            pass
+            return data
     else:
         for i in list_items:
             if i['node']['is_video'] is True:
@@ -42,7 +42,7 @@ def get_instagram_photos(link: str) -> list:
         try:
             data.append(res['graphql']['shortcode_media']['display_resources'][2]['src'])
         except KeyError:
-            pass
+            return data
     else:
         for i in list_photos:
             data.append(i['node']['display_resources'][2]['src'])

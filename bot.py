@@ -1160,17 +1160,18 @@ def callback_query(call):
     msg = bot.send_message(call.message.chat.id, 'Отправьте мне ссылку✒️')
     if call.data.split()[1] == 'video':
         bot.answer_callback_query(call.id, 'Вы выбрали видео')
-        bot.register_next_step_handler(msg, get_video)
+        bot.register_next_step_handler(msg, get_video, msg.message_id)
     else:
         bot.answer_callback_query(call.id, 'Вы выбрали фото')
-        bot.register_next_step_handler(msg, get_instagram_photo)
+        bot.register_next_step_handler(msg, get_instagram_photo, msg.message_id)
 
 
-def get_video(message: Message) -> None:
+def get_video(message: Message, message_id: str) -> None:
+    bot.delete_message(message.chat.id, message_id)
+    bot.delete_message(message.chat.id, message.message_id)
     if message.content_type != 'text':
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
-        bot.delete_message(message.chat.id, message.message_id)
         if re.match(r'^https?://(www.)?instagram.com/\w+/.+', message.text):
             url = re.search(r'^https?://(www.)?instagram.com/\w+/.+/', message.text)
             if url is not None:
@@ -1216,8 +1217,9 @@ def get_video(message: Message) -> None:
             bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
 
 
-def get_instagram_photo(message: Message) -> None:
+def get_instagram_photo(message: Message, message_id: str) -> None:
     bot.send_chat_action(message.chat.id, 'upload_photo')
+    bot.delete_message(message.chat.id, message_id)
     bot.delete_message(message.chat.id, message.message_id)
     if re.match(r'^https?://(www.)?instagram.com/\w+/.+', message.text):
         url = re.search(r'^https?://(www.)?instagram.com/\w+/.+/', message.text)
