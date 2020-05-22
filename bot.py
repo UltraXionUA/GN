@@ -1224,7 +1224,8 @@ def get_instagram_photo(message: Message, message_id: str) -> None:
     if re.match(r'^https?://(www.)?instagram.com/\w+/.+', message.text):
         url = re.search(r'^https?://(www.)?instagram.com/\w+/.+/', message.text)
         if url is not None:
-            url = url.group(0)
+            url = url.group(0)[:-1]
+            print(url)
             try:
                 data = get_instagram_photos(url)
             except JSONDecodeError:

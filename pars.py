@@ -34,10 +34,9 @@ def get_instagram_video(link: str) -> list:
 
 
 def get_instagram_photos(link: str) -> list:
-    import json
     data = []
-    res = requests.get(link + '?__a=1')
-    res = json.loads(res.text)
+    res = requests.get(link + '?__a=1').json()
+    print(res)
     try:
         list_photos = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
     except KeyError:
@@ -50,6 +49,7 @@ def get_instagram_photos(link: str) -> list:
             data.append(i['node']['display_resources'][2]['src'])
     return data
 
+get_instagram_photos('https://www.instagram.com/p/CAc721DB83o')
 
 def get_torrents3(search: str) -> list:
     data = []
