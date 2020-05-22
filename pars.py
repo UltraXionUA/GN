@@ -15,7 +15,7 @@ import re
 
 def get_instagram_video(link: str) -> list:
     data = []
-    res = requests.get(link + '?__a=1').json()
+    res = requests.get(link + '?__a=1', headers={'User-Agent': generate_user_agent()}).json()
     try:
         list_items = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
     except KeyError:
@@ -34,27 +34,20 @@ def get_instagram_video(link: str) -> list:
 
 
 def get_instagram_photos(link: str) -> list:
-    from urllib import request
-    import json
     data = []
-    res2 = request.urlopen(link + '?__a=1')
-    res2 = json.load(res2)
-    print(res2)
-    # res = requests.get(link + '?__a=1', headers={'User-Agent': generate_user_agent()}).json()
-    # print(res)
-    # try:
-    #     list_photos = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
-    # except KeyError:
-    #     try:
-    #         data.append(res['graphql']['shortcode_media']['display_resources'][2]['src'])
-    #     except KeyError:
-    #         return data
-    # else:
-    #     for i in list_photos:
-    #         data.append(i['node']['display_resources'][2]['src'])
-    # return data
+    res = requests.get(link + '?__a=1', headers={'User-Agent': generate_user_agent()}).json()
+    try:
+        list_photos = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
+    except KeyError:
+        try:
+            data.append(res['graphql']['shortcode_media']['display_resources'][2]['src'])
+        except KeyError:
+            return data
+    else:
+        for i in list_photos:
+            data.append(i['node']['display_resources'][2]['src'])
+    return data
 
-get_instagram_photos('https://www.instagram.com/p/CAc721DB83o')
 
 def get_torrents3(search: str) -> list:
     data = []
