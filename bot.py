@@ -1227,7 +1227,7 @@ def get_instagram_photo(message: Message, message_id: str) -> None:
             url = url.group(0)[:-1]
             try:
                 data = get_instagram_photos(url)
-            except JSONDecodeError:
+            except IndexError:
                 bot.send_message(message.chat.id, 'Не поддерживаются работа закрытыми аккаунтами😔')
             else:
                 if data:
