@@ -5,7 +5,6 @@ from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
 from Config_GNBot.config import URLS, bot
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from funcs import log
 import requests
 import schedule
@@ -120,46 +119,54 @@ def get_torrents1(search: str) -> list:
 
 
 def parser_memes() -> None:  # Main parser
-    user = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) ' \
-           'Chrome/80.0.3987.116 Safari/537.36 OPR/67.0.3575.87'
+    log('Parser is done', 'info')
     for i in URLS['memes']:
-        #  On prod use without UserAgent
-        soup = BeautifulSoup(requests.get(i, headers={'User-Agent': user, 'accept': '*/*'}).content, 'html.parser')
+        soup = BeautifulSoup(requests.get(i, headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
         links = set()
         for link in soup.find_all('a'):
             url = link.get('href')
             if re.fullmatch(r'https?://i.redd.it/?\.?\w+.?\w+', url):
                 links.add(url)
         db.add_memes(links)
-        log('Parser is done', 'info')
 
 
-def send_bad_guy():
+def send_bad_guy() -> None: # Detect bag guys in gr
     log('Send bad guy is done', 'info')
-    for i, item in db.get_bad_guy().items():
-        settings = db.get_setting(i)
-        keyboard = InlineKeyboardMarkup()
+    for chat_id, users in db.get_bad_guy().items():
+        settings = db.get_setting(chat_id)
         if settings is not None and settings['bad_guy'] == 'On':
-            text = '🎉<b>Пидор' + f"{'ы' if len(item) > 1 else ''}" + ' дня</b>🎉\n'
-            for q in item:
+            text = '🎉<b>Пидор' + f"{'ы' if len(users) > 1 else ''}" + ' дня</b>🎉\n'
+            for q in users:
                 if q['first_name'] is not None:
                     user = '🎊💙<i>' + q['first_name']
                     if q['last_name'] is not None:
                         user += f" {q['last_name']}"
                     text += user + '</i>💙🎊\n'
                 text += 'Приймите наши поздравления👍'
-                msg = bot.send_message(i, text)
-                keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id}'))
-                bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
-                                      text=msg.text, reply_markup=keyboard, parse_mode='HTML')
+                msg = bot.send_message(chat_id, text, parse_mode='HTML')
+                bot.pin_chat_message(msg.chat.id, msg.message_id, disable_notification=False)
+                db.save_pin_bag_guys(chat_id, msg.message_id)
+
+
+def unpin_bag_guys() -> None:
+    log('Unpin bad guys is done', 'info')
+    for msg in db.get_pin_bag_guys():
+        try:
+            bot.unpin_chat_message(msg['chat_id'])
+            bot.delete_message(msg['chat_id'], msg['message_id'])
+        except Exception:
+            pass
+
 
 def main():
-    schedule.every().day.at("22:00").do(send_bad_guy)
-    schedule.every().day.at("22:01").do(db.reset_users)
-    schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
-    schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
-    schedule.every().day.at("06:00").do(parser_memes)  # Do pars every 06:00
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
+    schedule.every().day.at("06:00").do(parser_memes)  # Do pars every 06:00
+    schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
+    schedule.every().day.at("12:00").do(unpin_bag_guys) # Unpin bad guys
+    schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
+    schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
+    schedule.every().day.at("22:01").do(db.reset_users)  # Reset daily karma
+
 
     while True:
         schedule.run_pending()

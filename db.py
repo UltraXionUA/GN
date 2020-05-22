@@ -157,6 +157,15 @@ def get_bad_guy():
     return bag_guys
 
 
+def save_pin_bag_guys(chat_id: str, message_id: str) -> None:
+    r = redis.Redis(host='localhost', port=6379, db=2)
+    r.set(chat_id, message_id)
+
+def get_pin_bag_guys() -> list:
+    r = redis.Redis(host='localhost', port=6379, db=2)
+    return [{'chat_id': id_.decode('utf-8'), 'message_id': r.get(id_.decode('utf-8'))} for id_ in r.keys()]
+
+
 def get_setting(chat_id: str) -> dict:
     connection = start_connection()
     with connection.cursor() as cursor:

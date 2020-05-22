@@ -2395,6 +2395,15 @@ def contact_handler(message: Message) -> None:
 # <<< End answer's  >>>
 
 
+# <<< Unpin bad guys message  >>>
+@bot.message_handler(content_types=['pinned_message'])  # Answer on contact
+def pin_handler(message: Message) -> None:
+    if message.pinned_message.json['text'].startswith('🎉Пидор дня🎉'):
+        bot.delete_message(message.chat.id, message.message_id)
+
+# <<< End unpin bad guys message  >>>
+
+
 # <<< Del  >>>
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^del\s.+$', call.data))
 def del_query(call):
