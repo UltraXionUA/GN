@@ -45,6 +45,8 @@ def start_handler(message: Message) -> None:
     :return:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         bot.send_chat_action(message.chat.id, 'typing')
@@ -65,6 +67,8 @@ def help_handler(message: Message) -> None:
     :return:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         bot.send_chat_action(message.chat.id, 'typing')
@@ -91,6 +95,8 @@ def gif_handler(message: Message) -> None:
     :return:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         bot.send_chat_action(message.chat.id, 'upload_video')
@@ -117,6 +123,8 @@ def qrcode_handler(message: Message) -> None:
     :return:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         keyboard = InlineKeyboardMarkup()
@@ -176,6 +184,8 @@ def joke_handler(message: Message) -> None:
     """
     global jokes_data
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if message.chat.id not in jokes_data or len(jokes_data[message.chat.id]) == 1:
@@ -217,6 +227,8 @@ def oggtomp3_handler(message: Message) -> None:
     """
     global msg_mp3ogg
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         msg_mp3ogg[message.chat.id] = bot.send_message(message.chat.id, 'Запишите или отправьте аудиосообщение🎙')
@@ -267,6 +279,8 @@ meme_data = defaultdict(list)
 def meme_handler(message: Message) -> None:
     global meme_data
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         bot.send_chat_action(message.chat.id, 'upload_photo')
@@ -299,6 +313,7 @@ def donate_handler(message: Message) -> None:
     :return:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         bot.send_chat_action(message.chat.id, 'typing')
         if message.chat.type == 'private':
@@ -398,6 +413,8 @@ def weather_handler(message: Message) -> None:
     :return:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         city_msg[message.chat.id] = bot.send_message(message.chat.id, 'Введите название города✒️')
@@ -493,6 +510,8 @@ def detect_handler(message: Message) -> None:
     """
     global detect_msg
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         bot.send_chat_action(message.chat.id, 'typing')
@@ -586,6 +605,8 @@ def music_handler(message: Message) -> None:
     :return:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         bot.send_chat_action(message.chat.id, 'typing')
@@ -826,6 +847,8 @@ def news_handler(message: Message) -> None:
     :return:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         keyboard = InlineKeyboardMarkup(row_width=2)
@@ -977,6 +1000,8 @@ def youtube_handler(message: Message) -> None:
     :return:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         keyboard = InlineKeyboardMarkup()
@@ -1117,6 +1142,8 @@ def instagram_handler(message: Message) -> None:
     :return:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         keyboard = InlineKeyboardMarkup()
@@ -1234,6 +1261,8 @@ def torrents_handler(message: Message) -> None:
     :return:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         keyboard = InlineKeyboardMarkup()
@@ -1396,6 +1425,8 @@ def translate_handler(message: Message) -> None:
     :return:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         bot.send_chat_action(message.chat.id, 'typing')
@@ -1404,7 +1435,6 @@ def translate_handler(message: Message) -> None:
 
 
 def trans_word(message: Message) -> None:  # Translate function
-    log(message, 'info')
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, tr_w(message.text))
 
@@ -1421,6 +1451,8 @@ def gn_sticker_handler(message: Message) -> None:
     :return:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if db.check(message.from_user.id, 'is_gn'):
@@ -1441,6 +1473,8 @@ def sticker_handler(message: Message) -> None:
     :return:
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         bot.send_sticker(message.chat.id, db.random_sticker())
@@ -1483,6 +1517,7 @@ def stat_handler(message: Message) -> None:
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
             data = db.get_stat(message.chat)
             if data:
                 keyboard = InlineKeyboardMarkup()
@@ -1525,6 +1560,7 @@ def me_handler(message: Message) -> None:
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
             keyboard = InlineKeyboardMarkup()
             data_user, position = db.get_user(message.from_user, message.chat)
             if data_user is not False or position is not False:
@@ -1562,6 +1598,8 @@ def euler_handler(message: Message) -> None:
     """
     global data_euler
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         keyboard = InlineKeyboardMarkup()
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
@@ -1616,6 +1654,8 @@ def logic_handler(message: Message) -> None:
     """
     global data_logic_tasks
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         keyboard = InlineKeyboardMarkup()
@@ -1641,7 +1681,7 @@ def answer_query(call):
     keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {id_command} {id_question}'))
     bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
                           text=msg.text, reply_markup=keyboard, parse_mode='HTML')
-# <<< End me >>>
+# <<< End logic task >>>
 
 
 # <<< Wiki >>>
@@ -1659,6 +1699,8 @@ def wiki_handler(message: Message) -> None:
        :return:
        """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         wiki_enter_msg[message.chat.id] = bot.send_message(message.chat.id, 'Введите запрос✒️')
@@ -1820,6 +1862,8 @@ def code_handler(message: Message) -> None:
     """
     global setting_msg
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         msg_setting[message.chat.id] = message
@@ -1893,6 +1937,8 @@ def code_handler(message: Message) -> None:
     """
     global leng_msg
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         keyboard = InlineKeyboardMarkup(row_width=3)
@@ -2171,8 +2217,6 @@ def text_handler(message: Message) -> None:
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-        if message.chat.type != 'private':
-            db.change_karma(message.from_user, message.chat, ['+'], 1)
         text = message.text.lower()
         if text in ['стикер', 'стикерочек', 'sticker']:
             gn_sticker_handler(message)
@@ -2187,20 +2231,22 @@ def text_handler(message: Message) -> None:
         elif text in ['хентай', 'hentai', 'лоли', 'loli', 'девушка', 'girl', 'баба', 'пизда']:
             forbidden_handler(message)
         check = db.get_setting(message.chat.id)
-        if message.chat.type != 'private' and str(message.from_user.id) != GNBot_ID and check['speak'] == 'On':
-            if check['periodicity'] == 'Rarely':
-                percent = [4, 1, 30]
-            elif check['periodicity'] == 'Normal':
-                percent = [7, 3, 45]
-            else:
-                percent = [15, 5, 60]
-            if message.reply_to_message is not None:
-                if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(percent[2]):
+        if message.chat.type != 'private':
+            db.change_karma(message.from_user, message.chat, ['+'], 1)
+            if str(message.from_user.id) != GNBot_ID and check['speak'] == 'On':
+                if check['periodicity'] == 'Rarely':
+                    percent = [4, 1, 30]
+                elif check['periodicity'] == 'Normal':
+                    percent = [7, 3, 45]
+                else:
+                    percent = [15, 5, 60]
+                if message.reply_to_message is not None:
+                    if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(percent[2]):
+                        bot.reply_to(message, db.get_answer())
+                elif rend_d(percent[0]):
                     bot.reply_to(message, db.get_answer())
-            elif rend_d(percent[0]):
-                bot.reply_to(message, db.get_answer())
-            elif rend_d(percent[1]):
-                    bot.send_sticker(message.chat.id, db.random_sticker(), message.message_id)
+                elif rend_d(percent[1]):
+                        bot.send_sticker(message.chat.id, db.random_sticker(), message.message_id)
 
 
 # <<< End all message >>>
@@ -2261,6 +2307,8 @@ def left_member_handler(message: Message) -> None:
 
 @bot.message_handler(content_types=['voice'])  # Answer on voice
 def voice_handler(message: Message) -> None:
+    if message.chat.type != 'private':
+        db.change_karma(message.from_user, message.chat, ['+'], 1)
     check = db.get_setting(message.chat.id)
     if check['recognize'] != 'Off':
         r = sr.Recognizer()
@@ -2316,23 +2364,33 @@ def send_text(message: Message, rec: str) -> None:
         log('Error! Can\'t remove file', 'warning')
 
 
+@bot.message_handler(content_types=['photo'])  # Answer on location
+def location_handler(message: Message) -> None:
+    if message.chat.type != 'private':
+        db.change_karma(message.from_user, message.chat, ['+'], 1)
+
+
 @bot.message_handler(content_types=['location'])  # Answer on location
 def location_handler(message: Message) -> None:
-    if rend_d(30) and message.chat.type != 'private':
-        bot.reply_to(message, ['Скинул мусорам', 'Прикоп или магнит?', 'Ебеня какие то',
-                                       'Та ну нафиг, я туда не поеду', 'Это ты там живешь? Сочувствую',
-                                       'Ой ну и местечко для сходочки вы выбрали...',
-                                       'Я бы туда не поехал будь я даже пьян',
-                                       'Дебри', 'Так так, вижу степи и болото'])
+    if message.chat.type != 'private':
+        db.change_karma(message.from_user, message.chat, ['+'], 1)
+        if rend_d(30):
+            bot.reply_to(message, ['Скинул мусорам', 'Прикоп или магнит?', 'Ебеня какие то',
+                                           'Та ну нафиг, я туда не поеду', 'Это ты там живешь? Сочувствую',
+                                           'Ой ну и местечко для сходочки вы выбрали...',
+                                           'Я бы туда не поехал будь я даже пьян',
+                                           'Дебри', 'Так так, вижу степи и болото'])
 
 
 @bot.message_handler(content_types=['contact'])  # Answer on contact
 def contact_handler(message: Message) -> None:
-    if rend_d(30) and message.chat.type != 'private':
-        bot.reply_to(message, random.choice(['Если мне будет одиноко и холодно я знаю куда позвонить',
-                                                     'Трубку не берут', 'Сохранил', 'А мой запишешь?',
-                                                     'Наберу тебя вечерком)', 'Разошлю его всем знакомым',
-                                                     'Продам в DarkNet']))
+    if message.chat.type != 'private':
+        db.change_karma(message.from_user, message.chat, ['+'], 1)
+        if rend_d(30):
+            bot.reply_to(message, random.choice(['Если мне будет одиноко и холодно я знаю куда позвонить',
+                                                         'Трубку не берут', 'Сохранил', 'А мой запишешь?',
+                                                         'Наберу тебя вечерком)', 'Разошлю его всем знакомым',
+                                                         'Продам в DarkNet']))
 
 # <<< End answer's  >>>
 

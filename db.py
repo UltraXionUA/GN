@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 """Control DB file for GNBot"""
+from Config_GNBot.config import GN_ID, GN_Stickers, BD_CONNECT
 from funcs import log
-from Config_GNBot import config
 import pymysql
 import redis
 import random
 
-gn_users = ['KKKrava', 'GoluboyNosok', 'BitchesNure', 'Koronafils']
 
 def start_connection():  # Connection to DB
     try:
-        connection = pymysql.connect(**config.BD_CONNECT)
+        connection = pymysql.connect(**BD_CONNECT)
         return connection
     except pymysql.err.OperationalError:
         log('Ошибка подключения к БД!', 'error')
@@ -26,11 +25,9 @@ def get_user(user, chat) -> dict:
             if user_['supergroup'] is None:
                 all_users.pop(en)
             else:
-                groups = user_['supergroup'].split(',')
-                for group in groups:
+                for group in user_['supergroup'].split(','):
                     if group == str(chat.id):
                         users_groups.append(user_)
-                        continue
         if users_groups:
             for en, user_ in enumerate(users_groups, 1):
                 if user_['user_id'] == user.id:
@@ -44,12 +41,11 @@ def get_stat(chat) -> list:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM Users WHERE is_bote = \'False\' AND supergroup IS NOT NULL ORDER BY karma DESC')
-        res = list(cursor.fetchall())
+        res = cursor.fetchall()
         true_res = []
         if res:
             for en, i in enumerate(res):
-                groups = i['supergroup'].split(',')
-                if str(chat.id) in groups:
+                if str(chat.id) in i['supergroup'].split(','):
                     true_res.append(i)
     return true_res
 
@@ -72,7 +68,7 @@ def add_user(user, chat=None, connection=None) -> None:
                                '`username`, `is_gn`, `supergroup`) VALUE '
                                f'(\'{int(user.id)}\', \'{str(user.is_bot)}\',\'{user.first_name}\','
                                f'\'{user.last_name}\',\'{user.username}\','
-                               f' \'{str(True) if str(chat.id) == config.GN_ID else str(False)}\', '
+                               f' \'{str(True) if str(chat.id) == GN_ID else str(False)}\', '
                                f'\'{str(chat.id)},\');')
             else:
                 cursor.execute('INSERT INTO Users (`user_id`, `is_bote`, `first_name`, `last_name`, '
@@ -105,7 +101,7 @@ def add_user(user, chat=None, connection=None) -> None:
                         cursor.execute(f'UPDATE Users SET supergroup = \'{res["supergroup"] + str(chat.id)},\''
                                        f' WHERE user_id LIKE {user.id};')
                         connection.commit()
-                if str(chat.id) == config.GN_ID and cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id} '
+                if str(chat.id) == GN_ID and cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id} '
                                                                    f'AND is_gn = \'False\';') == 0:
                     cursor.execute(f'UPDATE Users SET is_gn = \'True\' WHERE user_id LIKE {user.id}')
                     connection.commit()
@@ -122,8 +118,8 @@ def reset_users(chat_id=None) -> None:
                 connection.commit()
         else:
             for user in res:
-                 for q in user['supergroup'].split(','):
-                     if q == chat_id:
+                 for group in user['supergroup'].split(','):
+                     if group == chat_id:
                          cursor.execute(f'UPDATE Users SET daily={user["karma"]} WHERE id={user["id"]};')
                          connection.commit()
     connection.close()
@@ -182,8 +178,7 @@ def change_setting(chat_id: str, method: str, status: str) -> None:
 def check(user_id: str, check_t: str) -> bool:
     connection = start_connection()
     with connection.cursor() as cursor:
-        if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user_id}\''
-                          f'AND {check_t} LIKE \'True\';') == 0:
+        if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user_id}\' AND {check_t} LIKE \'True\';') == 0:
             return False
         else:
             return True
@@ -218,12 +213,12 @@ def random_sticker(gn=False) -> str:  # Random sticker
     connection = start_connection()
     with connection.cursor() as cursor:
         if gn is False:
-            cursor.execute(f'SELECT * FROM Stickers WHERE `set_name`!=\'{gn_users[0]}\' AND'
-                           f'`set_name`!=\'{gn_users[1]}\' AND `set_name`!=\'{gn_users[2]}\' AND'
-                           f'`set_name`!=\'{gn_users[3]}\' ORDER BY RAND() LIMIT 1')
+            cursor.execute(f'SELECT * FROM Stickers WHERE `set_name`!=\'{GN_Stickers[0]}\' AND'
+                           f'`set_name`!=\'{GN_Stickers[1]}\' AND `set_name`!=\'{GN_Stickers[2]}\' AND'
+                           f'`set_name`!=\'{GN_Stickers[3]}\' ORDER BY RAND() LIMIT 1')
         else:
             cursor.execute(f"SELECT `item_id` FROM Stickers WHERE `set_name`"
-                           f"=\'{random.choice(gn_users)}\'"
+                           f"=\'{random.choice(GN_Stickers)}\'"
                            f" ORDER BY RAND() LIMIT 1")
     result = cursor.fetchone()
     connection.close()
@@ -277,8 +272,7 @@ def add_memes(array: list) -> None:  # Add memes
 
 def get_forbidden(type_: str) -> str:
     r = redis.Redis(host='localhost', port=6379, db=0)
-    count_ = r.get(f'len_{type_}')
-    return r.get(f'{type_}{random.randint(1, int(count_))}').decode('utf-8')
+    return r.get(f'{type_}{random.randint(1, int(r.get(f"len_{type_}")))}').decode('utf-8')
 
 def get_doc(id_: str) -> str:
     connection = start_connection()
