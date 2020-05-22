@@ -51,7 +51,7 @@ def start_handler(message: Message) -> None:
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         bot.send_chat_action(message.chat.id, 'typing')
         bot.send_message(message.chat.id, 'Здравствуй, меня зовут <b>GNBot</b>🖥\n'
-                                          'Я много функциональный и мултимедийный бот👾\n'
+                                          'Я многофункциональный и мултимедийный бот👾\n'
                                           '<b>Помощь</b> <i>/help</i>', parse_mode='HTML')
 
 
@@ -74,6 +74,7 @@ def help_handler(message: Message) -> None:
         bot.send_chat_action(message.chat.id, 'typing')
         bot.send_message(message.chat.id, '<b>Тут должна была быть помощь</b>🆘, но её тут не будет🌚\n'
                                           'Список всех команд можно увидеть введя <b>\" </b>/<b> \"</b>\n'
+                                          'Бот работает как в приватных чатах так и в группах😱'
                                           'Также бот имеет ввести учет кармы 😇(<i>работает в группах</i>)\n'
                                           'Админ команды (<b>!ban</b>, <b>!mute {<i>time</i>}</b>, <b>!kick</b>)\n'
                                           'Бота можно настроить под себя перейдя в /settings\n'
@@ -2320,7 +2321,6 @@ def voice_handler(message: Message) -> None:
         file = sr.AudioFile('file.wav')
         with file as source:
             audio = r.record(source)
-
         try:
             if check['recognize'] == 'Wix':
                 rec = r.recognize_wit(audio, key=API['Wit'])
