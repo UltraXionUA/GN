@@ -35,7 +35,9 @@ def get_instagram_video(link: str) -> list:
 
 def get_instagram_photos(link: str) -> list:
     data = []
-    res = requests.get(link + '?__a=1', headers={'User-Agent': generate_user_agent()}).json()
+    res = requests.get(link + '?__a=1', headers={'User-Agent': generate_user_agent()})
+    print(res.ok)
+    res = res.json()
     try:
         list_photos = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
     except KeyError:

@@ -1175,9 +1175,8 @@ def get_video(message: Message, message_id: str) -> None:
         if re.match(r'^https?://(www.)?instagram.com/\w+/.+', message.text):
             url = re.search(r'^https?://(www.)?instagram.com/\w+/.+/', message.text)
             if url is not None:
-                url = url.group(0)
                 try:
-                    data = get_instagram_video(url)
+                    data = get_instagram_video(url.group(0))
                 except JSONDecodeError:
                     bot.send_message(message.chat.id, 'Не поддерживаются работа закрытыми аккаунтами😔')
                 else:
@@ -1224,9 +1223,8 @@ def get_instagram_photo(message: Message, message_id: str) -> None:
     if re.match(r'^https?://(www.)?instagram.com/\w+/.+', message.text):
         url = re.search(r'^https?://(www.)?instagram.com/\w+/.+/', message.text)
         if url is not None:
-            url = url.group(0)[:-1]
             try:
-                data = get_instagram_photos(url)
+                data = get_instagram_photos(url.group(0))
             except JSONDecodeError:
                 bot.send_message(message.chat.id, 'Не поддерживаются работа закрытыми аккаунтами😔')
             else:

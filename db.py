@@ -166,6 +166,7 @@ def get_pin_bag_guys() -> list:
     return [{'chat_id': id_.decode('utf-8'), 'message_id': r.get(id_.decode('utf-8'))} for id_ in r.keys()]
 
 
+
 def get_setting(chat_id: str) -> dict:
     connection = start_connection()
     with connection.cursor() as cursor:
