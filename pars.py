@@ -35,6 +35,7 @@ def get_instagram_video(link: str) -> list:
 
 def get_instagram_photos(link: str) -> list:
     data = []
+    print(link + '?__a=1')
     res = requests.get(link + '?__a=1', headers={'User-Agent': generate_user_agent()})
     print(res.ok)
     res = res.json()

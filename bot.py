@@ -1173,10 +1173,10 @@ def get_video(message: Message, message_id: str) -> None:
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
         if re.match(r'^https?://(www.)?instagram.com/\w+/.+', message.text):
-            url = re.search(r'^https?://(www.)?instagram.com/\w+/.+/', message.text)
+            url = re.search(r'^https?://(www.)?instagram.com/\w+/.+/', message.text).group(0)
             if url is not None:
                 try:
-                    data = get_instagram_video(url.group(0))
+                    data = get_instagram_video(url)
                 except JSONDecodeError:
                     bot.send_message(message.chat.id, 'Не поддерживаются работа закрытыми аккаунтами😔')
                 else:
@@ -1221,10 +1221,10 @@ def get_instagram_photo(message: Message, message_id: str) -> None:
     bot.delete_message(message.chat.id, message_id)
     bot.delete_message(message.chat.id, message.message_id)
     if re.match(r'^https?://(www.)?instagram.com/\w+/.+', message.text):
-        url = re.search(r'^https?://(www.)?instagram.com/\w+/.+/', message.text)
+        url = re.search(r'^https?://(www.)?instagram.com/\w+/.+/', message.text).group(0)
         if url is not None:
             try:
-                data = get_instagram_photos(url.group(0))
+                data = get_instagram_photos(url)
             except JSONDecodeError:
                 bot.send_message(message.chat.id, 'Не поддерживаются работа закрытыми аккаунтами😔')
             else:
