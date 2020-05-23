@@ -144,7 +144,6 @@ def send_bad_guy() -> None: # Detect bag guys in gr
                 bot.pin_chat_message(msg.chat.id, msg.message_id, disable_notification=False)
                 db.save_pin_bag_guys(chat_id, msg.message_id)
 
-
 def unpin_bag_guys() -> None:
     log('Unpin bad guys is done', 'info')
     for msg in db.get_pin_bag_guys():

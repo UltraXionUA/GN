@@ -2312,8 +2312,8 @@ def voice_handler(message: Message) -> None:
                 rec = r.recognize_google(audio,
                         language=f"{'ru-RU' if setting['leng_speak'] == 'Ru' else 'uk-UA' if setting['leng_speak'] == 'Ua' else 'en-US'}")
                 rec = rec[0].title() + rec[1:]
-        except (sr.UnknownValueError, sr.RequestError) as ex:
-            log(f"Could not request results from Wit Recognition service; {ex}", 'warning')
+        except (sr.UnknownValueError, sr.RequestError):
+            log(f"Could not request results from Wit Recognition service", 'warning')
             bot.send_message(message.chat.id, 'Не смог распознать голос😞')
         else:
             send_text(message, rec)
@@ -2393,8 +2393,8 @@ def del_query(call):
     for i in call.data.split()[1:]:
         try:
             bot.delete_message(call.message.chat.id, i)
-        except Exception as ex:
-            log(f'Can\'t delete message: {ex}', 'warning')
+        except Exception:
+            log(f'Can\'t delete message', 'warning')
 
 
 

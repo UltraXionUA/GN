@@ -118,23 +118,22 @@ def reset_users(chat_id=None) -> None:
 
 def get_bad_guy():
     connection = start_connection()
-    groups = set()
-    users = []
-    bag_guys = {}
+    groups, users, bag_guys = set(), [], {}
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM Users WHERE supergroup IS NOT NULL AND is_bote=\'False\';')
-        for user in cursor.fetchall():
-            for group in user['supergroup'].split(','):
-                if group != '':
-                    groups.add(group)
-        for user in cursor.fetchall():
-            for group_u in user['supergroup'].split(','):
-                for group in groups:
-                    if group == group_u:
-                        users.append(
-                            {'id': user['id'], 'group': group_u, 'karma': user['karma'], 'daily': user['daily'],
-                             'first_name': user['first_name'], 'last_name': user['last_name']})
+        res = cursor.fetchall()
     connection.close()
+    for user in res:
+        for group in user['supergroup'].split(','):
+            if group != '':
+                groups.add(group)
+    for user in res:
+        for group_u in user['supergroup'].split(','):
+            for group in groups:
+                if group == group_u:
+                    users.append(
+                        {'id': user['id'], 'group': group_u, 'karma': user['karma'], 'daily': user['daily'],
+                         'first_name': user['first_name'], 'last_name': user['last_name']})
     for group in groups:
         for user in users:
             if user['group'] == group:
