@@ -204,11 +204,13 @@ def joke_handler(message: Message) -> None:
             keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {panchline.message_id} '
                                                                        f'{setup.message_id} {message.message_id}'))
             time.sleep(1)
+            bot.edit_message_text(chat_id=message.chat.id, message_id=panchline.message_id,
+                                  text=panchline.text, reply_markup=keyboard)
         else:
             joke = bot.send_message(message.chat.id, joke['setup'] + random.choice(['🌚', '😅', '🤫']))
             keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {joke.message_id} {message.message_id}'))
-        bot.edit_message_text(chat_id=message.chat.id, message_id=joke.message_id,
-                              text=joke.text, reply_markup=keyboard)
+            bot.edit_message_text(chat_id=message.chat.id, message_id=joke.message_id,
+                                  text=joke.text, reply_markup=keyboard)
 
 
 # <<< End joke >>>
