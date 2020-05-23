@@ -7,7 +7,7 @@ User=ultraxion
 Group=ultraxion
 
 WorkingDirectory=/home/ultraxion/GNBot/GN/
-Environment="PYTHONPATH=/home/ultraxion/GNBot/GN/"
+Environment="PYTHONPATH=/home/ultraxion/"
 ExecStart=/home/ultraxion/venv/bin/python3.8 /home/ultraxion/GNBot/GN/bot.py
 
 [Install]
