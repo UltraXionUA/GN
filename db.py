@@ -15,7 +15,7 @@ def start_connection():  # Connection to DB
         log('Ошибка подключения к БД!', 'error')
 
 
-def get_user(user, chat) -> dict:
+def get_user(user, chat) -> [dict, int or bool, bool]:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM Users ORDER BY karma DESC;')
@@ -41,13 +41,7 @@ def get_stat(chat) -> list:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM Users WHERE is_bote = \'False\' AND supergroup IS NOT NULL ORDER BY karma DESC')
-        res = cursor.fetchall()
-        true_res = []
-        if res:
-            for en, i in enumerate(res):
-                if str(chat.id) in i['supergroup'].split(','):
-                    true_res.append(i)
-    return true_res
+        return [i for i in cursor.fetchall() if str(chat.id) in i['supergroup'].split(',')]
 
 
 def add_user(user, chat=None, connection=None) -> None:
@@ -89,12 +83,10 @@ def add_user(user, chat=None, connection=None) -> None:
                 cursor.execute(f'UPDATE Users SET username=\'{user.username}\' WHERE user_id LIKE {user.id};')
                 connection.commit()
             if chat is not None:
-                if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id} '
-                                                                   f'AND supergroup IS NULL;') != 0:
+                if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE {user.id} AND supergroup IS NULL;') != 0:
                     cursor.execute(f'UPDATE Users SET supergroup = \'{chat.id},\' WHERE user_id LIKE {user.id};')
                     connection.commit()
-                elif cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user.id}\' '
-                                                                       f'AND supergroup IS NOT NULL;') != 0:
+                elif cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user.id}\' AND supergroup IS NOT NULL;') != 0:
                     cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user.id}\';')
                     res = cursor.fetchone()
                     if str(chat.id) not in res['supergroup'].split(','):
@@ -111,13 +103,12 @@ def reset_users(chat_id=None) -> None:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM Users WHERE supergroup IS NOT NULL;')
-        res = cursor.fetchall()
         if chat_id is None:
-            for user in res:
+            for user in cursor.fetchall():
                 cursor.execute(f'UPDATE Users SET daily={user["karma"]} WHERE id={user["id"]};')
                 connection.commit()
         else:
-            for user in res:
+            for user in cursor.fetchall():
                  for group in user['supergroup'].split(','):
                      if group == chat_id:
                          cursor.execute(f'UPDATE Users SET daily={user["karma"]} WHERE id={user["id"]};')
@@ -127,23 +118,23 @@ def reset_users(chat_id=None) -> None:
 
 def get_bad_guy():
     connection = start_connection()
+    groups = set()
+    users = []
+    bag_guys = {}
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM Users WHERE supergroup IS NOT NULL AND is_bote=\'False\';')
-        res = cursor.fetchall()
+        for user in cursor.fetchall():
+            for group in user['supergroup'].split(','):
+                if group != '':
+                    groups.add(group)
+        for user in cursor.fetchall():
+            for group_u in user['supergroup'].split(','):
+                for group in groups:
+                    if group == group_u:
+                        users.append(
+                            {'id': user['id'], 'group': group_u, 'karma': user['karma'], 'daily': user['daily'],
+                             'first_name': user['first_name'], 'last_name': user['last_name']})
     connection.close()
-    groups = set()
-    for user in res:
-        for group in user['supergroup'].split(','):
-            if group != '':
-                groups.add(group)
-    users = []
-    for user in res:
-        for group_u in user['supergroup'].split(','):
-            for group in groups:
-                if group == group_u:
-                    users.append({'id': user['id'], 'group': group_u, 'karma': user['karma'], 'daily': user['daily'],
-                                 'first_name': user['first_name'], 'last_name': user['last_name']})
-    bag_guys = {}
     for group in groups:
         for user in users:
             if user['group'] == group:
@@ -166,14 +157,12 @@ def get_pin_bag_guys() -> list:
     return [{'chat_id': id_.decode('utf-8'), 'message_id': r.get(id_.decode('utf-8'))} for id_ in r.keys()]
 
 
-
 def get_setting(chat_id: str) -> dict:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM Setting WHERE id=\'{chat_id}\';')
-        res = cursor.fetchone()
-    connection.close()
-    return res
+        return cursor.fetchone()
+
 
 def change_setting(chat_id: str, method: str, status: str) -> None:
     connection = start_connection()
@@ -188,10 +177,7 @@ def change_setting(chat_id: str, method: str, status: str) -> None:
 def check(user_id: str, check_t: str) -> bool:
     connection = start_connection()
     with connection.cursor() as cursor:
-        if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user_id}\' AND {check_t} LIKE \'True\';') == 0:
-            return False
-        else:
-            return True
+        return False if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user_id}\' AND {check_t} LIKE \'True\';') == 0 else True
 
 
 def change_karma(user, chat, action: list, exp: int) -> dict:  # Change Karma
@@ -230,9 +216,8 @@ def random_sticker(gn=False) -> str:  # Random sticker
             cursor.execute(f"SELECT `item_id` FROM Stickers WHERE `set_name`"
                            f"=\'{random.choice(GN_Stickers)}\'"
                            f" ORDER BY RAND() LIMIT 1")
-    result = cursor.fetchone()
-    connection.close()
-    return result['item_id']
+        return cursor.fetchone()['item_id']
+
 
 
 def ban_user(user: str) -> None:  # Ban user
@@ -246,35 +231,30 @@ def ban_user(user: str) -> None:  # Ban user
 def check_ban_user(user: str) -> None:  # Ban user
     connection = start_connection()
     with connection.cursor() as cursor:
-        if cursor.execute(f'SELECT * FROM `BlackList` WHERE user_id LIKE \'{user}\';') == 0:
-            return True
-        else:
-            return False
+        return True if cursor.execute(f'SELECT * FROM `BlackList` WHERE user_id LIKE \'{user}\';') == 0 else False
 
 
 def get_code(name: str) -> [dict, None]:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT code FROM PasteBin WHERE name LIKE \'{name}\'')
-        result = cursor.fetchone()
-    connection.close()
-    return result
+        return cursor.fetchone()
 
 def get_all(type_: str) -> list:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM {type_};')
-        result = cursor.fetchall()
-    return result
+        return cursor.fetchall()
 
-def add_memes(array: list) -> None:  # Add memes
+
+def add_memes(data_memes: list) -> None:  # Add memes
     connection = start_connection()
     count = 0
     with connection.cursor() as cursor:
-        for i in array:
-            if cursor.execute(f'SELECT * FROM Memes WHERE url LIKE \'{i}\'') != 1:
+        for meme in data_memes:
+            if cursor.execute(f'SELECT * FROM Memes WHERE url LIKE \'{meme}\'') == 0:
                 count += 1
-                cursor.execute(f'INSERT INTO `Memes`(`url`) VALUES (\'{i}\');')
+                cursor.execute(f'INSERT INTO `Memes`(`url`) VALUES (\'{meme}\');')
                 connection.commit()
     log(f'Мемов добавлено: {count}', 'info')
     connection.close()
@@ -288,21 +268,20 @@ def get_doc(id_: str) -> str:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT other FROM Project_Euler WHERE id={id_};')
-        result = cursor.fetchone()
-    return result['other']
+        return cursor.fetchone()['other']
 
 
 def get_task_answer(id_: str) -> str:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT answer FROM Logic_Tasks WHERE id={id_};')
-        result = cursor.fetchone()
-    return result['answer']
+        return cursor.fetchone()['answer']
+
 
 def get_answer() -> str:
     r = redis.Redis(host='localhost', port=6379, db=1)
-    answer = r.get(f'answer{random.randint(1, int(r.get("len_answer")))}').decode('utf-8')
-    return answer[1:] if answer[0] == '.' else answer
+    return r.get(f'answer{random.randint(1, int(r.get("len_answer")))}').decode('utf-8')
+
 
 # def add_answers():
 #     import re

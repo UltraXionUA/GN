@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Function file for GNBot"""
-from googletrans import Translator
-from random import randint
-from langdetect import detect
 from datetime import datetime as dt
+from googletrans import Translator
+from langdetect import detect
+from random import randint
 import logging
 import re
 
@@ -46,9 +46,8 @@ def get_weather_emoji(code: str) -> str:
 
 
 def get_day(data: str) -> str:
-    week_day = dt.strptime(data, '%Y-%m-%d').isoweekday()
     for num, day in {1: 'ПН', 2: 'ВТ', 3: 'СР', 4: 'ЧТ', 5: 'ПТ', 6: 'СБ', 7: 'ВС'}.items():
-        if num == week_day:
+        if num == dt.strptime(data, '%Y-%m-%d').isoweekday():
             return day
     else:
         log('Wrong day of week', 'warning')
@@ -68,25 +67,20 @@ def sec_to_time(seconds: int) -> str:
 
 def tr_w(words) -> str:  # Define and translate
     leng_code = detect(words)
-    if leng_code == 'mk':
-        return 'Не удалось распознать язык⛔️'
-    return Translator().translate(words, dest='en').text if leng_code == 'ru' \
-        else Translator().translate(words, dest='ru').text
+    return Translator().translate(words, dest='en').text if leng_code == 'ru' else 'Не удалось распознать язык⛔️' if leng_code == 'mk' else Translator().translate(words, dest='ru').text
 
 
 def clear_link(string: str) -> str:  # Clear string of links
     clear_string = re.sub(r'https?://.*[\r\n]*|[www.]?\w+\-?\w+\.\w.', '', string, flags=re.MULTILINE)
     clear_string = re.sub(r'\s+', ' ', clear_string, flags=re.MULTILINE)
     clear_string = re.sub(r'(\s-\s+m)?', '', clear_string, flags=re.MULTILINE)
-    clear_string = re.sub(r'&\w+;', ' ', clear_string, flags=re.MULTILINE)
-    return clear_string
+    return re.sub(r'&\w+;', ' ', clear_string, flags=re.MULTILINE)
 
 
 
 def clear_date(string: str) -> str:
     date = re.sub('T', ' ', string)
-    date = re.sub('Z', '', date)
-    return date
+    return re.sub('Z', '', date)
 
 
 def rend_d(percent: int) -> bool:  # Random True or False

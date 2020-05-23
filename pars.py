@@ -13,7 +13,7 @@ import time
 import re
 
 
-def get_instagram_video(link: str) -> list:
+def get_instagram_videos(link: str) -> list:
     data = []
     res = requests.get(link + '?__a=1', headers={'User-Agent': generate_user_agent()}).json()
     try:
@@ -25,11 +25,11 @@ def get_instagram_video(link: str) -> list:
         except KeyError:
             return data
     else:
-        for i in list_items:
-            if i['node']['is_video'] is True:
-                data.append({'url': i['node']['video_url'], 'is_video': i['node']['is_video']})
+        for item in list_items:
+            if item['node']['is_video'] is True:
+                data.append({'url': item['node']['video_url'], 'is_video': item['node']['is_video']})
             else:
-                data.append({'url': i['node']['display_resources'][2]['src'], 'is_video': i['node']['is_video']})
+                data.append({'url': item['node']['display_resources'][2]['src'], 'is_video': item['node']['is_video']})
     return data
 
 
@@ -44,8 +44,8 @@ def get_instagram_photos(link: str) -> list:
         except KeyError:
             return data
     else:
-        for i in list_photos:
-            data.append(i['node']['display_resources'][2]['src'])
+        for photo in list_photos:
+            data.append(photo['node']['display_resources'][2]['src'])
     return data
 
 
@@ -79,9 +79,9 @@ def get_torrents2(search: str) -> list:
                                       headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
     list_divs = soup.find('div', id='maincol').find_all_next('table')
     if list_divs:
-        for i in list_divs:
-            link = i.find('a').get('href')
-            name = i.find('a').get_text()
+        for div in list_divs:
+            link = div.find('a').get('href')
+            name = div.find('a').get_text()
             if link.startswith('/'):
                 link = URLS['torrent2']['main'] + link
             soup_link = BeautifulSoup(requests.get(link, headers={'User-Agent': generate_user_agent()}).content,
@@ -89,10 +89,7 @@ def get_torrents2(search: str) -> list:
             link_t = soup_link.find('div', class_='download_torrent')
             if link_t is not None:
                 link_t = URLS['torrent2']['main'] + link_t.find_all_next('a')[0].get('href')
-                size = soup_link.find('div',
-                                      class_='download_torrent').find_all_next('span',
-                                                                               class_='torrent-size')[0].get_text()\
-                                                                                .replace('Размер игры: ', '')
+                size = soup_link.find('div', class_='download_torrent').find_all_next('span', class_='torrent-size')[0].get_text().replace('Размер игры: ', '')
                 data.append({'name': name, 'size': size, 'link_t': link_t, 'link': link})
     return data
 
@@ -104,11 +101,11 @@ def get_torrents1(search: str) -> list:
     list_divs = soup.find('div', id='center-block').find_all_next('div', class_='blog_brief_news')
     if list_divs:
         del list_divs[0]
-        for en, i in enumerate(list_divs, 1):
-            size = i.find('div', class_='center col px65').get_text()
+        for div in list_divs:
+            size = div.find('div', class_='center col px65').get_text()
             if size != '0':
-                name = i.find('strong').get_text()
-                link = i.find('a').get('href')
+                name = div.find('strong').get_text()
+                link = div.find('a').get('href')
                 soup_link = BeautifulSoup(requests.get(link, headers={
                     'User-Agent': generate_user_agent()}).content, 'html.parser')
                 link_t = soup_link.find('div', class_='title-tor')
@@ -120,14 +117,13 @@ def get_torrents1(search: str) -> list:
 
 def parser_memes() -> None:  # Main parser
     log('Parser is done', 'info')
-    for i in URLS['memes']:
-        soup = BeautifulSoup(requests.get(i, headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
-        links = set()
-        for link in soup.find_all('a'):
-            url = link.get('href')
-            if re.fullmatch(r'https?://i.redd.it/?\.?\w+.?\w+', url):
-                links.add(url)
-        db.add_memes(links)
+    soup = BeautifulSoup(requests.get(URLS['memes'], headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+    links = set()
+    for link in soup.find_all('a'):
+        url = link.get('href')
+        if re.fullmatch(r'https?://i.redd.it/?\.?\w+.?\w+', url):
+            links.add(url)
+    db.add_memes(links)
 
 
 def send_bad_guy() -> None: # Detect bag guys in gr
@@ -136,13 +132,13 @@ def send_bad_guy() -> None: # Detect bag guys in gr
         settings = db.get_setting(chat_id)
         if settings is not None and settings['bad_guy'] == 'On':
             text = '🎉<b>Пидор' + f"{'ы' if len(users) > 1 else ''}" + ' дня</b>🎉\n'
-            for q in users:
-                if q['first_name'] is not None:
-                    user = '🎊💙<i>' + q['first_name']
-                    if q['last_name'] is not None:
-                        user += f" {q['last_name']}"
-                    text += user + '</i>💙🎊\n'
-                text += 'Приймите наши поздравления👍'
+            for user in users:
+                if user['first_name'] is not None:
+                    user_name = '🎊💙<i>' + user['first_name']
+                    if user['last_name'] is not None:
+                        user_name += f" {user['last_name']}"
+                    text += user_name + '</i>💙🎊\n'
+                text += f'Прийми{"те" if len(users) > 2 else ""} наши поздравления👍'
                 msg = bot.send_message(chat_id, text, parse_mode='HTML')
                 bot.pin_chat_message(msg.chat.id, msg.message_id, disable_notification=False)
                 db.save_pin_bag_guys(chat_id, msg.message_id)
@@ -155,7 +151,7 @@ def unpin_bag_guys() -> None:
             bot.unpin_chat_message(msg['chat_id'])
             bot.delete_message(msg['chat_id'], msg['message_id'])
         except Exception:
-            pass
+            log('Can\'t unpin message', 'warning')
 
 
 def main():
@@ -166,8 +162,6 @@ def main():
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     schedule.every().day.at("22:01").do(db.reset_users)  # Reset daily karma
-
-
     while True:
         schedule.run_pending()
         time.sleep(1)
