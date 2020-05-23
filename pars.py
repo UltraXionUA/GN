@@ -1,5 +1,6 @@
 #!/home/UltraXionUA/.virtualenvs/myvirtualenv/bin/python3.8
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python3.8
 """Parser file for GNBot"""
 from user_agent import generate_user_agent
 from urllib.parse import quote
