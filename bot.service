@@ -8,7 +8,7 @@ Group=ultraxion
 
 WorkingDirectory=/home/ultraxion/GN/
 Environment="PYTHONPATH=/home/ultraxion/"
-ExecStart=/home/ultraxion/GN/.venv/bin/python3.8 /home/ultraxion/GN/bot.py
+ExecStart=/home/ultraxion/GN/.venv/bin/python3 /home/ultraxion/GN/bot.py
 
 [Install]
 WantedBy=multi-user.target

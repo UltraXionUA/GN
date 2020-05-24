@@ -153,6 +153,7 @@ def unpin_bag_guys() -> None:
         except Exception:
             log('Can\'t unpin message', 'warning')
 
+db.reset_users()
 
 def main():
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
