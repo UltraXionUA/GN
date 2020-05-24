@@ -310,22 +310,22 @@ def get_answer() -> str:
 #     connection.close()
 #     print('finish')
 #
-def add_to_redis():
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        cursor.execute(f'SELECT answer FROM Answer;')
-        res = cursor.fetchall()
-    r = redis.Redis(host='localhost', port=6379, db=1)
-    r.set(f'len_answer', len(res))
-    print(len(res))
-    for en, i in enumerate(res, 1):
-        if en % 1000 == 0:
-            print(en)
-        r.set('answer' + str(en), i['answer'])
-    print('finish')
+# def add_to_redis():
+#     connection = start_connection()
+#     with connection.cursor() as cursor:
+#         cursor.execute(f'SELECT answer FROM Answer;')
+#         res = cursor.fetchall()
+#     r = redis.Redis(host='localhost', port=6379, db=1)
+#     r.set(f'len_answer', len(res))
+#     print(len(res))
+#     for en, i in enumerate(res, 1):
+#         if en % 1000 == 0:
+#             print(en)
+#         r.set('answer' + str(en), i['answer'])
+#     print('finish')
 #
 # add_answers()
-add_to_redis()
+# add_to_redis()
 
 # def set_img():
 #     import re
@@ -351,29 +351,28 @@ add_to_redis()
 #                 connection.commit()
 #             connection.close()
 
-def add_to_redis(data: list, type_: str):
-    r = redis.Redis(host='localhost', port=6379, db=0)
-    r.set(f'len_{type_}', len(data))
-    print(len(data))
-    for en, i in enumerate(data, 1):
-        r.set(type_ + str(en), i['url'])
-    print('finish')
+# def add_to_redis(data: list, type_: str):
+#     r = redis.Redis(host='localhost', port=6379, db=0)
+#     r.set(f'len_{type_}', len(data))
+#     print(len(data))
+#     for en, i in enumerate(data, 1):
+#         r.set(type_ + str(en), i['url'])
+#     print('finish')
 
-
-def get_all_():
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM Lolis;')
-        result = cursor.fetchall()
-        add_to_redis(result, 'loli')
-        cursor.execute(f'SELECT * FROM Hentai;')
-        result = cursor.fetchall()
-        add_to_redis(result, 'hentai')
-        cursor.execute(f'SELECT * FROM Girls;')
-        result = cursor.fetchall()
-        add_to_redis(result, 'girls')
-
-get_all_()
+# def get_all():
+#     connection = start_connection()
+#     with connection.cursor() as cursor:
+#         cursor.execute(f'SELECT * FROM Lolis;')
+#         result = cursor.fetchall()
+#         add_to_redis(result, 'loli')
+#         cursor.execute(f'SELECT * FROM Hentai;')
+#         result = cursor.fetchall()
+#         add_to_redis(result, 'hentai')
+#         cursor.execute(f'SELECT * FROM Girls;')
+#         result = cursor.fetchall()
+#         add_to_redis(result, 'girls')
+#
+# get_all()
 
 
 # def add_logic_tasks(tasks: dict) -> None:
