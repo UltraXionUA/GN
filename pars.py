@@ -16,7 +16,7 @@ import re
 
 def get_instagram_videos(link: str) -> list:
     data = []
-    res = requests.get(link + '?__a=1', headers={'User-Agent': generate_user_agent()}).json()
+    res = requests.get(link + '?__a=1').json()
     try:
         list_items = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
     except KeyError:
@@ -36,7 +36,7 @@ def get_instagram_videos(link: str) -> list:
 
 def get_instagram_photos(link: str) -> list:
     data = []
-    res = requests.get(link + '?__a=1', headers={'User-Agent': generate_user_agent()}).json()
+    res = requests.get(link + '?__a=1').json()
     try:
         list_photos = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
     except KeyError:
