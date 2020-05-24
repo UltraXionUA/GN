@@ -52,29 +52,25 @@ def get_instagram_photos(link: str) -> list:
 
 def get_torrents3(search: str) -> list:
     data = []
-    try:
-        soup = BeautifulSoup(requests.get(URLS['torrent3']['search'] + quote(search),
-                                        headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
-    except requests.exceptions.ConnectionError:
-        pass
-    else:
-        list_gai = soup.find_all('tr', class_='gai')
-        list_tum = soup.find_all('tr', class_='tum')
-        if list_gai and list_tum:
-            for gai, tum in zip(list_gai, list_tum):
-                link1 = gai.find_all_next('a')
-                link2 = tum.find_all_next('a')
-                load1 = link1[0].get('href')
-                load2 = link2[0].get('href')
-                if load1 is not None and load2 is not None:
-                    text1 = link1[2].get_text()
-                    text2 = link2[2].get_text()
-                    link1 = URLS['torrent3']['main'] + link1[2].get('href')
-                    link2 = URLS['torrent3']['main'] + link2[2].get('href')
-                    size1 = gai.find_all_next('td')[3].get_text()
-                    size2 = tum.find_all_next('td')[3].get_text()
-                    data.append({'name': text1, 'size': size1, 'link_t': load1, 'link': link1})
-                    data.append({'name': text2, 'size': size2, 'link_t': load2, 'link': link2})
+    soup = BeautifulSoup(requests.get(URLS['torrent3']['search'] + quote(search),
+                                    headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+    list_gai = soup.find_all('tr', class_='gai')
+    list_tum = soup.find_all('tr', class_='tum')
+    if list_gai and list_tum:
+        for gai, tum in zip(list_gai, list_tum):
+            link1 = gai.find_all_next('a')
+            link2 = tum.find_all_next('a')
+            load1 = link1[0].get('href')
+            load2 = link2[0].get('href')
+            if load1 is not None and load2 is not None:
+                text1 = link1[2].get_text()
+                text2 = link2[2].get_text()
+                link1 = URLS['torrent3']['main'] + link1[2].get('href')
+                link2 = URLS['torrent3']['main'] + link2[2].get('href')
+                size1 = gai.find_all_next('td')[3].get_text()
+                size2 = tum.find_all_next('td')[3].get_text()
+                data.append({'name': text1, 'size': size1, 'link_t': load1, 'link': link1})
+                data.append({'name': text2, 'size': size2, 'link_t': load2, 'link': link2})
     return data
 
 
@@ -162,10 +158,10 @@ def main():
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
     schedule.every().day.at("06:00").do(parser_memes)  # Do pars every 06:00
     schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
-    schedule.every().day.at("12:00").do(unpin_bag_guys) # Unpin bad guys
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     schedule.every().day.at("22:01").do(db.reset_users)  # Reset daily karma
+    schedule.every().day.at("23:59").do(unpin_bag_guys)  # Unpin bad guys
     while True:
         schedule.run_pending()
         time.sleep(1)

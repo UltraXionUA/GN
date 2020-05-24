@@ -1171,33 +1171,28 @@ def get_instagram_video(message: Message, message_id: str) -> None:
                     bot.send_message(message.chat.id, 'Не поддерживаются работа закрытыми аккаунтами😔')
                 else:
                     if data:
+                        bot.send_chat_action(message.chat.id, 'upload_video')
                         if len(data) == 1:
                             if data[0]['is_video'] is True:
-                                req = request.Request(data[0]['url'], method='HEAD')
-                                f = request.urlopen(req)
-                                if f.headers['Content-Length'] is not None:
-                                    if int(f.headers['Content-Length']) < 5242880:
-                                        bot.send_chat_action(message.chat.id, 'upload_video')
-                                        keyboard = InlineKeyboardMarkup()
-                                        keyboard.add(InlineKeyboardButton('Instagram', url=url))
-                                        bot.send_video(message.chat.id, data[0]['url'], reply_markup=keyboard)
-                                    else:
-                                        bot.send_message(message.chat.id, 'Размер видео слишком большой😔')
+                                try:
+                                    keyboard = InlineKeyboardMarkup()
+                                    keyboard.add(InlineKeyboardButton('Instagram', url=url))
+                                    bot.send_video(message.chat.id, data[0]['url'], reply_markup=keyboard)
+                                except Exception:
+                                    bot.send_message(message.chat.id, 'Размер видео слишком большой😔')
                             else:
                                 bot.send_message(message.chat.id, 'По ссылке нет видео😔')
                         else:
                             list_data = []
-                            bot.send_chat_action(message.chat.id, 'upload_video')
                             for i in data:
                                 if i['is_video'] is True:
-                                    req = request.Request(i['url'], method='HEAD')
-                                    f = request.urlopen(req)
-                                    if f.headers['Content-Length'] is not None:
-                                        if int(f.headers['Content-Length']) < 5242880:
-                                            list_data.append(InputMediaVideo(i['url']))
+                                    list_data.append(InputMediaVideo(i['url']))
                                 else:
                                     list_data.append(InputMediaPhoto(i['url']))
-                            bot.send_media_group(message.chat.id, list_data)
+                            try:
+                                bot.send_media_group(message.chat.id, list_data)
+                            except Exception:
+                                bot.send_message(message.chat.id, 'Размер медиа данных слишком большой😔')
                     else:
                         bot.send_message(message.chat.id, 'По ссылке ничего не обнаружено😔')
             else:
@@ -1280,18 +1275,22 @@ def send_urls(message: Message) -> None:
         search_msg[message.chat.id] = message.text
         if message.chat.id in data_torrents:
             bot.delete_message(torrent_msg[message.chat.id].chat.id, torrent_msg[message.chat.id].message_id)
-        if tracker[message.chat.id] == URLS['torrent']['name']:
-            data_torrents[message.chat.id] = get_torrents1(message.text)
-        elif tracker[message.chat.id] == URLS['torrent2']['name']:
-            data_torrents[message.chat.id] = get_torrents2(message.text)
-        elif tracker[message.chat.id] == URLS['torrent3']['name']:
-            data_torrents[message.chat.id] = get_torrents3(message.text)
-        if data_torrents[message.chat.id]:
-            create_data_torrents(message)
-            torrent_msg[message.chat.id] = bot.send_message(message.chat.id, 'Загрузка...')
-            torrent_keyboard(torrent_msg[message.chat.id], 0)
+        try:
+            if tracker[message.chat.id] == URLS['torrent']['name']:
+                data_torrents[message.chat.id] = get_torrents1(message.text)
+            elif tracker[message.chat.id] == URLS['torrent2']['name']:
+                data_torrents[message.chat.id] = get_torrents2(message.text)
+            elif tracker[message.chat.id] == URLS['torrent3']['name']:
+                data_torrents[message.chat.id] = get_torrents3(message.text)
+        except requests.exceptions.ConnectionError:
+            bot.send_message(message.chat.id, 'Возникла непредвиденная ошибка😔')
         else:
-            torrent_msg[message.chat.id] = bot.send_message(message.chat.id, 'Ничего не нашлось😔')
+            if data_torrents[message.chat.id]:
+                create_data_torrents(message)
+                torrent_msg[message.chat.id] = bot.send_message(message.chat.id, 'Загрузка...')
+                torrent_keyboard(torrent_msg[message.chat.id], 0)
+            else:
+                torrent_msg[message.chat.id] = bot.send_message(message.chat.id, 'Ничего не нашлось😔')
 
 
 def create_data_torrents(message: Message) -> None:
