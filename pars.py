@@ -52,25 +52,29 @@ def get_instagram_photos(link: str) -> list:
 
 def get_torrents3(search: str) -> list:
     data = []
-    soup = BeautifulSoup(requests.get(URLS['torrent3']['search'] + quote(search),
-                                      headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
-    list_gai = soup.find_all('tr', class_='gai')
-    list_tum = soup.find_all('tr', class_='tum')
-    if list_gai and list_tum:
-        for gai, tum in zip(list_gai, list_tum):
-            link1 = gai.find_all_next('a')
-            link2 = tum.find_all_next('a')
-            load1 = link1[0].get('href')
-            load2 = link2[0].get('href')
-            if load1 is not None and load2 is not None:
-                text1 = link1[2].get_text()
-                text2 = link2[2].get_text()
-                link1 = URLS['torrent3']['main'] + link1[2].get('href')
-                link2 = URLS['torrent3']['main'] + link2[2].get('href')
-                size1 = gai.find_all_next('td')[3].get_text()
-                size2 = tum.find_all_next('td')[3].get_text()
-                data.append({'name': text1, 'size': size1, 'link_t': load1, 'link': link1})
-                data.append({'name': text2, 'size': size2, 'link_t': load2, 'link': link2})
+    try:
+        soup = BeautifulSoup(requests.get(URLS['torrent3']['search'] + quote(search),
+                                        headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
+    except requests.exceptions.ConnectionError:
+        pass
+    else:
+        list_gai = soup.find_all('tr', class_='gai')
+        list_tum = soup.find_all('tr', class_='tum')
+        if list_gai and list_tum:
+            for gai, tum in zip(list_gai, list_tum):
+                link1 = gai.find_all_next('a')
+                link2 = tum.find_all_next('a')
+                load1 = link1[0].get('href')
+                load2 = link2[0].get('href')
+                if load1 is not None and load2 is not None:
+                    text1 = link1[2].get_text()
+                    text2 = link2[2].get_text()
+                    link1 = URLS['torrent3']['main'] + link1[2].get('href')
+                    link2 = URLS['torrent3']['main'] + link2[2].get('href')
+                    size1 = gai.find_all_next('td')[3].get_text()
+                    size2 = tum.find_all_next('td')[3].get_text()
+                    data.append({'name': text1, 'size': size1, 'link_t': load1, 'link': link1})
+                    data.append({'name': text2, 'size': size2, 'link_t': load2, 'link': link2})
     return data
 
 
