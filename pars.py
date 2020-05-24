@@ -134,9 +134,9 @@ def send_bad_guy() -> None: # Detect bag guys in gr
         if settings is not None and settings['bad_guy'] == 'On':
             text = '🎉<b>Пидор' + f"{'ы' if len(users) > 1 else ''}" + ' дня</b>🎉\n'
             for user in users:
-                if user['first_name'] is not None:
+                if user['first_name'] != 'None':
                     user_name = '🎊💙<i>' + user['first_name']
-                    if user['last_name'] is not None:
+                    if user['last_name'] != 'None':
                         user_name += f" {user['last_name']}"
                     text += user_name + '</i>💙🎊\n'
                 text += f'Прийми{"те" if len(users) > 2 else ""} наши поздравления👍'
