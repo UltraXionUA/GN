@@ -17,3 +17,5 @@ user_agent
 ffmpeg-python
 SpeechRecognition
 redis
+wikipedia-api
+wikipedia
