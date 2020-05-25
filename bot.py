@@ -1512,14 +1512,15 @@ def stat_handler(message: Message) -> None:
                         break
                     else:
                         medal = None
-                        if en == 0:
+                        if en == 1:
                             medal = '🥇'
-                        elif en == 1:
-                            medal = '🥈'
                         elif en == 2:
+                            medal = '🥈'
+                        elif en == 3:
                             medal = '🥉'
                         print(i['last_name'])
-                        text += f"<i>{en}.</i> {i['first_name']} {i['last_name'] if i['last_name'] != 'None' else ''} - <i>{i['karma']}</i>{medal}\n"
+                        text += f"<i>{en}.</i> {i['first_name']} {i['last_name'] if i['last_name'] != 'None' else ''}" \
+                                f" - <i>{i['karma']}</i>{medal if medal is not None else ''}\n"
                 text += '...\nНажмите /me что бы увидеть себя'
                 msg = bot.send_message(message.chat.id, text, parse_mode='HTML')
                 keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
