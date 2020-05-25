@@ -1518,8 +1518,8 @@ def stat_handler(message: Message) -> None:
                             medal = '🥈'
                         elif en == 2:
                             medal = '🥉'
-                        text += f"<i>{en}.</i> {i['first_name']}" \
-                                f" {i['last_name'] if i['last_name'] != 'None' else ''} - <i>{i['karma']}</i>{medal}\n"
+                        print(i['last_name'])
+                        text += f"<i>{en}.</i> {i['first_name']} {i['last_name'] if i['last_name'] != 'None' else ''} - <i>{i['karma']}</i>{medal}\n"
                 text += '...\nНажмите /me что бы увидеть себя'
                 msg = bot.send_message(message.chat.id, text, parse_mode='HTML')
                 keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
