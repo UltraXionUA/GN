@@ -1508,19 +1508,11 @@ def stat_handler(message: Message) -> None:
                 keyboard = InlineKeyboardMarkup()
                 text = '<b>Статистика:</b>\n'
                 for en, i in enumerate(data, 1):
-                    if en == 5:
+                    if en == 6:
                         break
-                    else:
-                        medal = None
-                        if en == 1:
-                            medal = '🥇'
-                        elif en == 2:
-                            medal = '🥈'
-                        elif en == 3:
-                            medal = '🥉'
-                        print(i['last_name'])
-                        text += f"<i>{en}.</i> {i['first_name']} {i['last_name'] if i['last_name'] != 'None' else ''}" \
-                                f" - <i>{i['karma']}</i>{medal if medal is not None else ''}\n"
+                    medal = '🥇' if en == 1 else '🥈' if en == 2 else '🥉' if en == 3 else None
+                    text += f"<i>{en}.</i> {i['first_name']} {i['last_name'] if i['last_name'] != 'None' else ''}" \
+                            f" - <i>{i['karma']}</i>{medal if medal is not None else ''}\n"
                 text += '...\nНажмите /me что бы увидеть себя'
                 msg = bot.send_message(message.chat.id, text, parse_mode='HTML')
                 keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
@@ -1550,10 +1542,8 @@ def me_handler(message: Message) -> None:
             keyboard = InlineKeyboardMarkup()
             data_user, position = db.get_user(message.from_user, message.chat)
             if data_user is not False or position is not False:
-                if data_user['first_name'] is not None:
                     user = data_user['first_name']
-                    if data_user['last_name'] is not None:
-                        user += ' ' + data_user['last_name']
+                    user += f"{' ' + data_user['last_name']}" if data_user['last_name'] != 'None' else ''
                     msg = bot.send_message(message.chat.id, f'Ваш рейтинг:\n'
                                                             f'<i>{position}. </i>'
                                                             f'<b>{user}</b> - '
