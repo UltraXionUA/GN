@@ -1594,6 +1594,7 @@ def answer_feedback_query(call):
     bot.register_next_step_handler(msg, answer_feedback, call.data.split()[1])
 
 def answer_feedback(message: Message, chat_id: str) -> None:
+    bot.send_message(message.chat.id, 'Ваше сообщение отправленно😌')
     bot.send_message(chat_id, f"<b>На ваше сообщение ответили</b> \nОтвет: {message.text}\n\n<b>Спасибо за обращение</b>😏",
                      parse_mode='HTML')
 # <<< End feedback >>>
