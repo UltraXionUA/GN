@@ -7,7 +7,7 @@ from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, I
 from telebot.types import LabeledPrice, PreCheckoutQuery, ShippingQuery
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_videos, get_instagram_photos
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time, clear_date
-from Config_GNBot.config import API, URLS, GNBot_ID, bot, PAYMENT_TOKEN
+from Config_GNBot.config import API, URLS, GNBot_ID, bot, PAYMENT_TOKEN, Admin_ID
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from urllib import parse, request, error
 from pytube import YouTube, exceptions
@@ -80,7 +80,7 @@ def help_handler(message: Message) -> None:
                                           'Админ команды (<b>!ban</b>, <b>!mute {<i>time</i>}</b>, <b>!kick</b>)\n'
                                           'Бота можно настроить под себя перейдя в /settings\n'
                                           'Все свои вопросы, предложения или информацию по найдемным '
-                                          'багам и ошибкам вы можете писать мне 💢<b>@Ultra_Xion</b>💢\n'
+                                          'багам и ошибкам вы можете отправить введя /feedback\n'
                                           '<b>Почта:</b> <i>ultra25813@gmail.com</i>', parse_mode='HTML')
 
 
@@ -1559,6 +1559,44 @@ def me_handler(message: Message) -> None:
 
 
 # <<< End me >>>
+
+
+# <<< Feedback >>>
+@bot.message_handler(commands=['feedback'])  # /feedback
+def feedback_handler(message: Message) -> None:
+    """
+       Enter /feedback to sand feedback to admin
+       :param message:
+       :return:
+    """
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        db.change_karma(message.from_user, message.chat, ['+'], 10)
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        msg = bot.send_message(message.chat.id, '<b>Отправьте сообщение ниже</b>📝\n'
+                                                'В кратчайшие сроки оно будет проверенно админитрацией🙃', parse_mode='HTML')
+        bot.register_next_step_handler(msg, send_to_admin)
+
+
+def send_to_admin(message: Message) -> None:
+    bot.send_message(message.chat.id, 'Ваше сообщение отправленно😌')
+    keyboard = InlineKeyboardMarkup()
+    msg = bot.send_message(Admin_ID, f'Вам пришел <b>feedback</b> от <b>{message.from_user.first_name}</b> '
+                               f'<b>{message.from_user.last_name if message.from_user.last_name is not None else ""}</b>\n'
+                               f'Текст: {message.text}')
+    keyboard.add(InlineKeyboardButton('Ответить', callback_data=f'answer_feedback {message.chat.id}'))
+    bot.edit_message_text(msg.text, msg.chat.id, msg.message_id, reply_markup=keyboard, parse_mode='HTML')
+
+
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^answer_feedback\s.+', call.data))
+def answer_feedback_query(call):
+    msg = bot.send_message(call.message.chat.id, '<b>Отправьте сообщение ниже</b>📝', parse_mode='HTML')
+    bot.register_next_step_handler(msg, answer_feedback, call.data.split()[1])
+
+def answer_feedback(message: Message, chat_id: str) -> None:
+    bot.send_message(chat_id, f"<b>На ваше сообщение ответили</b> \nОтвет: {message.text}\n\n<b>Спасибо за обращение</b>😏",
+                     parse_mode='HTML')
+# <<< End feedback >>>
 
 
 # <<< Project Euler >>>
