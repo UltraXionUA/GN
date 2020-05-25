@@ -161,7 +161,7 @@ def main():
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     schedule.every().day.at("22:01").do(db.reset_users)  # Reset daily karma
-    schedule.every().day.at("23:59").do(unpin_bag_guys)  # Unpin bad guys
+    schedule.every().day.at("09:00").do(unpin_bag_guys)  # Unpin bad guys
     while True:
         schedule.run_pending()
         time.sleep(1)
