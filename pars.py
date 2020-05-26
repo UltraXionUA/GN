@@ -156,8 +156,7 @@ def unpin_bag_guys() -> None:
             bot.delete_message(msg['chat_id'], msg['message_id'])
         except Exception:
             log('Can\'t unpin message', 'warning')
-send_bad_guy()
-unpin_bag_guys()
+
 
 def main():
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
