@@ -2409,7 +2409,7 @@ def contact_handler(message: Message) -> None:
 # <<< Unpin bad guys message  >>>
 @bot.message_handler(content_types=['pinned_message'])
 def pin_handler(message: Message) -> None:
-    if message.pinned_message.json['text'].startswith('🎉Пидор дня🎉'):
+    if message.pinned_message.json['text'].startswith('🎉Пидор'):
         bot.delete_message(message.chat.id, message.message_id)
 
 # <<< End unpin bad guys message  >>>

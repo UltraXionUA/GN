@@ -139,9 +139,13 @@ def send_bad_guy() -> None: # Detect bag guys in gr
                     if user['last_name'] != 'None':
                         user_name += f" {user['last_name']}"
                     text += user_name + '</i>💙🎊\n'
-                text += f'Прийми{"те" if len(users) > 2 else ""} наши поздравления👍'
+            text += f'Прийми{"те" if len(users) > 2 else ""} наши поздравления👍'
+            try:
                 msg = bot.send_message(chat_id, text, parse_mode='HTML')
                 bot.pin_chat_message(msg.chat.id, msg.message_id, disable_notification=False)
+            except Exception:
+                log('Error in bad guy', 'error')
+            else:
                 db.save_pin_bag_guys(chat_id, msg.message_id)
 
 def unpin_bag_guys() -> None:
@@ -152,7 +156,8 @@ def unpin_bag_guys() -> None:
             bot.delete_message(msg['chat_id'], msg['message_id'])
         except Exception:
             log('Can\'t unpin message', 'warning')
-
+send_bad_guy()
+unpin_bag_guys()
 
 def main():
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
