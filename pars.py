@@ -7,51 +7,64 @@ from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
 from funcs import log
+import random
 import requests
 import schedule
 import db
 import time
 import re
 
-Proxy = {'http': 'http://51.158.98.121:8811', 'https': 'https://194.44.199.242:8880'}
+https = ['194.44.199.242:8880', '213.6.65.30:8080', '109.87.40.23:44343']
+http = ['199.247.12.54:8080', '62.210.82.89:3128', '139.99.222.27:3128']
+
 
 def get_instagram_videos(link: str) -> list:
     data = []
-    res = requests.get(link + '?__a=1', proxies=Proxy, headers={'User-Agent': generate_user_agent()}).json()
-    try:
-        list_items = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
-    except KeyError:
+    for http_, https_ in zip(http, https):
+        proxy = {'http': f'http://{http_}', 'https': f'https://{https_}'}
         try:
-            data.append({'url': res['graphql']['shortcode_media']['video_url'],
-                        'is_video': res['graphql']['shortcode_media']['is_video']})
-        except KeyError:
-            return data
-    else:
-        for item in list_items:
-            if item['node']['is_video'] is True:
-                data.append({'url': item['node']['video_url'], 'is_video': item['node']['is_video']})
+            res = requests.get(link + '?__a=1', proxies=proxy, headers={'User-Agent': generate_user_agent()}).json()
+        except Exception:
+            continue
+        else:
+            try:
+                list_items = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
+            except KeyError:
+                try:
+                    data.append({'url': res['graphql']['shortcode_media']['video_url'],
+                                'is_video': res['graphql']['shortcode_media']['is_video']})
+                except KeyError:
+                    return data
             else:
-                data.append({'url': item['node']['display_resources'][2]['src'], 'is_video': item['node']['is_video']})
-    return data
+                for item in list_items:
+                    if item['node']['is_video'] is True:
+                        data.append({'url': item['node']['video_url'], 'is_video': item['node']['is_video']})
+                    else:
+                        data.append({'url': item['node']['display_resources'][2]['src'], 'is_video': item['node']['is_video']})
+            return data
 
 
 def get_instagram_photos(link: str) -> list:
     data = []
-    res = requests.get(link + '?__a=1', proxies=Proxy, headers={'User-Agent': generate_user_agent()}).json()
-    # print(res)
-    try:
-        list_photos = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
-    except KeyError:
+    for http_, https_ in zip(http, https):
+        proxy = {'http': f'http://{http_}', 'https': f'https://{https_}'}
         try:
-            data.append(res['graphql']['shortcode_media']['display_resources'][2]['src'])
-        except KeyError:
+            res = requests.get(link + '?__a=1', proxies=proxy, headers={'User-Agent': generate_user_agent()}).json()
+        except Exception:
+            continue
+        else:
+            try:
+                list_photos = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
+            except KeyError:
+                try:
+                    data.append(res['graphql']['shortcode_media']['display_resources'][2]['src'])
+                except KeyError:
+                    return data
+            else:
+                for photo in list_photos:
+                    data.append(photo['node']['display_resources'][2]['src'])
             return data
-    else:
-        for photo in list_photos:
-            data.append(photo['node']['display_resources'][2]['src'])
-    return data
 
-# get_instagram_photos('https://www.instagram.com/p/CApZ4QKAi5G/')
 
 def get_torrents3(search: str) -> list:
     data = []
