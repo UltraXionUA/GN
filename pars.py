@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/ python3.8
 """Parser file for GNBot"""
-from Config_GNBot.config import URLS, Proxy, bot
+from Config_GNBot.config import URLS, bot
 from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
@@ -13,6 +13,7 @@ import db
 import time
 import re
 
+Proxy = {'http': 'http://51.158.98.121:8811', 'https': 'https://194.44.199.242:8880'}
 
 def get_instagram_videos(link: str) -> list:
     data = []
@@ -37,6 +38,7 @@ def get_instagram_videos(link: str) -> list:
 def get_instagram_photos(link: str) -> list:
     data = []
     res = requests.get(link + '?__a=1', proxies=Proxy, headers={'User-Agent': generate_user_agent()}).json()
+    # print(res)
     try:
         list_photos = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
     except KeyError:
@@ -49,7 +51,7 @@ def get_instagram_photos(link: str) -> list:
             data.append(photo['node']['display_resources'][2]['src'])
     return data
 
-get_instagram_photos('https://www.instagram.com/p/CApZ4QKAi5G/')
+# get_instagram_photos('https://www.instagram.com/p/CApZ4QKAi5G/')
 
 def get_torrents3(search: str) -> list:
     data = []
