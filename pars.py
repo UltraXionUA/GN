@@ -44,7 +44,7 @@ def get_instagram_videos(link: str) -> list:
 def get_instagram_photos(link: str) -> list:
     data = []
     for https_ in https:
-        proxy = {'http': f'http://{https_}', 'https': f'https://{https_}'
+        proxy = {'http': f'http://{https_}', 'https': f'https://{https_}'}
         try:
             res = requests.get(link + '?__a=1', proxies=proxy, headers={'User-Agent': generate_user_agent()}).json()
         except Exception:
