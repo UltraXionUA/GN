@@ -7,7 +7,6 @@ from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
 from funcs import log
-import random
 import requests
 import schedule
 import db
@@ -15,13 +14,11 @@ import time
 import re
 
 https = ['194.44.199.242:8880', '213.6.65.30:8080', '109.87.40.23:44343']
-http = ['199.247.12.54:8080', '62.210.82.89:3128', '139.99.222.27:3128']
-
 
 def get_instagram_videos(link: str) -> list:
     data = []
-    for http_, https_ in zip(http, https):
-        proxy = {'http': f'http://{http_}', 'https': f'https://{https_}'}
+    for https_ in https:
+        proxy = {'http': f'http://{https_}', 'https': f'https://{https_}'}
         try:
             res = requests.get(link + '?__a=1', proxies=proxy, headers={'User-Agent': generate_user_agent()}).json()
         except Exception:
@@ -46,8 +43,8 @@ def get_instagram_videos(link: str) -> list:
 
 def get_instagram_photos(link: str) -> list:
     data = []
-    for http_, https_ in zip(http, https):
-        proxy = {'http': f'http://{http_}', 'https': f'https://{https_}'}
+    for https_ in https:
+        proxy = {'http': f'http://{https_}', 'https': f'https://{https_}'
         try:
             res = requests.get(link + '?__a=1', proxies=proxy, headers={'User-Agent': generate_user_agent()}).json()
         except Exception:
