@@ -575,17 +575,23 @@ def detect_music(message: Message, type_r) -> None:
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'/watch\?v=\w+.+', call.data))
 def callback_query(call):
     bot.send_chat_action(call.message.chat.id, 'upload_audio')
-    yt = YouTube('https://' + 'www.youtube.com/' + call.data.split()[0])
-    bot.send_audio(call.message.chat.id,
-                   open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
-                   title=yt.title, duration=yt.length, performer=yt.author,
-                   caption=f'🎧 {sec_to_time(yt.length)} '
-                           f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
-                           f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps')
-    try:
-        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
-    except (FileNotFoundError, NameError):
-        log('Error! Can\'t remove file', 'warning')
+    while True:
+        try:
+            yt = YouTube('https://' + 'www.youtube.com/' + call.data.split()[0])
+        except KeyError:
+            continue
+        else:
+            bot.send_audio(call.message.chat.id,
+                           open(yt.streams.filter(only_audio=True)[0].download(filename='file'), 'rb'),
+                           title=yt.title, duration=yt.length, performer=yt.author,
+                           caption=f'🎧 {sec_to_time(yt.length)} '
+                                   f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
+                                   f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps')
+            try:
+                os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
+            except (FileNotFoundError, NameError):
+                log('Error! Can\'t remove file', 'warning')
+            break
 
 
 # <<< End detect music >>>
@@ -731,6 +737,7 @@ def callback_query(call):
     for song in data_songs[call.message.chat.id]:
         for item in song:
             if item['id'] == int(song_id):
+                bot.answer_callback_query(call.id, 'Вы выбрали ' + item["name"] + ' - ' + item["title"])
                 res = YoutubeUnlimitedSearch(f'{item["name"]} - {item["title"]}', max_results=1).get()
                 if res:
                     while True:
@@ -739,7 +746,6 @@ def callback_query(call):
                         except KeyError:
                             continue
                         else:
-                            bot.answer_callback_query(call.id, 'Вы выбрали ' + item["name"] + ' - ' + item["title"])
                             bot.send_chat_action(call.message.chat.id, 'upload_audio')
                             keyboard = InlineKeyboardMarkup(row_width=2)
                             keyboard.add(InlineKeyboardButton('Текст', callback_data=f'Lyric music {str(song_id)}'),
@@ -752,15 +758,16 @@ def callback_query(call):
                                                    f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
                                                    f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")}'
                                                    f' Kbps')
+                            try:
+                                os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
+                            except (FileNotFoundError, NameError):
+                                log('Error! Can\'t remove file', 'warning')
                             break
                 else:
                     bot.answer_callback_query(call.id, 'Не смог получить песню😔')
     else:
         bot.answer_callback_query(call.id, 'Список песен пуст, выполните поиск заново😔')
-    try:
-        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
-    except (FileNotFoundError, NameError):
-        log('Error! Can\'t remove file', 'warning')
+
 
 
 # <<< End music >>>
