@@ -733,24 +733,26 @@ def callback_query(call):
             if item['id'] == int(song_id):
                 res = YoutubeUnlimitedSearch(f'{item["name"]} - {item["title"]}', max_results=1).get()
                 if res:
-                    try:
-                        yt = YouTube('https://' + 'www.youtube.com/' + res[0]['link'])
-                    except KeyError:
-                        bot.answer_callback_query(call.id, 'Аудио не доступно😔')
-                    else:
-                        bot.answer_callback_query(call.id, 'Вы выбрали ' + item["name"] + ' - ' + item["title"])
-                        bot.send_chat_action(call.message.chat.id, 'upload_audio')
-                        keyboard = InlineKeyboardMarkup(row_width=2)
-                        keyboard.add(InlineKeyboardButton('Текст', callback_data=f'Lyric music {str(song_id)}'),
-                                     InlineKeyboardButton('Dezeer', url=item['link']))
-                        bot.send_audio(call.message.chat.id, audio=open(yt.streams.filter(
-                            only_audio=True)[0].download(filename='file'), 'rb'),
-                                       reply_markup=keyboard, performer=item['name'],
-                                       title=item['title'], duration=item['duration'],
-                                       caption=f'🎧 {sec_to_time(yt.length)} '
-                                               f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
-                                               f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")}'
-                                               f' Kbps')
+                    while True:
+                        try:
+                            yt = YouTube('https://' + 'www.youtube.com/' + res[0]['link'])
+                        except KeyError:
+                            continue
+                        else:
+                            bot.answer_callback_query(call.id, 'Вы выбрали ' + item["name"] + ' - ' + item["title"])
+                            bot.send_chat_action(call.message.chat.id, 'upload_audio')
+                            keyboard = InlineKeyboardMarkup(row_width=2)
+                            keyboard.add(InlineKeyboardButton('Текст', callback_data=f'Lyric music {str(song_id)}'),
+                                         InlineKeyboardButton('Dezeer', url=item['link']))
+                            bot.send_audio(call.message.chat.id, audio=open(yt.streams.filter(
+                                only_audio=True)[0].download(filename='file'), 'rb'),
+                                           reply_markup=keyboard, performer=item['name'],
+                                           title=item['title'], duration=item['duration'],
+                                           caption=f'🎧 {sec_to_time(yt.length)} '
+                                                   f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
+                                                   f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")}'
+                                                   f' Kbps')
+                            break
                 else:
                     bot.answer_callback_query(call.id, 'Не смог получить песню😔')
     else:
