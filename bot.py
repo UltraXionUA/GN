@@ -732,7 +732,7 @@ def callback_query(call):
         for item in song:
             if item['id'] == int(song_id):
                 res = YoutubeUnlimitedSearch(f'{item["name"]} - {item["title"]}', max_results=1).get()
-                if res[0]:
+                if res:
                     try:
                         yt = YouTube('https://' + 'www.youtube.com/' + res[0]['link'])
                     except KeyError:
