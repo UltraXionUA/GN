@@ -737,15 +737,15 @@ def callback_query(call):
     for song in data_songs[call.message.chat.id]:
         for item in song:
             if item['id'] == int(song_id):
-                bot.answer_callback_query(call.id, 'Вы выбрали ' + item["name"] + ' - ' + item["title"])
                 res = YoutubeUnlimitedSearch(f'{item["name"]} - {item["title"]}', max_results=1).get()
                 if res:
-                    while True:
+                    for i in range(5):
                         try:
                             yt = YouTube('https://' + 'www.youtube.com/' + res[0]['link'])
                         except KeyError:
                             continue
                         else:
+                            bot.answer_callback_query(call.id, 'Вы выбрали ' + item["name"] + ' - ' + item["title"])
                             bot.send_chat_action(call.message.chat.id, 'upload_audio')
                             keyboard = InlineKeyboardMarkup(row_width=2)
                             keyboard.add(InlineKeyboardButton('Текст', callback_data=f'Lyric music {str(song_id)}'),
@@ -763,6 +763,8 @@ def callback_query(call):
                             except (FileNotFoundError, NameError):
                                 log('Error! Can\'t remove file', 'warning')
                             break
+                    else:
+                        bot.answer_callback_query(call.id, 'В данный момент трек не доступен😔')
                 else:
                     bot.answer_callback_query(call.id, 'Не смог получить песню😔')
     else:
@@ -2062,8 +2064,8 @@ def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
 
 
 # <<< Dice game >>>
-first_dice: dict = {'username': None, 'dice': 0}
-second_dice: dict = {'username': None, 'dice': 0}
+first_dice: dict = {'user': None, 'dice': 0}
+second_dice: dict = {'user': None, 'dice': 0}
 
 
 @bot.message_handler(commands=['dice'])
@@ -2082,34 +2084,36 @@ def dice_handler(message: Message) -> None:
         else:
             res = message
         t = Timer(60.0, reset_users)
-        if first_dice['username'] is None:
-            first_dice['username'], first_dice['dice'] = message.from_user.username, res.dice.value
+        if first_dice['user'] is None:
+            first_dice['user'], first_dice['dice'] = message.from_user, res.dice.value
             t.start()
-        elif second_dice['username'] is None:
-            second_dice['username'], second_dice['dice'] = message.from_user.username, res.dice.value
-            if first_dice['username'] != second_dice['username']:
+        elif second_dice['user'] is None:
+            second_dice['user'], second_dice['dice'] = message.from_user, res.dice.value
+            if first_dice['user'].id != second_dice['user'].id:
                 t.cancel()
                 bot.send_chat_action(message.chat.id, 'typing')
-                time.sleep(4)
+                time.sleep(4.5)
                 if first_dice['dice'] > second_dice['dice']:
-                    bot.send_message(message.chat.id, f'{first_dice["username"].title()}🥇 победил '
-                                                      f'{second_dice["username"].title()}🥈')
+                    bot.send_message(message.chat.id,
+                                     f"{first_dice['user'].first_name} {first_dice['user'].last_name if first_dice['user'].last_name is not None else ''}🥇 победил "
+                                     f"{second_dice['user'].first_name} {second_dice['user'].last_name if second_dice['user'].last_name is not None else ''}🥈")
                 elif first_dice['dice'] < second_dice['dice']:
-                    bot.send_message(message.chat.id, f'{second_dice["username"].title()}🥇 победил '
-                                                      f'{first_dice["username"].title()}🥈')
+                    bot.send_message(message.chat.id,
+                                     f"{second_dice['user'].first_name} {second_dice['user'].last_name if second_dice['user'].last_name is not None else ''}🥇 победил "
+                                     f"{first_dice['user'].first_name} {first_dice['user'].last_name if first_dice['user'].last_name is not None else ''}🥈")
                 else:
                     bot.send_message(message.chat.id, 'Победила дружба🤝')
                 reset_users()
             else:
-                first_dice['username'], first_dice['dice'] = message.from_user.first_name, res.dice.value
+                first_dice['user'], first_dice['dice'] = message.from_user, res.dice.value
                 t.cancel()
                 t.start()
 
 
 def reset_users() -> None:  # Reset users for Dice game
-    first_dice['username'] = None
+    first_dice['user'] = None
     first_dice['dice'] = 0
-    second_dice['username'] = None
+    second_dice['user'] = None
     second_dice['dice'] = 0
 
 
