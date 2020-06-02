@@ -239,6 +239,14 @@ def get_code(name: str) -> [dict, None]:
         cursor.execute(f'SELECT code FROM PasteBin WHERE name LIKE \'{name}\'')
         return cursor.fetchone()
 
+
+def del_meme(meme_id: str) -> None:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'DELETE FROM Memes WHERE id={meme_id}')
+        connection.commit()
+    connection.close()
+
 def get_all(type_: str) -> list:
     connection = start_connection()
     with connection.cursor() as cursor:

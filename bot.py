@@ -292,7 +292,15 @@ def meme_handler(message: Message) -> None:
             while True:
                 try:
                     meme = meme_data[message.chat.id].pop(random.choice(range(len(meme_data[message.chat.id]) - 1)))
-                    bot.send_photo(message.chat.id, meme['url'])
+                    msg = bot.send_photo(message.chat.id, meme['url'])
+                    if str(message.from_user.id) == Admin_ID:
+                        keyboard = InlineKeyboardMarkup()
+                        keyboard.add(InlineKeyboardButton('Удалить',
+                                                          callback_data=f'del_from_db {meme["id"]} {message.message_id}'
+                                                                        f' {msg.message_id}'))
+                        bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
+                                               media=InputMediaPhoto(msg.photo[-1].file_id),
+                                               reply_markup=keyboard)
                 except Exception:
                     continue
                 else:
@@ -302,6 +310,12 @@ def meme_handler(message: Message) -> None:
             bot.send_photo(message.chat.id, meme['url'])
 
 
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^del_from_db\s.+\s.+\s.+$', call.data))
+def del_meme_query(call):
+    bot.answer_callback_query(call.id, 'Удалено')
+    for msg_id in call.data.split()[2:]:
+        bot.delete_message(call.message.chat.id, msg_id)
+    db.del_meme(call.data.split()[1])
 # <<< End meme >>>
 
 
