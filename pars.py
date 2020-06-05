@@ -1,6 +1,6 @@
-#!/home/UltraXionUA/.virtualenvs/myvirtualenv/bin/python3
-# -*- coding: utf-8 -*-
+#!/home/ultraxion/GNBot/GN/.venv/bin/activate
 #!/usr/bin/ python3.8
+# -*- coding: utf-8 -*-
 """Parser file for GNBot"""
 from Config_GNBot.config import URLS, bot
 from user_agent import generate_user_agent
@@ -159,7 +159,7 @@ def get_torrents1(search: str) -> list:
         return data
 
 
-def parser_memes() -> None:  # Main parser
+def parser_memes() -> None:
     """
     .. notes:: Dayle pasre memes from redit
     :return: None
@@ -174,7 +174,7 @@ def parser_memes() -> None:  # Main parser
     db.add_memes(links)
 
 
-def send_bad_guy() -> None: # Detect bag guys in group
+def send_bad_guy() -> None:
     """
     .. notes:: Select most active users un group
     :return: None

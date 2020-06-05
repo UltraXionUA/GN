@@ -7,7 +7,7 @@ from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, I
 from telebot.types import LabeledPrice, PreCheckoutQuery, ShippingQuery
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_videos, get_instagram_photos
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time, clear_date
-from Config_GNBot.config import API, URLS, GNBot_ID, bot, PAYMENT_TOKEN, Admin_ID
+from Config_GNBot.config import API, URLS, GNBot_ID, bot, PAYMENT_TOKEN, Admins
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from urllib import parse, request, error
 from pytube import YouTube, exceptions
@@ -305,7 +305,7 @@ def meme_handler(message: Message) -> None:
                 try:
                     meme = meme_data[message.chat.id].pop(random.choice(range(len(meme_data[message.chat.id]) - 1)))
                     msg = bot.send_photo(message.chat.id, meme['url'])
-                    if str(message.from_user.id) == Admin_ID:
+                    if str(message.from_user.id) in Admins:
                         keyboard = InlineKeyboardMarkup()
                         keyboard.add(InlineKeyboardButton('Удалить',
                                                           callback_data=f'del_from_db {meme["id"]} {message.message_id}'
@@ -1641,7 +1641,7 @@ def feedback_handler(message: Message) -> None:
 def send_to_admin(message: Message) -> None:
     bot.send_message(message.chat.id, 'Ваше сообщение отправленно😌')
     keyboard = InlineKeyboardMarkup()
-    msg = bot.send_message(Admin_ID, f'Вам пришел <b>feedback</b> от <b>{message.from_user.first_name}</b> '
+    msg = bot.send_message(Admins[0], f'Вам пришел <b>feedback</b> от <b>{message.from_user.first_name}</b> '
                                f'<b>{message.from_user.last_name if message.from_user.last_name is not None else ""}</b>\n'
                                f'Текст: {message.text}')
     keyboard.add(InlineKeyboardButton('Ответить', callback_data=f'answer_feedback {message.chat.id}'))
