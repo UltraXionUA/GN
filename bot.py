@@ -451,7 +451,8 @@ def weather_handler(message: Message) -> None:
 
 
 def weather(message: Message, index: int) -> None:
-    bot.delete_message(message.chat.id, message.message_id)
+    if not message.text.startswith('20'):
+        bot.delete_message(message.chat.id, message.message_id)
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
         InlineKeyboardButton(text="⬅️️", callback_data=f"weather_move_to {index - 1 if index > 0 else 'pass'}"),
@@ -2016,6 +2017,10 @@ def set_settings(chat_id) -> InlineKeyboardMarkup:
             InlineKeyboardButton(f'Язык: {"RU🇷🇺" if data["leng_speak"] == "Ru" else "UA🇺🇦" if data["leng_speak"] == "Ua" else "US🇺🇸"}',
                                  callback_data=f"Settings {chat_id} leng_speak "
                                                f"{'ru' if data['leng_speak'] == 'Ua' else 'ua' if data['leng_speak'] == 'Us' else 'us'}"))
+    print(data["pastebin"])
+    keyboard.add(InlineKeyboardButton(f'Хранение PasteBin: {"1 Час🕰" if data["pastebin"] == "1H" else "1 Неделя🕰" if data["pastebin"] == "1W" else "1 Месяц🕰"}',
+        callback_data=f"Settings {chat_id} pastebin "
+                      f"{'1W' if data['pastebin'] == '1H' else '1M' if data['pastebin'] == '1W' else '1H'}"))
     keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {settings_msg[chat_id].message_id} '
                                                                f'{msg_settings[chat_id].message_id}'))
     bot.edit_message_text(chat_id=chat_id, message_id=settings_msg[chat_id].message_id,
@@ -2106,7 +2111,7 @@ def code_callback_query(call):
     bot.register_next_step_handler(code, set_name, leng)
 
 
-def set_name(message: Message, leng: str) -> None:  # Set file name
+def set_name(message: Message, leng: str) -> None:
     if message.content_type != 'text':
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
@@ -2116,13 +2121,14 @@ def set_name(message: Message, leng: str) -> None:  # Set file name
         bot.register_next_step_handler(name, get_url, message.text, leng)
 
 
-def get_url(message: Message, code: str, leng: str) -> None:  # Url PasteBin
+def get_url(message: Message, code: str, leng: str) -> None:
     if message.content_type != 'text':
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
+        settings = db.get_setting(message.chat.id)
         values = {'api_option': 'paste', 'api_dev_key': f"{API['PasteBin']['DevApi']}",
                   'api_paste_code': f'{code}', 'api_paste_private': '0',
-                  'api_paste_name': f'{message.text}', 'api_paste_expire_date': '1H',
+                  'api_paste_name': f'{message.text}', 'api_paste_expire_date': f'{"1H" if settings["pastebin"] == "1H" else "1W" if  settings["pastebin"] == "1W" else "1M"}',
                   'api_paste_format': f'{leng}', 'api_user_key': f"{API['PasteBin']['UserApi']}"}
         data = parse.urlencode(values).encode('utf-8')
         req = request.Request(API['PasteBin']['URL'], data)
