@@ -16,6 +16,12 @@ import re
 https = ['194.44.199.242:8880', '213.6.65.30:8080', '109.87.40.23:44343']
 
 def get_instagram_videos(link: str) -> list:
+    """
+    :param link
+    :type link: str
+    :return: list videos instagram
+    :rtype: list
+    """
     data = []
     for https_ in https:
         proxy = {'http': f'http://{https_}', 'https': f'https://{https_}'}
@@ -42,6 +48,12 @@ def get_instagram_videos(link: str) -> list:
 
 
 def get_instagram_photos(link: str) -> list:
+    """
+    :param link
+    :type link: str
+    :return: list photos instagram
+    :rtype: list
+    """
     data = []
     for https_ in https:
         proxy = {'http': f'http://{https_}', 'https': f'https://{https_}'}
@@ -64,6 +76,12 @@ def get_instagram_photos(link: str) -> list:
 
 
 def get_torrents3(search: str) -> list:
+    """
+    :param search
+    :type search: str
+    :return: list torrents
+    :rtype: list
+    """
     data = []
     soup = BeautifulSoup(requests.get(URLS['torrent3']['search'] + quote(search),
                                     headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
@@ -88,6 +106,12 @@ def get_torrents3(search: str) -> list:
 
 
 def get_torrents2(search: str) -> list:
+    """
+    :param search
+    :type search: str
+    :return: list torrents
+    :rtype: list
+    """
     data = []
     soup = BeautifulSoup(requests.get(URLS['torrent2']['search'].replace('TEXT',  search.replace(' ', '+')),
                                       headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
@@ -109,6 +133,12 @@ def get_torrents2(search: str) -> list:
 
 
 def get_torrents1(search: str) -> list:
+    """
+    :param search
+    :type search: str
+    :return: list torrents
+    :rtype: list
+    """
     data = []
     soup = BeautifulSoup(requests.get(URLS['torrent']['search'] + quote(search.encode('cp1251')),
                                       headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
@@ -130,6 +160,10 @@ def get_torrents1(search: str) -> list:
 
 
 def parser_memes() -> None:  # Main parser
+    """
+    .. notes:: Dayle pasre memes from redit
+    :return: None
+    """
     log('Parser is done', 'info')
     soup = BeautifulSoup(requests.get(URLS['memes'], headers={'User-Agent': generate_user_agent()}).content, 'html.parser')
     links = set()
@@ -140,7 +174,11 @@ def parser_memes() -> None:  # Main parser
     db.add_memes(links)
 
 
-def send_bad_guy() -> None: # Detect bag guys in gr
+def send_bad_guy() -> None: # Detect bag guys in group
+    """
+    .. notes:: Select most active users un group
+    :return: None
+    """
     log('Send bad guy is done', 'info')
     for chat_id, users in db.get_bad_guy().items():
         settings = db.get_setting(chat_id)
@@ -162,6 +200,10 @@ def send_bad_guy() -> None: # Detect bag guys in gr
                 db.save_pin_bag_guys(chat_id, msg.message_id)
 
 def unpin_bag_guys() -> None:
+    """
+    .. notes:: Delete pip message
+    :return: None
+    """
     log('Unpin bad guys is done', 'info')
     for msg in db.get_pin_bag_guys():
         try:
@@ -171,7 +213,11 @@ def unpin_bag_guys() -> None:
             log('Can\'t unpin message', 'warning')
 
 
-def main():
+def main() -> None:
+    """
+    .. notes:: Daily tasks
+    :return: None
+    """
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
     schedule.every().day.at("06:00").do(parser_memes)  # Do pars every 06:00
     schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00

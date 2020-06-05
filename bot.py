@@ -38,12 +38,13 @@ Parser.start()
 
 
 # <<< Start >>>
-@bot.message_handler(commands=['start'])  # /start
+@bot.message_handler(commands=['start'])
 def start_handler(message: Message) -> None:
     """
-    Enter /start to see start menu
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /start to see start menu
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
@@ -60,12 +61,13 @@ def start_handler(message: Message) -> None:
 
 
 # <<< Help >>>
-@bot.message_handler(commands=['help'])  # /help
+@bot.message_handler(commands=['help'])
 def help_handler(message: Message) -> None:
     """
-    Enter /help to see help info and contacts
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso::  Enter /help to see help info and contacts
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
@@ -88,13 +90,14 @@ def help_handler(message: Message) -> None:
 
 
 # <<< Gif >>>
-@bot.message_handler(commands=['gif'])  # /gif
+@bot.message_handler(commands=['gif'])
 def gif_handler(message: Message) -> None:
     """
-    Enter /gif to get random Gif
-    Api: https://api.giphy.com
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /gif to get random Gif
+    .. notes:: Api: https://api.giphy.com
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
@@ -121,13 +124,14 @@ def gif_handler(message: Message) -> None:
 qr_msg = defaultdict(Message)
 
 
-@bot.message_handler(commands=['qrcode'])  # /qrcode
+@bot.message_handler(commands=['qrcode'])
 def qrcode_handler(message: Message) -> None:
     """
-    Enter /qrcode to crate or reed QR Code
-    API: https://api.qrserver.com
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /qrcode to crate or reed QR Code
+    .. notes:: Api: https://api.qrserver.com
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
@@ -179,12 +183,13 @@ def send_qrcode(message: Message) -> None:
 jokes_data = defaultdict(list)
 
 
-@bot.message_handler(commands=['joke'])  # /joke
+@bot.message_handler(commands=['joke'])
 def joke_handler(message: Message) -> None:
     """
-    Enter /joke to get random jock(18+)
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /joke to get random jock(18+)
     """
     global jokes_data
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
@@ -221,12 +226,13 @@ def joke_handler(message: Message) -> None:
 msg_mp3ogg = defaultdict(Message)
 
 
-@bot.message_handler(commands=['oggtomp3'])  # /oggtomp3
+@bot.message_handler(commands=['oggtomp3'])
 def oggtomp3_handler(message: Message) -> None:
     """
-    Enter /oggtomp3 to conver your voice or ogg file to .mp3
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /oggtomp3 to convert your voice or ogg file to .mp3
     """
     global msg_mp3ogg
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
@@ -276,8 +282,14 @@ def send_mp3(message: Message, file_id: int) -> None:
 meme_data = defaultdict(list)
 
 
-@bot.message_handler(commands=['meme'])  # /meme
+@bot.message_handler(commands=['meme'])
 def meme_handler(message: Message) -> None:
+    """
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /meme to get random meme on rus or eng lang
+    """
     global meme_data
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
@@ -320,12 +332,13 @@ def del_meme_query(call):
 
 
 # <<< Donate >>>
-@bot.message_handler(commands=['donate'])  # /donate
+@bot.message_handler(commands=['donate'])
 def donate_handler(message: Message) -> None:
     """
-    Enter /donate to see donate menu(not finished!)
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /donate to see donate menu(not finished!)
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         db.change_karma(message.from_user, message.chat, ['+'], 1)
@@ -419,13 +432,14 @@ city_data = defaultdict(dict)
 city_msg = defaultdict(Message)
 
 
-@bot.message_handler(commands=['weather'])  # /weather
+@bot.message_handler(commands=['weather'])
 def weather_handler(message: Message) -> None:
     """
-    Enter /weather and enter your city to see weather broadcast on 16th days
-    API:  https://api.weatherbit.io
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso::  Enter /weather and enter your city to see weather broadcast on 16th days
+    .. notes:: Api:  https://api.weatherbit.io
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
@@ -515,13 +529,14 @@ detect_msg = defaultdict(Message)
 data_detect = defaultdict(list)
 
 
-@bot.message_handler(commands=['detect'])  # /detect_music
+@bot.message_handler(commands=['detect'])
 def detect_handler(message: Message) -> None:
     """
-    Enter /detect to detect what song play now or you can humming song
-    API: https://api.audd.io
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /detect to detect what song play now or you can humming song
+    .. notes:: Api: https://api.audd.io
     """
     global detect_msg
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
@@ -617,13 +632,14 @@ song_msg = defaultdict(Message)
 msg_song = defaultdict(Message)
 
 
-@bot.message_handler(commands=['music'])  # /music
+@bot.message_handler(commands=['music'])
 def music_handler(message: Message) -> None:
     """
-    Enter /music to found music by artist or title song you can get song and them lyric
-    API: https://api.deezer.com/search & PyTube
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /music to found music by artist or title song you can get song and them lyric
+    .. notes:: Api: https://api.deezer.com/search & Lib: PyTube
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
@@ -792,6 +808,12 @@ def callback_query(call):
 # <<< Lyric >>>
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Lyric\s\w+\s\d+$', call.data))
 def callback_query(call):
+    """
+   :param call
+   :return: None
+   .. seealso:: Get lyric from song
+   .. notes:: Api: https://api.audd.io/
+   """
     global data_songs, data_detect
     type_lyric, song_id = call.data.split()[1:]
     keyboard = InlineKeyboardMarkup()
@@ -816,14 +838,15 @@ def callback_query(call):
 
 
 # <<< Loli&Hentai&Girl >>>
-@bot.message_handler(commands=['loli'])  # /loli
-@bot.message_handler(commands=['girl'])  # /girl
-@bot.message_handler(commands=['hentai'])  # /hentai
+@bot.message_handler(commands=['loli'])
+@bot.message_handler(commands=['girl'])
+@bot.message_handler(commands=['hentai'])
 def forbidden_handler(message: Message) -> None:
     """
-    Enter /{command} to get random hentai(18+) or loli(18+), or girl(18+). Access is limited
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /{command} to get random hentai(18+) or loli(18+), or girl(18+). Access is limited
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
@@ -834,9 +857,9 @@ def forbidden_handler(message: Message) -> None:
             if message.chat.type != 'private':
                 db.change_karma(message.from_user, message.chat, ['-'], 10)
             while True:
-                if message.text.lower() in ['/loli', 'лоли', '/loli@gntmbot', '/loli@pineapple_test_bot']:
+                if message.text.lower() in ['/loli', 'лоли', 'loli', '/loli@gntmbot', '/loli@pineapple_test_bot']:
                     data = db.get_forbidden('loli')
-                elif message.text.lower() in ['/hentai', 'хентай', '/hentai@gntmbot', '/hentai@pineapple_test_bot']:
+                elif message.text.lower() in ['/hentai', 'хентай', 'hentai', '/hentai@gntmbot', '/hentai@pineapple_test_bot']:
                     data = db.get_forbidden('hentai')
                 else:
                     data = db.get_forbidden('girls')
@@ -864,13 +887,14 @@ news = defaultdict(list)
 news_msg = defaultdict(Message)
 
 
-@bot.message_handler(commands=['news'])  # /news
+@bot.message_handler(commands=['news'])
 def news_handler(message: Message) -> None:
     """
-    Enter /news to get news in 8th different categories and links on them
-    API: https://newsapi.org
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /news to get news in 8th different categories and links on themd
+    .. notes:: Api: https://newsapi.org
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
@@ -998,10 +1022,6 @@ def choice_news_query(call):
     main_news(call.message, call.data.split()[1])
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'\w+_move_to\spass]', call.data))
-def callback_query(call):
-    bot.answer_callback_query(call.id, '⛔️')
-
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^news_move_to\s\d+$', call.data))
 def next_news_query(call):
@@ -1018,12 +1038,14 @@ def next_news_query(call):
 
 
 # <<< YouTube >>>
-@bot.message_handler(commands=['youtube'])  # /youtube
+@bot.message_handler(commands=['youtube'])
 def youtube_handler(message: Message) -> None:
     """
-    Enter /youtube to get audio or video from youtube link
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso::  Enter /youtube to get audio or video from youtube link
+    .. notes:: Lib: PyTube
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
@@ -1154,12 +1176,13 @@ def ffmpeg_run():
 msg_instagram = defaultdict(Message)
 
 
-@bot.message_handler(commands=['instagram'])  # /instagram
+@bot.message_handler(commands=['instagram'])
 def instagram_handler(message: Message) -> None:
     """
-    Enter /instagram to get photo(s) or video(s) from instagram link
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso::  Enter /instagram to get photo(s) or video(s) from instagram link
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
@@ -1268,12 +1291,13 @@ tracker = defaultdict(str)
 search = defaultdict(Message)
 
 
-@bot.message_handler(commands=['torrent'])  # /torrents
+@bot.message_handler(commands=['torrent'])
 def torrents_handler(message: Message) -> None:
     """
-    Enter /torrent to search torrents on Rutor.info, GTorrent.ru or Gamestracker.org
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /torrent to search torrents on Rutor.info, GTorrent.ru or Gamestracker.org
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
@@ -1431,12 +1455,13 @@ def callback_query(call):
 
 
 # <<< Translate >>>
-@bot.message_handler(commands=['translate'])  # /translate
+@bot.message_handler(commands=['translate'])
 def translate_handler(message: Message) -> None:
     """
-    Enter /translate to translate any sentence on any leng to russian or russian sentence to english
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /translate to translate any sentence on any leng to russian or russian sentence to english
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
@@ -1457,12 +1482,13 @@ def trans_word(message: Message) -> None:  # Translate function
 
 
 # <<< Sticker GN >>>
-@bot.message_handler(commands=['sticker_gn'])  # /sticker_gn
+@bot.message_handler(commands=['sticker_gn'])
 def gn_sticker_handler(message: Message) -> None:
     """
-    Enter /sticker_gn to get random sticker from GN, access limited
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /sticker_gn to get random sticker from GN, access limited
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
@@ -1479,12 +1505,13 @@ def gn_sticker_handler(message: Message) -> None:
 
 
 # <<< Sticker >>>
-@bot.message_handler(commands=['sticker'])  # /sticker
+@bot.message_handler(commands=['sticker'])
 def sticker_handler(message: Message) -> None:
     """
-    Enter /sticker to get random sticker
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /sticker to get random sticker
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
@@ -1498,12 +1525,13 @@ def sticker_handler(message: Message) -> None:
 
 
 # <<< Add new sticker >>>
-@bot.message_handler(content_types=['sticker'])  # Add new sticker
+@bot.message_handler(content_types=['sticker'])
 def add_sticker_handler(message: Message) -> None:
     """
-    Send sticker in chat with bot to add him in our database
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Send sticker in chat with bot to add him in our database
     """
     if message.chat.type != 'private':
         db.change_karma(message.from_user, message.chat, ['+'], 1)
@@ -1519,12 +1547,13 @@ stat_msg = defaultdict(Message)
 com_stat_msg = defaultdict(Message)
 
 
-@bot.message_handler(commands=['stat'])  # /stat
+@bot.message_handler(commands=['stat'])
 def stat_handler(message: Message) -> None:
     """
-    Enter /stat to see statistic in group
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /stat to see statistic in group
     """
     global stat_msg, com_stat_msg
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
@@ -1556,12 +1585,13 @@ def stat_handler(message: Message) -> None:
 
 
 # <<< Me >>>
-@bot.message_handler(commands=['me'])  # /me
+@bot.message_handler(commands=['me'])
 def me_handler(message: Message) -> None:
     """
-    Enter /me to see your stat in group
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /me to see your stat in group
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
@@ -1591,12 +1621,13 @@ def me_handler(message: Message) -> None:
 
 
 # <<< Feedback >>>
-@bot.message_handler(commands=['feedback'])  # /feedback
+@bot.message_handler(commands=['feedback'])
 def feedback_handler(message: Message) -> None:
     """
-       Enter /feedback to sand feedback to admin
-       :param message:
-       :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /feedback to sand feedback to admin
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         db.change_karma(message.from_user, message.chat, ['+'], 10)
@@ -1633,12 +1664,13 @@ def answer_feedback(message: Message, chat_id: str) -> None:
 data_euler = defaultdict(list)
 
 
-@bot.message_handler(commands=['euler'])  # /euler
+@bot.message_handler(commands=['euler'])
 def euler_handler(message: Message) -> None:
     """
-       Enter /euler to get random task from Project Euler
-       :param message:
-       :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /euler to get random task from Project Euler
     """
     global data_euler
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
@@ -1676,11 +1708,13 @@ def answer_query(call):
             req = requests.get(url, stream=True)
             for i in req.iter_content(1024):
                 f.write(i)
-        bot.send_document(call.message.chat.id, data=open(name, 'rb'))
         try:
+            bot.send_document(call.message.chat.id, data=open(name, 'rb'))
             os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), name))
         except (FileNotFoundError, NameError):
             log('Error! Can\'t remove file', 'warning')
+        except (FileNotFoundError, FileExistsError):
+            log('Error! Can\'t find file', 'warning')
 # <<< End project Euler >>>
 
 
@@ -1688,12 +1722,13 @@ def answer_query(call):
 data_logic_tasks = defaultdict(dict)
 
 
-@bot.message_handler(commands=['logic'])  # /logic
+@bot.message_handler(commands=['logic'])
 def logic_handler(message: Message) -> None:
     """
-       Enter /logic to get random logic task
-       :param message:
-       :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /logic to get random logic task
     """
     global data_logic_tasks
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
@@ -1734,13 +1769,14 @@ page_msg = defaultdict(Message)
 wiki_enter_msg = defaultdict(Message)
 
 
-@bot.message_handler(commands=['wiki'])  # /wiki
+@bot.message_handler(commands=['wiki'])
 def wiki_handler(message: Message) -> None:
     """
-       Enter /wiki to get result from Wikipedia and choose page what you need to read it
-       :param message:
-       :return:
-       """
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /wiki to get result from Wikipedia and choose page what you need to read it
+    """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
             db.change_karma(message.from_user, message.chat, ['+'], 1)
@@ -1843,6 +1879,12 @@ msg_from_user = defaultdict(Message)
 @bot.message_handler(content_types=['text'], regexp=r'^\+{1,5}$')  # Change karma
 @bot.message_handler(content_types=['text'], regexp=r'^\-{1,5}$')
 def text_handler(message: Message) -> None:
+    """
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Func to up or down karma user in group
+    """
     def set_true() -> None:
         time_to_change[message.from_user.id] = True
 
@@ -1894,12 +1936,13 @@ settings_msg = defaultdict(Message)
 msg_settings = defaultdict(Message)
 
 
-@bot.message_handler(commands=['settings'])  # /settings
+@bot.message_handler(commands=['settings'])
 def settings_handler(message: Message) -> None:
     """
-    Enter /settings to open setting menu
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso::  Enter /settings to open setting menu
     """
     global settings_msg, msg_settings
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
@@ -1969,12 +2012,13 @@ def set_settings(chat_id) -> InlineKeyboardMarkup:
 leng_msg = defaultdict(Message)
 
 
-@bot.message_handler(commands=['code'])  # /code
+@bot.message_handler(commands=['code'])
 def code_handler(message: Message) -> None:
     """
-    Enter /code to get link on you program code on PasteBin
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /code to get link on you program code on PasteBin
     """
     global leng_msg
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
@@ -2086,9 +2130,10 @@ second_dice: dict = {'user': None, 'dice': 0}
 @bot.message_handler(content_types=['dice'])
 def dice_handler(message: Message) -> None:
     """
-    Enter /dice or send emodji :dice: to play a dice with any member
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /dice or send emodji :dice: to play a dice with any member
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
@@ -2135,12 +2180,13 @@ def reset_users() -> None:  # Reset users for Dice game
 
 
 # <<< Admin menu >>>
-@bot.message_handler(content_types=['text'], regexp=r'^!ban$')  # Add answer to DB
+@bot.message_handler(content_types=['text'], regexp=r'^!ban$')
 def text_handler(message: Message) -> None:
     """
-    !ban func for admins
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: !ban func for admins
     """
     log(message, 'info')
     if message.chat.type != 'private':
@@ -2172,12 +2218,13 @@ def ban(message: Message, chat=None, user=None):
                 bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
 
 
-@bot.message_handler(content_types=['text'], regexp=r'^!mute\s\d+$')  # Add answer to DB
+@bot.message_handler(content_types=['text'], regexp=r'^!mute\s\d+$')
 def text_handler(message: Message) -> None:
     """
-    !mute {some_time} func for admin
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: !mute {some_time} func for admin
     """
     log(message, 'info')
     if message.chat.type != 'private':
@@ -2210,12 +2257,13 @@ def mute(message: Message, time_mute=30, chat=None, user=None):
                 bot.send_message(message.chat.id, 'У вас недостаточно прав для этого😔')
 
 
-@bot.message_handler(content_types=['text'], regexp=r'^!kick$')  # Add answer to DB
+@bot.message_handler(content_types=['text'], regexp=r'^!kick$')
 def text_handler(message: Message) -> None:
     """
-    !kick func for admin
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: !kick func for admin
     """
     log(message, 'info')
     if message.chat.type != 'private':
@@ -2253,9 +2301,10 @@ def kick(message: Message, chat=None, user=None):
 @bot.edited_message_handler(content_types=['text'])
 def text_handler(message: Message) -> None:
     """
-    Check all messages by command or answer on random message
-    :param message:
-    :return:
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Check all messages by command or answer on random message
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
@@ -2379,8 +2428,6 @@ def voice_handler(message: Message) -> None:
             send_text(message, rec)
 
 
-
-
 def send_text(message: Message, rec: str) -> None:
     keyboard = InlineKeyboardMarkup()
     if message.forward_from is None:
@@ -2440,8 +2487,11 @@ def contact_handler(message: Message) -> None:
 # <<< Unpin bad guys message  >>>
 @bot.message_handler(content_types=['pinned_message'])
 def pin_handler(message: Message) -> None:
-    if message.pinned_message.json['text'].startswith('🎉Пидор'):
-        bot.delete_message(message.chat.id, message.message_id)
+    try:
+        if message.pinned_message.json['text'].startswith('🎉Пидор'):
+            bot.delete_message(message.chat.id, message.message_id)
+    except Exception:
+        log('Key error in unpin bad gay', 'error')
 
 # <<< End unpin bad guys message  >>>
 

@@ -7,7 +7,12 @@ import redis
 import random
 
 
-def start_connection():  # Connection to DB
+def start_connection():
+    """
+    .. notes:: Funk to connect to MySQL DB
+    :return: connection
+    :rtype: connection: pymysql.connect
+    """
     try:
         connection = pymysql.connect(**BD_CONNECT)
         return connection
@@ -16,6 +21,15 @@ def start_connection():  # Connection to DB
 
 
 def get_user(user, chat) -> [dict, int or bool, bool]:
+    """
+    :param user
+    :param chat
+    :return: user, en
+    :rtype: user: dict, en: int
+    :return: False, False
+    :rtype: False: bool, False: bool
+    .. notes:: Get some user
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM Users ORDER BY karma DESC;')
@@ -38,6 +52,12 @@ def get_user(user, chat) -> [dict, int or bool, bool]:
 
 
 def get_stat(chat) -> list:
+    """
+    :param chat
+    :return: user_list
+    :rtype: user_list: list
+    .. notes:: get stats users in some group
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM Users WHERE is_bote = \'False\' AND supergroup IS NOT NULL ORDER BY karma DESC')
@@ -45,6 +65,13 @@ def get_stat(chat) -> list:
 
 
 def add_user(user, chat=None, connection=None) -> None:
+    """
+    :param user
+    :param chat
+    :param connection
+    :return: None
+    .. notes:: add or update user to DB
+    """
     if connection is None:
         connection = start_connection()
     with connection.cursor() as cursor:
@@ -100,6 +127,12 @@ def add_user(user, chat=None, connection=None) -> None:
 
 
 def reset_users(chat_id=None) -> None:
+    """
+    :param chat_id
+    :type chat_id: str
+    :return: None
+    .. notes:: reset users daily karma
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM Users WHERE supergroup IS NOT NULL;')
@@ -116,7 +149,12 @@ def reset_users(chat_id=None) -> None:
     connection.close()
 
 
-def get_bad_guy():
+def get_bad_guy() -> dict:
+    """
+    :return: dict_bag_guys
+    :rtype: dict_bag_guys: dict
+    .. notes:: get bad guys for all super groups
+    """
     connection = start_connection()
     groups, users, bag_guys = set(), [], {}
     with connection.cursor() as cursor:
@@ -148,15 +186,35 @@ def get_bad_guy():
 
 
 def save_pin_bag_guys(chat_id: str, message_id: str) -> None:
+    """
+    :param chat_id
+    :type chat_id: str
+    :param message_id
+    :type message_id: str
+    :return: None
+    .. notes:: save pins id's
+    """
     r = redis.Redis(host='localhost', port=6379, db=2)
     r.set(chat_id, message_id)
 
 def get_pin_bag_guys() -> list:
+    """
+    :return: list_pins
+    :rtype: list_pins: list
+    .. notes:: get pin's messages
+    """
     r = redis.Redis(host='localhost', port=6379, db=2)
     return [{'chat_id': id_.decode('utf-8'), 'message_id': r.get(id_.decode('utf-8'))} for id_ in r.keys()]
 
 
 def get_setting(chat_id: str) -> dict:
+    """
+    :param: chat_id
+    :type: chat_id: str
+    :return: list_pins
+    :rtype: list_pins: list
+    .. notes:: get setting from group
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM Setting WHERE id=\'{chat_id}\';')
@@ -164,6 +222,16 @@ def get_setting(chat_id: str) -> dict:
 
 
 def change_setting(chat_id: str, method: str, status: str) -> None:
+    """
+    :param: chat_id
+    :type: chat_id: str
+    :param: method
+    :type: method: str
+    :param: status
+    :type: status: str
+    :return: None
+    .. notes:: change some setting in group
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
         if method == 'bad_guy' and status == 'on':
@@ -174,12 +242,31 @@ def change_setting(chat_id: str, method: str, status: str) -> None:
 
 
 def check(user_id: str, check_t: str) -> bool:
+    """
+    :param: user_id
+    :type: user_id: str
+    :param: check_t
+    :type: check_t: str
+    :rtype: bool
+    .. notes:: check user in DB
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
         return False if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user_id}\' AND {check_t} LIKE \'True\';') == 0 else True
 
 
-def change_karma(user, chat, action: list, exp: int) -> dict:  # Change Karma
+def change_karma(user, chat, action: list, exp: int) -> dict:
+    """
+    :param: user
+    :param: action
+    :type: action: list
+    :param: exp
+    :type: exp: int
+    :type: check_t: str
+    :return karma
+    :rtype: karma: dict
+    .. notes:: change and get back karma of some users
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
         add_user(user, chat, connection)
@@ -195,7 +282,14 @@ def change_karma(user, chat, action: list, exp: int) -> dict:  # Change Karma
     return karma
 
 
-def add_sticker(id_, emoji, name) -> None:  # Add sticker
+def add_sticker(id_, emoji, name) -> None:
+    """
+    :param: id_
+    :param: emoji
+    :param: name
+    :return None
+    .. notes:: add new sticker to DB
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
         if cursor.execute(f'SELECT * FROM Stickers WHERE `set_name`=\'{name}\' AND emoji=\'{emoji}\';') == 0:
@@ -204,7 +298,14 @@ def add_sticker(id_, emoji, name) -> None:  # Add sticker
             connection.commit()
     connection.close()
 
-def random_sticker(gn=False) -> str:  # Random sticker
+def random_sticker(gn=False) -> str:
+    """
+    :param: gn
+    :type: gn: bool
+    :return sticker_id
+    :rtype: sticker_id: str
+    .. notes:: get random sticker from DB
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
         if gn is False:
@@ -219,7 +320,13 @@ def random_sticker(gn=False) -> str:  # Random sticker
 
 
 
-def ban_user(user: str) -> None:  # Ban user
+def ban_user(user: str) -> None:
+    """
+    :param: user
+    :type: user: str
+    :return None
+    .. notes:: ban some user in group
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'INSERT INTO `BlackList` (`user_id`) VALUES (\'{user}\');')
@@ -227,13 +334,27 @@ def ban_user(user: str) -> None:  # Ban user
     connection.close()
 
 
-def check_ban_user(user: str) -> None:  # Ban user
+def check_ban_user(user: str) -> bool:
+    """
+    :param: user
+    :type: user: str
+    :return sticker_id
+    :rtype: bool
+    .. notes:: Check baned user or not
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
         return True if cursor.execute(f'SELECT * FROM `BlackList` WHERE user_id LIKE \'{user}\';') == 0 else False
 
 
 def get_code(name: str) -> [dict, None]:
+    """
+    :param: name
+    :type: name: str
+    :return code
+    :rtype: code: dict or None
+    .. notes:: Get code of programming lang
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT code FROM PasteBin WHERE name LIKE \'{name}\'')
@@ -241,6 +362,12 @@ def get_code(name: str) -> [dict, None]:
 
 
 def del_meme(meme_id: str) -> None:
+    """
+    :param: meme_id
+    :type: meme_id: str
+    :return None
+    .. notes:: Delete meme from DB (for admins)
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'DELETE FROM Memes WHERE id={meme_id}')
@@ -248,13 +375,25 @@ def del_meme(meme_id: str) -> None:
     connection.close()
 
 def get_all(type_: str) -> list:
+    """
+    :param: type_
+    :type: type_: str
+    :rtype list
+    .. notes:: get all {some thing} from DB
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT * FROM {type_};')
         return cursor.fetchall()
 
 
-def add_memes(data_memes: list) -> None:  # Add memes
+def add_memes(data_memes: list) -> None:
+    """
+    :param: data_memes
+    :type: data_memes: list
+    :rtype None
+    .. notes:: Add new memes from daily parser
+    """
     connection = start_connection()
     count = 0
     with connection.cursor() as cursor:
@@ -268,10 +407,24 @@ def add_memes(data_memes: list) -> None:  # Add memes
 
 
 def get_forbidden(type_: str) -> str:
+    """
+    :param: type_
+    :type: type_: str
+    :return forbidden
+    :rtype forbidden: str
+    .. notes:: get random forbidden
+    """
     r = redis.Redis(host='localhost', port=6379, db=0)
     return r.get(f'{type_}{random.randint(1, int(r.get(f"len_{type_}")))}').decode('utf-8')
 
 def get_doc(id_: str) -> str:
+    """
+    :param: id_
+    :type: id_: str
+    :return doc
+    :rtype doc: str
+    .. notes:: get document from some task of Project Euler
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT other FROM Project_Euler WHERE id={id_};')
@@ -279,6 +432,13 @@ def get_doc(id_: str) -> str:
 
 
 def get_task_answer(id_: str) -> str:
+    """
+   :param: id_
+   :type: id_: str
+   :return task_answer
+   :rtype task_answer: str
+   .. notes:: get answer from Logic Task
+   """
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT answer FROM Logic_Tasks WHERE id={id_};')
@@ -286,6 +446,11 @@ def get_task_answer(id_: str) -> str:
 
 
 def get_answer() -> str:
+    """
+    :return bot_answer
+    :rtype bot_answer: str
+    .. notes:: get random bot answer from DB
+    """
     r = redis.Redis(host='localhost', port=6379, db=1)
     return r.get(f'answer{random.randint(1, int(r.get("len_answer")))}').decode('utf-8')
 

@@ -27,8 +27,9 @@
 &nbsp;&nbsp;&nbsp;&nbsp;• _/translate_ - Translate sentence<br>
 &nbsp;&nbsp;&nbsp;&nbsp;• _/stat_ - Get statistic about members in your group<br>
 &nbsp;&nbsp;&nbsp;&nbsp;• _/donate_ - Support developing this bot<br>
+&nbsp;&nbsp;&nbsp;&nbsp;• _/feedback_ - Send feedback to admin<br>
 &nbsp;&nbsp;&nbsp;&nbsp;• _/settings_ - Bot settings<br>
-&nbsp;&nbsp;&nbsp;&nbsp;• _/help_ - Get help info<br>
+&nbsp;&nbsp;&nbsp;&nbsp;• _/help_ - Get help info<br><br>
 **API's:**<br>
 &nbsp;&nbsp;&nbsp;&nbsp;• _Weather_ - api.weatherbit.io<br>
 &nbsp;&nbsp;&nbsp;&nbsp;• _Gif_ - api.giphy.com<br>
@@ -38,14 +39,14 @@
 &nbsp;&nbsp;&nbsp;&nbsp;• _Share code_ - pastebin.com/api<br>
 &nbsp;&nbsp;&nbsp;&nbsp;• _News_ - newsapi.org<br>
 &nbsp;&nbsp;&nbsp;&nbsp;• _QR Code_ - api.qrserver.com<br>
-&nbsp;&nbsp;&nbsp;&nbsp;• _Recognize song_ - api.audd.io<br>
+&nbsp;&nbsp;&nbsp;&nbsp;• _Recognize song_ - api.audd.io<br><br>
 **Group func's:**<br>
 &nbsp;&nbsp;&nbsp;&nbsp;• Admin menu (!ban, !mute {time}, !kick)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;• Keeps records of user karma <br>
-&nbsp;&nbsp;&nbsp;&nbsp;• Send "Bad guy of the day"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;• Send "Bad guy of the day"<br><br>
 **Other:**<br>
 &nbsp;&nbsp;&nbsp;&nbsp;• Converts voice to text<br>
 <br>
-**Other:**<br>
+**Contacts:**<br>
 **Mail**: ultra25813@gmail.com<br>
 **Telegram**: @Ultra_Xion<br>
