@@ -1063,69 +1063,84 @@ def youtube_call(call):
     bot.answer_callback_query(call.id, 'Вы выбрали ' + tr_w(call.data))
     bot.delete_message(call.message.chat.id, call.message.message_id)
     link = bot.send_message(call.message.chat.id, 'Отправьте мне ссылку на видео🔗')
-    bot.register_next_step_handler(link, send_audio, call.data)
+    bot.register_next_step_handler(link, send_audio, call.data, link.message_id)
 
 
-def send_audio(message: Message, method: str) -> None:
+def send_audio(message: Message, method: str, message_id: int) -> None:
     if message.content_type != 'text':
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
         if re.fullmatch(r'^https?://.*[\r\n]*$', message.text):
             keyboard = InlineKeyboardMarkup()
             keyboard.add(InlineKeyboardButton('YouTube', url=message.text))
-            try:
-                yt = YouTube(message.text)
-            except error.HTTPError:
-                bot.send_message(message.chat.id, 'Не могу найти файл😔')
-            except exceptions.RegexMatchError:
-                bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
-            else:
-                if method == 'Audio':
-                    bot.send_chat_action(message.chat.id, 'upload_audio')
-                    bot.delete_message(message.chat.id, message.message_id)
-                    bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(
-                        filename='file'), 'rb'),
-                                   reply_markup=keyboard, duration=yt.length, title=yt.title, performer=yt.author,
-                                   caption=f'🎧 {sec_to_time(yt.length)} '
-                                           f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
-                                           f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps')
-                    try:
-                        os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
-                    except (FileNotFoundError, NameError):
-                        log('Error! Can\'t remove file', 'warning')
+            for i in range(5):
+                try:
+                    yt = YouTube(message.text)
+                except error.HTTPError:
+                    bot.send_message(message.chat.id, 'Не могу найти файл😔')
+                    break
+                except exceptions.RegexMatchError:
+                    bot.send_message(message.chat.id, 'Не верный формат ссылки😔')
+                    break
+                except KeyError:
+                    continue
                 else:
-                    try:
-                        resolution = '480p'
-                        yt.streams.filter(res="480p").order_by('resolution').desc()[0].download(
-                            filename='video')
-                    except (error.HTTPError, IndexError):
+                    if method == 'Audio':
+                        bot.send_chat_action(message.chat.id, 'upload_audio')
+                        bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(
+                            filename='file'), 'rb'),
+                                       reply_markup=keyboard, duration=yt.length, title=yt.title, performer=yt.author,
+                                       caption=f'🎧 {sec_to_time(yt.length)} '
+                                               f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
+                                               f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps')
+                        bot.delete_message(message.chat.id, message.message_id)
+                        bot.delete_message(message.chat.id, message_id)
                         try:
-                            resolution = '320p'
-                            yt.streams.filter(res="320p").order_by('resolution').desc()[0].download(
+                            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
+                        except (FileNotFoundError, NameError):
+                            log('Error! Can\'t remove file', 'warning')
+                        break
+                    else:
+                        try:
+                            resolution = '480p'
+                            yt.streams.filter(res="480p").order_by('resolution').desc()[0].download(
                                 filename='video')
                         except (error.HTTPError, IndexError):
                             try:
-                                resolution = '240p'
-                                yt.streams.filter(res="240p").order_by('resolution').desc()[0].download(
+                                resolution = '320p'
+                                yt.streams.filter(res="320p").order_by('resolution').desc()[0].download(
                                     filename='video')
                             except (error.HTTPError, IndexError):
                                 try:
-                                    resolution = '144p'
-                                    yt.streams.filter(res="144p").order_by('resolution').desc()[0].download(
+                                    resolution = '240p'
+                                    yt.streams.filter(res="240p").order_by('resolution').desc()[0].download(
                                         filename='video')
-                                except error.HTTPError:
-                                    bot.send_message(message.chat.id, 'Не могу найти файл😔')
-                                except IndexError:
-                                    bot.send_message(message.chat.id, 'Даное видео имеет слигком большой объем,'
-                                                                      ' мой лимит 50МБ😔')
+                                except (error.HTTPError, IndexError):
+                                    try:
+                                        resolution = '144p'
+                                        yt.streams.filter(res="144p").order_by('resolution').desc()[0].download(
+                                            filename='video')
+                                    except error.HTTPError:
+                                        bot.send_message(message.chat.id, 'Не могу найти файл😔')
+                                    except IndexError:
+                                        bot.send_message(message.chat.id, 'Даное видео имеет слигком большой объем,'
+                                                                          ' мой лимит 50МБ😔')
+                                    else:
+                                        load_video(message, yt, keyboard, resolution)
+                                        bot.delete_message(message.chat.id, message_id)
+                                        break
                                 else:
                                     load_video(message, yt, keyboard, resolution)
+                                    bot.delete_message(message.chat.id, message_id)
+                                    break
                             else:
                                 load_video(message, yt, keyboard, resolution)
+                                bot.delete_message(message.chat.id, message_id)
+                                break
                         else:
                             load_video(message, yt, keyboard, resolution)
-                    else:
-                        load_video(message, yt, keyboard, resolution)
+                            bot.delete_message(message.chat.id, message_id)
+                            break
         else:
             bot.send_message(message.chat.id, 'Не верный формат данных😔')
 
