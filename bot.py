@@ -110,10 +110,9 @@ def gif_handler(message: Message) -> None:
                 data = requests.get(API['API_Gif']).json()
                 if hi_r(data['data']['rating']):
                     bot.send_document(message.chat.id, data['data']['images']['downsized_large']['url'])
+                    break
             except Exception:
                 continue
-            else:
-                break
 
 
 
@@ -302,8 +301,8 @@ def meme_handler(message: Message) -> None:
             if message.chat.id not in meme_data or len(meme_data[message.chat.id]) == 1:
                 meme_data[message.chat.id] = db.get_all('Memes')
             while True:
+                meme = meme_data[message.chat.id].pop(random.choice(range(len(meme_data[message.chat.id]) - 1)))
                 try:
-                    meme = meme_data[message.chat.id].pop(random.choice(range(len(meme_data[message.chat.id]) - 1)))
                     msg = bot.send_photo(message.chat.id, meme['url'])
                     if str(message.from_user.id) in Admins:
                         keyboard = InlineKeyboardMarkup()
@@ -313,10 +312,9 @@ def meme_handler(message: Message) -> None:
                         bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
                                                media=InputMediaPhoto(msg.photo[-1].file_id),
                                                reply_markup=keyboard)
+                    break
                 except Exception:
                     continue
-                else:
-                     break
         else:
             meme = requests.get(API['API_Meme']).json()
             bot.send_photo(message.chat.id, meme['url'])
@@ -605,7 +603,7 @@ def detect_music(message: Message, type_r) -> None:
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'/watch\?v=\w+.+', call.data))
 def callback_query(call):
     bot.send_chat_action(call.message.chat.id, 'upload_audio')
-    while True:
+    for i in range(5):
         try:
             yt = YouTube('https://' + 'www.youtube.com/' + call.data.split()[0])
         except KeyError:
@@ -2343,13 +2341,13 @@ def text_handler(message: Message) -> None:
             dice_handler(message)
         elif text in ['хентай', 'hentai', 'лоли', 'loli', 'девушка', 'girl', 'баба', 'пизда']:
             forbidden_handler(message)
-        check = db.get_setting(message.chat.id)
+        settings = db.get_setting(message.chat.id)
         if message.chat.type != 'private' and not message.edit_date:
             db.change_karma(message.from_user, message.chat, ['+'], 1)
-            if str(message.from_user.id) != GNBot_ID and check['speak'] == 'On':
-                if check['periodicity'] == 'Rarely':
+            if str(message.from_user.id) != GNBot_ID and settings['speak'] == 'On':
+                if settings['periodicity'] == 'Rarely':
                     percent = [4, 1, 30]
-                elif check['periodicity'] == 'Normal':
+                elif settings['periodicity'] == 'Normal':
                     percent = [7, 3, 45]
                 else:
                     percent = [15, 5, 60]
@@ -2422,8 +2420,8 @@ def left_member_handler(message: Message) -> None:
 def voice_handler(message: Message) -> None:
     if message.chat.type != 'private':
         db.change_karma(message.from_user, message.chat, ['+'], 1)
-    check = db.get_setting(message.chat.id)
-    if check['recognize'] != 'Off':
+    settings = db.get_setting(message.chat.id)
+    if settings['recognize'] != 'Off':
         r = sr.Recognizer()
         data = request.urlopen(bot.get_file_url(message.voice.file_id)).read()
         with tempfile.NamedTemporaryFile(delete=False) as f:
@@ -2434,7 +2432,7 @@ def voice_handler(message: Message) -> None:
         with file as source:
             audio = r.record(source)
         try:
-            if check['recognize'] == 'Wix':
+            if settings['recognize'] == 'Wix':
                 rec = r.recognize_wit(audio, key=API['Wit'])
                 rec = rec[0].title() + rec[1:]
             else:
