@@ -310,7 +310,7 @@ def meme_handler(message: Message) -> None:
                                                           callback_data=f'del_from_db {meme["id"]} {message.message_id}'
                                                                         f' {msg.message_id}'))
                     else:
-                        keyboard.add(InlineKeyboardButton('Удалить',
+                        keyboard.add(InlineKeyboardButton('Закрыть',
                                                           callback_data=f'del {message.message_id} {msg.message_id}'))
                     bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
                                            media=InputMediaPhoto(msg.photo[-1].file_id),
