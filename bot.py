@@ -1091,14 +1091,17 @@ def send_audio(message: Message, method: str, message_id: int) -> None:
                 else:
                     if method == 'Audio':
                         bot.send_chat_action(message.chat.id, 'upload_audio')
-                        bot.send_audio(message.chat.id, open(yt.streams.filter(only_audio=True)[0].download(
-                            filename='file'), 'rb'),
-                                       reply_markup=keyboard, duration=yt.length, title=yt.title, performer=yt.author,
-                                       caption=f'🎧 {sec_to_time(yt.length)} '
-                                               f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
-                                               f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps')
-                        bot.delete_message(message.chat.id, message.message_id)
-                        bot.delete_message(message.chat.id, message_id)
+                        yt.streams.filter(only_audio=True)[0].download(filename='file')
+                        if round(os.path.getsize("file.mp4") / 1000000, 1) < 50:
+                            bot.send_audio(message.chat.id, open('file.mp4', 'rb'),
+                                           reply_markup=keyboard, duration=yt.length, title=yt.title, performer=yt.author,
+                                           caption=f'🎧 {sec_to_time(yt.length)} '
+                                                   f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
+                                                   f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")} Kbps')
+                            bot.delete_message(message.chat.id, message.message_id)
+                            bot.delete_message(message.chat.id, message_id)
+                        else:
+                            bot.send_message(message.chat.id, 'Размер файла слишком большой😔')
                         try:
                             os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
                         except (FileNotFoundError, NameError):
@@ -1107,28 +1110,23 @@ def send_audio(message: Message, method: str, message_id: int) -> None:
                     else:
                         try:
                             resolution = '480p'
-                            yt.streams.filter(res="480p").order_by('resolution').desc()[0].download(
-                                filename='video')
+                            yt.streams.filter(res="480p").order_by('resolution').desc()[0].download(filename='video')
                         except (error.HTTPError, IndexError):
                             try:
                                 resolution = '320p'
-                                yt.streams.filter(res="320p").order_by('resolution').desc()[0].download(
-                                    filename='video')
+                                yt.streams.filter(res="320p").order_by('resolution').desc()[0].download(filename='video')
                             except (error.HTTPError, IndexError):
                                 try:
                                     resolution = '240p'
-                                    yt.streams.filter(res="240p").order_by('resolution').desc()[0].download(
-                                        filename='video')
+                                    yt.streams.filter(res="240p").order_by('resolution').desc()[0].download(filename='video')
                                 except (error.HTTPError, IndexError):
                                     try:
                                         resolution = '144p'
-                                        yt.streams.filter(res="144p").order_by('resolution').desc()[0].download(
-                                            filename='video')
+                                        yt.streams.filter(res="144p").order_by('resolution').desc()[0].download(filename='video')
                                     except error.HTTPError:
                                         bot.send_message(message.chat.id, 'Не могу найти файл😔')
                                     except IndexError:
-                                        bot.send_message(message.chat.id, 'Даное видео имеет слигком большой объем,'
-                                                                          ' мой лимит 50МБ😔')
+                                        bot.send_message(message.chat.id, 'Размер видео слишком большой😔')
                                     else:
                                         load_video(message, yt, keyboard, resolution)
                                         bot.delete_message(message.chat.id, message_id)
