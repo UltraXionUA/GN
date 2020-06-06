@@ -408,6 +408,7 @@ def get_forbidden(type_: str) -> str:
     r = redis.Redis(host='localhost', port=6379, db=0)
     return r.get(f'{type_}{random.randint(1, int(r.get(f"len_{type_}")))}').decode('utf-8')
 
+
 def get_doc(id_: str) -> str:
     """
     :param: id_

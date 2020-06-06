@@ -875,10 +875,9 @@ def forbidden_handler(message: Message) -> None:
                         bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
                                                media=InputMediaPhoto(msg.photo[-1].file_id),
                                                reply_markup=keyboard)
+                        break
                 except Exception:
                     continue
-                else:
-                    break
         else:
             bot.send_message(message.chat.id, 'Цензура включена, функция недоступна😔\nОтключить цензуру можно <i>/settings</i>',
                             parse_mode='HTML')
