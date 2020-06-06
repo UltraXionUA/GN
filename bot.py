@@ -304,14 +304,17 @@ def meme_handler(message: Message) -> None:
                 meme = meme_data[message.chat.id].pop(random.choice(range(len(meme_data[message.chat.id]) - 1)))
                 try:
                     msg = bot.send_photo(message.chat.id, meme['url'])
+                    keyboard = InlineKeyboardMarkup()
                     if str(message.from_user.id) in Admins:
-                        keyboard = InlineKeyboardMarkup()
                         keyboard.add(InlineKeyboardButton('Удалить',
                                                           callback_data=f'del_from_db {meme["id"]} {message.message_id}'
                                                                         f' {msg.message_id}'))
-                        bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
-                                               media=InputMediaPhoto(msg.photo[-1].file_id),
-                                               reply_markup=keyboard)
+                    else:
+                        keyboard.add(InlineKeyboardButton('Удалить',
+                                                          callback_data=f'del {message.message_id} {msg.message_id}'))
+                    bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
+                                           media=InputMediaPhoto(msg.photo[-1].file_id),
+                                           reply_markup=keyboard)
                     break
                 except Exception:
                     db.del_meme(meme['id'])
