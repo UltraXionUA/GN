@@ -302,6 +302,7 @@ def meme_handler(message: Message) -> None:
                 meme_data[message.chat.id] = db.get_all('Memes')
             while True:
                 meme = meme_data[message.chat.id].pop(random.choice(range(len(meme_data[message.chat.id]) - 1)))
+                text = requests.get(API['VeryPDF']['link'].replace('API_KEY', API['VeryPDF']['key']).replace('LINK', meme['url'])).content.decode('utf-8')
                 try:
                     msg = bot.send_photo(message.chat.id, meme['url'])
                     keyboard = InlineKeyboardMarkup()

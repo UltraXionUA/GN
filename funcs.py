@@ -96,12 +96,12 @@ def sec_to_time(seconds: int) -> str:
 
 def tr_w(sentence: str) -> str:
     """
-   :param sentence
-   :type sentence: str
-   :return: tr_word
-   :rtype: tr_word: str
-   .. seealso:: detect lang of sentence and translate them
-   """
+    :param sentence
+    :type sentence: str
+    :return: tr_word
+    :rtype: tr_word: str
+    .. seealso:: detect lang of sentence and translate them
+    """
     leng_code = detect(sentence)
     return Translator().translate(sentence, dest='en').text if leng_code == 'ru' else 'Не удалось распознать язык⛔️' \
         if leng_code == 'mk' else Translator().translate(sentence, dest='ru').text
