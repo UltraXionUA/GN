@@ -212,7 +212,7 @@ def unpin_bag_guys() -> None:
         except Exception:
             log('Can\'t unpin message', 'warning')
 
-parser_memes()
+
 def main() -> None:
     """
     .. notes:: Daily tasks
