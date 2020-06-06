@@ -395,14 +395,12 @@ def add_memes(data_memes: list) -> None:
     .. notes:: Add new memes from daily parser
     """
     connection = start_connection()
-    count = 0
     with connection.cursor() as cursor:
-        for meme in data_memes:
-            if cursor.execute(f'SELECT * FROM Memes WHERE url LIKE \'{meme}\'') == 0:
-                count += 1
-                cursor.execute(f'INSERT INTO `Memes`(`url`) VALUES (\'{meme}\');')
-                connection.commit()
-    log(f'Мемов добавлено: {count}', 'info')
+        for en, meme in enumerate([meme for meme in data_memes if cursor.execute(f'SELECT * FROM Memes WHERE url LIKE \'{meme}\'') == 0], 1):
+            cursor.execute(f'INSERT INTO `Memes`(`url`) VALUES (\'{meme}\');')
+            connection.commit()
+        else:
+            log(f'Мемов добавлено: {en}', 'info')
     connection.close()
 
 

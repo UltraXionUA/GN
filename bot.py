@@ -32,7 +32,7 @@ import re
 # <<< End import's>>
 log('Bot is successful running!', 'info')
 
-# Turn on parser memes
+# Turn on daily tasks
 Parser = Thread(target=main, name='Parser')
 Parser.start()
 
@@ -314,6 +314,7 @@ def meme_handler(message: Message) -> None:
                                                reply_markup=keyboard)
                     break
                 except Exception:
+                    db.del_meme(meme['id'])
                     continue
         else:
             meme = requests.get(API['API_Meme']).json()
