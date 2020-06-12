@@ -2327,6 +2327,8 @@ def text_handler(message: Message) -> None:
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        if str(message.from_user.id) in Admins and str(message.forward_from_chat.id) == '-1001304250568':
+            db.add_joke(message.text.split('\n')[0], message.text.split('\n')[2])
         text = message.text.lower()
         if text in ['стикер', 'стикерочек', 'sticker']:
             gn_sticker_handler(message)
