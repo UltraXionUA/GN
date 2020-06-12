@@ -179,7 +179,8 @@ def get_bad_guy() -> dict:
                 elif bag_guys[group][0]['karma'] - bag_guys[group][0]['daily'] > user['karma'] - user['daily']:
                     bag_guys[group].clear()
                     bag_guys[group].append(user)
-                elif bag_guys[group][0]['karma'] - bag_guys[group][0]['daily'] == user['karma'] - user['daily']:
+                elif bag_guys[group][0]['karma'] - bag_guys[group][0]['daily'] == user['karma'] - user['daily'] or \
+                    user['daily'] < user['karma']:
                     bag_guys[group].append(user)
     return bag_guys
 
