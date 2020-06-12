@@ -331,8 +331,11 @@ def ban_user(user: str) -> None:
 def add_joke(setup, panchline):
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'INSERT INTO `Joke`(`setup`, `panchline`) VALUES (\'{setup}\', \'{panchline}\');')
-        connection.commit()
+        try:
+            cursor.execute(f'INSERT INTO `Joke`(`setup`, `panchline`) VALUES (\'{setup}\', \'{panchline}\');')
+            connection.commit()
+        except Exception:
+            pass
     connection.close()
 
 def check_ban_user(user: str) -> bool:
