@@ -190,7 +190,7 @@ def send_bad_guy() -> None:
                     if user['last_name'] != 'None':
                         user_name += f" {user['last_name']}"
                     text += user_name + '</i>💙🎊\n'
-            text += f'Прийми{"те" if len(users) > 2 else ""} наши поздравления👍'
+            text += f'Прийми{"те" if len(users) > 1 else ""} наши поздравления👍'
             try:
                 msg = bot.send_message(chat_id, text, parse_mode='HTML')
                 bot.pin_chat_message(msg.chat.id, msg.message_id, disable_notification=False)
