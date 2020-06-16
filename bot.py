@@ -849,9 +849,7 @@ def forbidden_handler(message: Message) -> None:
         keyboard = InlineKeyboardMarkup()
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         setting = db.get_setting(message.chat.id)
-        if setting['censure'] == 'Off':
-            if message.chat.type != 'private':
-                db.change_karma(message.from_user, message.chat, ['-'], 10)
+        if setting['censure'] == 'Off
             while True:
                 if message.text.lower() in ['/loli', 'лоли', 'loli', '/loli@gntmbot', '/loli@pineapple_test_bot']:
                     data = db.get_forbidden('loli')
