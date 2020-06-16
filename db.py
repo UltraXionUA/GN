@@ -270,7 +270,10 @@ def change_karma(user, chat, action: list, exp: int) -> dict:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT `karma` FROM `Users` WHERE `user_id` = {user.id};')
-        karma = cursor.fetchone()['karma'] + len(action) * exp if action[0] == '+' else - len(action) * exp
+        if action[0] == '+':
+            karma = cursor.fetchone()['karma'] + len(action) * exp
+        else:
+            karma = cursor.fetchone()['karma'] - len(action) * exp
         cursor.execute(f'UPDATE `Users` SET `karma` = \'{karma}\' WHERE `username` = \'{user.username}\';')
         connection.commit()
     return karma
