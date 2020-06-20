@@ -255,11 +255,11 @@ def check(user_id: str, check_t: str) -> bool:
         return False if cursor.execute(f'SELECT * FROM Users WHERE user_id LIKE \'{user_id}\' AND {check_t} LIKE \'True\';') == 0 else True
 
 
-def change_karma(user, chat, action: list, exp: int) -> dict:
+def change_karma(user_id, action: str, exp: int) -> dict:
     """
     :param: user
     :param: action
-    :type: action: list
+    :type: action: str
     :param: exp
     :type: exp: int
     :type: check_t: str
@@ -269,12 +269,12 @@ def change_karma(user, chat, action: list, exp: int) -> dict:
     """
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT `karma` FROM `Users` WHERE `user_id` = {user.id};')
-        if action[0] == '+':
-            karma = cursor.fetchone()['karma'] + len(action) * exp
+        cursor.execute(f'SELECT `karma` FROM `Users` WHERE `user_id` = {str(user_id)};')
+        if action == '+':
+            karma = cursor.fetchone()['karma'] + exp
         else:
-            karma = cursor.fetchone()['karma'] - len(action) * exp
-        cursor.execute(f'UPDATE `Users` SET `karma` = \'{karma}\' WHERE `username` = \'{user.username}\';')
+            karma = cursor.fetchone()['karma'] + exp
+        cursor.execute(f'UPDATE `Users` SET `karma` = \'{karma}\' WHERE `user_id` = \'{str(user_id)}\';')
         connection.commit()
     return karma
 
