@@ -639,13 +639,13 @@ def casino_handler(message: Message) -> None:
     .. seealso:: Enter /casino to play in roulette with another members putting your karma points
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
-        if message.chat.type != 'private':
-            log(message, 'info')
-            db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-            msg = bot.send_message(message.chat.id, 'Введите времмя на ставк (в минутах)🖊')
-            bot.register_next_step_handler(msg, set_time_roulette, msg.message_id)
-        else:
-            bot.send_message(message.chat.id, 'Функция доступна только в группах😔')
+        # if message.chat.type != 'private':
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        msg = bot.send_message(message.chat.id, 'Введите времмя на ставк (в минутах)🖊')
+        bot.register_next_step_handler(msg, set_time_roulette, msg.message_id)
+        # else:
+        #     bot.send_message(message.chat.id, 'Функция доступна только в группах😔')
 
 
 def play_roulette():
@@ -665,8 +665,8 @@ def play_roulette():
                 msg_res = bot.send_message(chat_id, f'[{get_color(nums.pop(0))}] [{get_color(nums.pop(0))}] '
                                                     f'➡️[{get_color(nums.pop(0))}]⬅️ [{get_color(nums.pop(0))}] '
                                                     f'[{get_color(nums.pop(0))}]')
-                for num in nums:
-                    time.sleep(0.3)
+                for num in nums[1:random.randint(15, 36)]:
+                    time.sleep(0.25)
                     text = msg_res.text.replace('➡️', '').replace('⬅️', '').replace('[', '').replace(']', '').split()[1:]
                     text.append(get_color(num))
                     msg_res = bot.edit_message_text(f'[{text[0]}] [{text[1]}]  ➡️[{text[2]}]⬅️ [{text[3]}] [{text[4]}]',
@@ -1717,8 +1717,7 @@ def me_handler(message: Message) -> None:
             keyboard = InlineKeyboardMarkup()
             data_user, position = db.get_user(message.from_user, message.chat)
             if data_user is not False or position is not False:
-                    user = data_user['first_name']
-                    user += f"{' ' + data_user['last_name']}" if data_user['last_name'] != 'None' else ''
+                    user = f"{data_user['first_name'] + ' ' + data_user['last_name']}" if data_user['last_name'] != 'None' else data_user['first_name']
                     msg = bot.send_message(message.chat.id, f'Ваш рейтинг:\n'
                                                             f'<i>{position}. </i>'
                                                             f'<b>{user}</b> - '
