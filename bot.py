@@ -655,7 +655,7 @@ def play_roulette():
                 del data['time']
                 win_num = random.randint(0, 36)
                 win_color = 'zero' if win_num == 0 else 'red' if win_num % 2 == 0 else 'black'
-                bot.send_message(chat_id, f'Побеило {win_num} {"🔴" if win_color == "red" else "⚫" if win_color == "black" else "⭕"}')
+                bot.send_message(chat_id, f'Победило {win_num} {"🔴" if win_color == "red" else "⚫" if win_color == "black" else "⭕"}')
                 for user_id, bids in data.items():
                     for bid in bids:
                         if bid['color'] == win_color:
@@ -701,7 +701,7 @@ def callback_query(call):
         chips, color = call.data.split()[1:]
         user = f"{call.from_user.first_name + ' ' + call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
         if len(chips_data[call.message.chat.id].keys()) == 1:
-            chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id, f'{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}')
+            chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id, f'Ставки\n{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}')
         else:
             chips_msg[call.message.chat.id] = bot.edit_message_text(chips_msg[call.message.chat.id].text + f'\n{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}',
                                   call.message.chat.id, chips_msg[call.message.chat.id].message_id)
