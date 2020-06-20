@@ -639,13 +639,13 @@ def casino_handler(message: Message) -> None:
     .. seealso:: Enter /casino to play in roulette with another members putting your karma points
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
-        if message.chat.type != 'private':
-            log(message, 'info')
-            db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-            msg = bot.send_message(message.chat.id, 'Введите времмя на ставк (в минутах)🖊')
-            bot.register_next_step_handler(msg, set_time_roulette, msg.message_id)
-        else:
-            bot.send_message(message.chat.id, 'Функция доступна только в группах😔')
+        # if message.chat.type != 'private':
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        msg = bot.send_message(message.chat.id, 'Введите времмя на ставк (в минутах)🖊')
+        bot.register_next_step_handler(msg, set_time_roulette, msg.message_id)
+        # else:
+        #     bot.send_message(message.chat.id, 'Функция доступна только в группах😔')
 
 
 def play_roulette():
@@ -673,9 +673,11 @@ def play_roulette():
                                             msg_res.chat.id, msg_res.message_id)
             text = msg_res.text.split()[2].replace("➡️[", "").replace("]⬅️", "")
             name_color = get_color(list(text)[-1])
+            print(text)
             bot.edit_message_text(f'{msg_res.text}\n\nПобедило {text}', msg_res.chat.id, msg_res.message_id)
             for user_id, bids in data.items():
                 for bid in bids:
+                    print(bid)
                     if bid['color'] == name_color:
                         if name_color == 'zero':
                             db.change_karma(user_id, '+', int(bid['chips']) * 10)
