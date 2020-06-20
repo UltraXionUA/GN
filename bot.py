@@ -663,15 +663,15 @@ def play_roulette():
                 nums = [num for num in range(0, 36)]
                 random.shuffle(nums)
                 msg_res = bot.send_message(chat_id, f'[{get_color(nums.pop(0))}] [{get_color(nums.pop(0))}] '
-                                                    f'>>[{get_color(nums.pop(0))}]<< [{get_color(nums.pop(0))}] '
+                                                    f'➡️[{get_color(nums.pop(0))}]⬅️ [{get_color(nums.pop(0))}] '
                                                     f'[{get_color(nums.pop(0))}]')
                 for num in nums:
                     time.sleep(0.3)
-                    text = msg_res.text.replace('>>', '').replace('<<', '').replace('[', '').replace(']', '').split()[1:]
+                    text = msg_res.text.replace('➡️', '').replace('⬅️', '').replace('[', '').replace(']', '').split()[1:]
                     text.append(get_color(num))
-                    msg_res = bot.edit_message_text(f'[{text[0]}] [{text[1]}]  >>[{text[2]}]<< [{text[3]}] [{text[4]}]',
+                    msg_res = bot.edit_message_text(f'[{text[0]}] [{text[1]}]  ➡️[{text[2]}]⬅️ [{text[3]}] [{text[4]}]',
                                                 chat_id, msg_res.message_id)
-                text = msg_res.text.split()[2].replace(">>[", "").replace("]<<", "")
+                text = msg_res.text.split()[2].replace("➡️[", "").replace("]⬅️", "")
                 bot.edit_message_text(msg_res.text + f'\n\nПобедило {text}', msg_res.chat.id, msg_res.message_id)
                 color = list(text)
                 for user_id, bids in data.items():
