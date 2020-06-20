@@ -720,7 +720,9 @@ def callback_query(call):
         chips, color = call.data.split()[1:]
         user = f"{call.from_user.first_name + ' ' + call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
         if len(chips_data[call.message.chat.id].keys()) == 1:
-            chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id, f'Ставки:\n{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}')
+            time = str(chips_data[call.message.chat.id]["time"]).split()[-1].split(':')
+            chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id, f'Конец в {time[0]}:{time[1]}:{time[2].split(".")[0]}\nСтавки:'
+                                                                                     f'\n{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}')
         else:
             chips_msg[call.message.chat.id] = bot.edit_message_text(chips_msg[call.message.chat.id].text + f'\n{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}',
                                   call.message.chat.id, chips_msg[call.message.chat.id].message_id)
