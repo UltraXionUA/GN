@@ -627,6 +627,7 @@ def callback_query(call):
 # <<< Roulette >>>
 chips_data = defaultdict(dict)
 chips_msg = defaultdict(Message)
+msg_res = None
 
 
 @bot.message_handler(commands=['casino'])
@@ -648,18 +649,36 @@ def casino_handler(message: Message) -> None:
 
 
 def play_roulette():
-    global chips_data
+    global chips_data, msg_res
+    def get_color(num: int) -> str:
+        return f'{num}⭕' if num == 0 else f'{num}🔴' if num % 2 == 0 else f'{num}⚫'
+
+    def get_color_by_emodji(num: str) -> str:
+        return 'zero' if num == '⭕' else 'red' if num == '🔴' else 'black'
+
     if chips_data:
         for chat_id, data in chips_data.items():
             if str(dt.now()).split('.')[:-1] == str(data['time']).split('.')[:-1]:
                 del data['time']
-                win_num = random.randint(0, 36)
-                win_color = 'zero' if win_num == 0 else 'red' if win_num % 2 == 0 else 'black'
-                bot.send_message(chat_id, f'Победило {win_num} {"🔴" if win_color == "red" else "⚫" if win_color == "black" else "⭕"}')
+                nums = [num for num in range(0, 36)]
+                random.shuffle(nums)
+                msg_res = bot.send_message(chat_id, f'[{get_color(nums.pop(0))}] [{get_color(nums.pop(0))}] '
+                                                    f'>>[{get_color(nums.pop(0))}]<< [{get_color(nums.pop(0))}] '
+                                                    f'[{get_color(nums.pop(0))}]')
+                for num in nums:
+                    time.sleep(0.3)
+                    text = msg_res.text.replace('>>', '').replace('<<', '').replace('[', '').replace(']', '').split()[1:]
+                    text.append(get_color(num))
+                    msg_res = bot.edit_message_text(f'[{text[0]}] [{text[1]}]  >>[{text[2]}]<< [{text[3]}] [{text[4]}]',
+                                                chat_id, msg_res.message_id)
+                text = msg_res.text.split()[2].replace(">>[", "").replace("]<<", "")
+                bot.edit_message_text(msg_res.text + f'\n\nПобедило {text}', msg_res.chat.id, msg_res.message_id)
+                color = list(text)
                 for user_id, bids in data.items():
                     for bid in bids:
-                        if bid['color'] == win_color:
-                            if win_color == 'zero':
+                        name_color = get_color_by_emodji(color[-1])
+                        if bid['color'] == name_color:
+                            if name_color == 'zero':
                                 db.change_karma(user_id, '+', int(bid['chips']) * 5)
                             else:
                                 db.change_karma(user_id, '+', int(bid['chips']))
@@ -701,7 +720,7 @@ def callback_query(call):
         chips, color = call.data.split()[1:]
         user = f"{call.from_user.first_name + ' ' + call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
         if len(chips_data[call.message.chat.id].keys()) == 1:
-            chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id, f'Ставки\n{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}')
+            chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id, f'Ставки:\n{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}')
         else:
             chips_msg[call.message.chat.id] = bot.edit_message_text(chips_msg[call.message.chat.id].text + f'\n{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}',
                                   call.message.chat.id, chips_msg[call.message.chat.id].message_id)
