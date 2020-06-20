@@ -665,8 +665,8 @@ def play_roulette():
                 msg_res = bot.send_message(chat_id, f'[{get_color(nums.pop(0))}] [{get_color(nums.pop(0))}] '
                                                     f'➡️[{get_color(nums.pop(0))}]⬅️ [{get_color(nums.pop(0))}] '
                                                     f'[{get_color(nums.pop(0))}]')
-                for num in nums[1:random.randint(15, 36)]:
-                    time.sleep(0.75)
+                for num in nums[1:random.randint(10, 25)]:
+                    time.sleep(1)
                     text = msg_res.text.replace('➡️', '').replace('⬅️', '').replace('[', '').replace(']', '').split()[1:]
                     text.append(get_color(num))
                     msg_res = bot.edit_message_text(f'[{text[0]}] [{text[1]}]  ➡️[{text[2]}]⬅️ [{text[3]}] [{text[4]}]',
