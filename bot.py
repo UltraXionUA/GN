@@ -629,13 +629,13 @@ chips_data = defaultdict(dict)
 chips_msg = defaultdict(Message)
 
 
-@bot.message_handler(commands=['roulette'])
-def roulette_handler(message: Message) -> None:
+@bot.message_handler(commands=['casino'])
+def casino_handler(message: Message) -> None:
     """
     :param message
     :type message: telebot.types.Message
     :return: None
-    .. seealso:: Enter /roulette to play in roulette with another members putting your karma points
+    .. seealso:: Enter /casino to play in roulette with another members putting your karma points
     """
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
