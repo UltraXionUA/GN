@@ -273,7 +273,7 @@ def change_karma(user_id, action: str, exp: int) -> dict:
         if action == '+':
             karma = cursor.fetchone()['karma'] + exp
         else:
-            karma = cursor.fetchone()['karma'] + exp
+            karma = cursor.fetchone()['karma'] - exp
         cursor.execute(f'UPDATE `Users` SET `karma` = \'{karma}\' WHERE `user_id` = \'{str(user_id)}\';')
         connection.commit()
     return karma

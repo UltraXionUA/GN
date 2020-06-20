@@ -671,10 +671,10 @@ def play_roulette():
                 msg_res = bot.edit_message_text(f'[{text[0]}] [{text[1]}]  ➡️[{text[2]}]⬅️ [{text[3]}] [{text[4]}]',
                                             msg_res.chat.id, msg_res.message_id)
             text = msg_res.text.split()[2].replace("➡️[", "").replace("]⬅️", "")
+            name_color = get_color(list(text)[-1])
             bot.edit_message_text(f'{msg_res.text}\n\nПобедило {text}', msg_res.chat.id, msg_res.message_id)
             for user_id, bids in data.items():
                 for bid in bids:
-                    name_color = get_color(list(text)[-1])
                     if bid['color'] == name_color:
                         if name_color == 'zero':
                             db.change_karma(user_id, '+', int(bid['chips']) * 10)
