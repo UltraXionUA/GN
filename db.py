@@ -280,6 +280,14 @@ def change_karma(user_id, action: str, exp: int):
     return karma
 
 
+def get_username(user_id: str) -> str:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT first_name, last_name FROM Users WHERE user_id={user_id};')
+        user = cursor.fetchone()
+    return f"{user['first_name']} {user['last_name']}" if user['last_name'] != 'None' else user['first_name']
+
+
 def get_roulette() -> list:
     connection = start_connection()
     with connection.cursor() as cursor:

@@ -233,7 +233,6 @@ def play_roulette():
             return 'zero' if num == '⭕' else 'red' if num == '🔴' else 'black'
 
     for chat_id, data in chips_data.items():
-        print(data)
         nums = [num for num in range(0, 36)]
         random.shuffle(nums)
         msg_res[chat_id] = bot.send_message(chat_id, f'[{get_color(nums.pop(0))}] [{get_color(nums.pop(0))}] '
@@ -248,16 +247,26 @@ def play_roulette():
                                         msg_res[chat_id].chat.id, msg_res[chat_id].message_id)
         text = msg_res[chat_id].text.split()[2].replace("➡️[", "").replace("]⬅️", "")
         name_color = get_color(list(text)[-1])
-        bot.edit_message_text(f'{msg_res[chat_id].text}\n\nПобедило {text}', msg_res[chat_id].chat.id, msg_res[chat_id].message_id)
+        summary = {}
         for user_id, bids in data.items():
+            summary[user_id] = 0
             for bid in bids:
                 if bid['color'] == name_color:
                     if name_color == 'zero':
+                        summary[user_id] += int(bid['chips']) * 10
                         db.change_karma(user_id, '+', int(bid['chips']) * 10)
                     else:
+                        summary[user_id] += int(bid['chips'])
                         db.change_karma(user_id, '+', int(bid['chips']))
                 else:
+                    summary[user_id] -= int(bid['chips'])
+                    db.change_karma(user_id, '+', int(bid['chips']))
                     db.change_karma(user_id, '-', int(bid['chips']))
+        users_text = ''
+        for user_id, res in summary.items():
+            users_text += f'{db.get_username(user_id)} {"+" if res > 0 else "-" if res < 0 else ""}{res} очков\n'
+        bot.edit_message_text(f'{msg_res[chat_id].text}\n\nВыпало {text}\n{users_text}',
+                              msg_res[chat_id].chat.id, msg_res[chat_id].message_id)
 
 
 def daily_roulette():
@@ -277,7 +286,7 @@ def daily_roulette():
         except Exception:
             log('Error in daily roulette', 'error')
         else:
-            Timer(10.0, play_roulette).run()  # 7200.0
+            Timer(7200.0, play_roulette).run()
             bot.delete_message(msg.chat.id, msg.message_id)
             if chat['id'] in chips_data:
                 del chips_data[chat['id']]
@@ -303,7 +312,10 @@ def callback_query(call):
     if call.from_user.id not in chips_data[call.message.chat.id]:
         chips_data[call.message.chat.id][call.from_user.id] = [{'color': color, 'chips': chips}]
     else:
-        chips_data[call.message.chat.id][call.from_user.id].append({'color': color, 'chips': chips})
+        if len(chips_data[call.message.chat.id][call.from_user.id]) < 4:
+            chips_data[call.message.chat.id][call.from_user.id].append({'color': color, 'chips': chips})
+        else:
+            bot.answer_callback_query(call.id, 'Превышен лимит ставок')
 
 
 def main() -> None:
@@ -314,7 +326,7 @@ def main() -> None:
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
     schedule.every().day.at("06:00").do(parser_memes)  # Do pars every 06:00
     schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
-    schedule.every().day.at("12:00").do(daily_roulette)  # Daily roulette 12:00
+    schedule.every().day.at("06:54").do(daily_roulette)  # Daily roulette 12:00
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
     schedule.every().day.at("18:00").do(daily_roulette)  # Daily roulette 18:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
