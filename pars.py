@@ -287,7 +287,7 @@ def daily_roulette():
         except Exception:
             log('Error in daily roulette', 'error')
         else:
-            Timer(30.0, play_roulette).run()
+            Timer(7200.0, play_roulette).run()
             bot.delete_message(msg.chat.id, msg.message_id)
             if chat['id'] in chips_data:
                 del chips_data[chat['id']]
