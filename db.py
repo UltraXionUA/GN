@@ -280,6 +280,14 @@ def change_karma(user_id, action: str, exp: int):
     return karma
 
 
+def get_roulette() -> list:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT id FROM Setting WHERE roulette=\'On\';')
+    return cursor.fetchall()
+
+
+
 def add_sticker(id_, emoji, name) -> None:
     """
     :param: id_

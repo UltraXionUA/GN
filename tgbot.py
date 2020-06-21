@@ -11,7 +11,7 @@ from Config_GNBot.config import API, URLS, GNBot_ID, bot, PAYMENT_TOKEN, Admins
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from urllib import parse, request, error
 from pytube import YouTube, exceptions
-from datetime import datetime as dt, timedelta
+from datetime import datetime as dt
 from collections import defaultdict
 from json import JSONDecodeError
 import speech_recognition as sr
@@ -622,118 +622,6 @@ def callback_query(call):
 
 
 # <<< End detect music >>>
-
-
-# <<< Roulette >>>
-chips_data = defaultdict(dict)
-chips_msg = defaultdict(Message)
-msg_res = None
-
-
-@bot.message_handler(commands=['casino'])
-def casino_handler(message: Message) -> None:
-    """
-    :param message
-    :type message: telebot.types.Message
-    :return: None
-    .. seealso:: Enter /casino to play in roulette with another members putting your karma points
-    """
-    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
-        # if message.chat.type != 'private':
-        log(message, 'info')
-        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-        msg = bot.send_message(message.chat.id, 'Введите времмя на ставк (в минутах)🖊')
-        bot.register_next_step_handler(msg, set_time_roulette, msg.message_id)
-        # else:
-        #     bot.send_message(message.chat.id, 'Функция доступна только в группах😔')
-
-
-def play_roulette():
-    global chips_data, msg_res
-    def get_color(num: [int,str]) -> str:
-        if type(num) == int:
-            return f'{num}⭕' if num == 0 else f'{num}🔴' if num % 2 == 0 else f'{num}⚫'
-        else:
-            return 'zero' if num == '⭕' else 'red' if num == '🔴' else 'black'
-
-    for chat_id, data in chips_data.items():
-        if str(dt.now()).split('.')[:-1] == str(data['time']).split('.')[:-1]:
-            del data['time']
-            nums = [num for num in range(0, 36)]
-            random.shuffle(nums)
-            msg_res = bot.send_message(chat_id, f'[{get_color(nums.pop(0))}] [{get_color(nums.pop(0))}] '
-                                                f'➡️[{get_color(nums.pop(0))}]⬅️ [{get_color(nums.pop(0))}] '
-                                                f'[{get_color(nums.pop(0))}]')
-            start = random.randint(1, 20)
-            for num in nums[start:start + 10]:
-                time.sleep(0.75)
-                text = msg_res.text.replace('➡️', '').replace('⬅️', '').replace('[', '').replace(']', '').split()[1:]
-                text.append(get_color(num))
-                msg_res = bot.edit_message_text(f'[{text[0]}] [{text[1]}]  ➡️[{text[2]}]⬅️ [{text[3]}] [{text[4]}]',
-                                            msg_res.chat.id, msg_res.message_id)
-            text = msg_res.text.split()[2].replace("➡️[", "").replace("]⬅️", "")
-            name_color = get_color(list(text)[-1])
-            bot.edit_message_text(f'{msg_res.text}\n\nПобедило {text}', msg_res.chat.id, msg_res.message_id)
-            for user_id, bids in data.items():
-                for bid in bids:
-                    if bid['color'] == name_color:
-                        if name_color == 'zero':
-                            db.change_karma(user_id, '+', int(bid['chips']) * 10)
-                        else:
-                            db.change_karma(user_id, '+', int(bid['chips']))
-                    else:
-                        db.change_karma(user_id, '-', int(bid['chips']))
-
-
-
-def set_time_roulette(message: Message, message_id) -> None:
-    global chips_data, chips_msg
-    if message.text.isdigit():
-        bot.delete_message(message.chat.id, message_id)
-        bot.delete_message(message.chat.id, message.message_id)
-        keyboard = InlineKeyboardMarkup()
-        keyboard.add(InlineKeyboardButton('10⚫', callback_data='roulette 10 black'),
-                     InlineKeyboardButton('100⚫', callback_data='roulette 100 black'),
-                     InlineKeyboardButton('250⚫', callback_data='roulette 250 black'))
-        keyboard.add(InlineKeyboardButton('10🔴', callback_data='roulette 10 red'),
-                     InlineKeyboardButton('100🔴', callback_data='roulette 100 red'),
-                     InlineKeyboardButton('250🔴', callback_data='roulette 250 red'))
-        keyboard.add(InlineKeyboardButton('10⭕', callback_data='roulette 10 zero'),
-                     InlineKeyboardButton('100⭕', callback_data='roulette 100 zero'),
-                     InlineKeyboardButton('250⭕', callback_data='roulette 250 zero'))
-        msg = bot.send_message(message.chat.id, 'Ваши ставки', reply_markup=keyboard)
-        chips_data[message.chat.id] = {'time': dt.now() + timedelta(minutes=float(message.text))}
-        Timer(float(message.text) * 60, play_roulette).run()
-        bot.delete_message(msg.chat.id, msg.message_id)
-        del chips_data[message.chat.id]
-        del chips_msg[message.chat.id]
-    else:
-        bot.send_message(message.chat.id, 'Не верный формат данных😔')
-
-
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s\d+\s\w+$', call.data))
-def callback_query(call):
-    global chips_data, chips_msg
-    if call.message.chat.id in chips_data:
-        bot.answer_callback_query(call.id, 'Ставка принята')
-        chips, color = call.data.split()[1:]
-        user = f"{call.from_user.first_name + ' ' + call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
-        if len(chips_data[call.message.chat.id].keys()) == 1:
-            time_end = str(chips_data[call.message.chat.id]["time"]).split()[-1].split(':')
-            chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id,
-                                                               f'Конец в {time_end[0]}:{time_end[1]}:{time_end[2].split(".")[0]}\nСтавки:'
-                                                               f'\n{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}')
-        else:
-            chips_msg[call.message.chat.id] = bot.edit_message_text(f'{chips_msg[call.message.chat.id].text}\n'
-                                                                    f'{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}',
-                                                                    call.message.chat.id, chips_msg[call.message.chat.id].message_id)
-        if call.from_user.id not in chips_data[call.message.chat.id]:
-            chips_data[call.message.chat.id][call.from_user.id] = [{'color': color, 'chips': chips}]
-        else:
-            chips_data[call.message.chat.id][call.from_user.id].append({'color': color, 'chips': chips})
-    else:
-        bot.answer_callback_query(call.id,  'Игра еще не создана😔')
-# <<< End Roulette >>>
 
 
 # <<< Music >>>
@@ -2100,10 +1988,13 @@ def set_settings(chat_id) -> InlineKeyboardMarkup:
     keyboard.add(InlineKeyboardButton(f'Цензура: {"On🟢" if data["censure"] == "On" else "Off🔴"}',
                                       callback_data=f"Settings {chat_id} censure "
                                                     f"{'off' if data['censure'] == 'On' else 'on'}"))
-    if data['speak'] == 'On' and settings_msg[chat_id].chat.type != 'private':
+    if settings_msg[chat_id].chat.type != 'private':
         keyboard.add(InlineKeyboardButton(f'Пидор дня: {"On🟢" if data["bad_guy"] == "On" else "Off🔴"}',
                                           callback_data=f"Settings {chat_id} bad_guy "
                                                         f"{'off' if data['bad_guy'] == 'On' else 'on'}"))
+        keyboard.add(InlineKeyboardButton(f'Рулетка: {"On🟢" if data["roulette"] == "On" else "Off🔴"}',
+                                          callback_data=f"Settings {chat_id} roulette "
+                                                        f"{'off' if data['roulette'] == 'On' else 'on'}"))
     keyboard.add(InlineKeyboardButton(f'Новости: {"UA🇺🇦" if data["news"] == "Ua" else "RU🇷🇺" if data["news"] == "Ru" else "US🇺🇸"}',
                                       callback_data=f"Settings {chat_id} news "
                                                     f"{'ru' if data['news'] == 'Ua' else 'ua' if data['news'] == 'Us' else 'us'}"))
@@ -2119,7 +2010,6 @@ def set_settings(chat_id) -> InlineKeyboardMarkup:
             InlineKeyboardButton(f'Язык: {"RU🇷🇺" if data["leng_speak"] == "Ru" else "UA🇺🇦" if data["leng_speak"] == "Ua" else "US🇺🇸"}',
                                  callback_data=f"Settings {chat_id} leng_speak "
                                                f"{'ru' if data['leng_speak'] == 'Ua' else 'ua' if data['leng_speak'] == 'Us' else 'us'}"))
-    print(data["pastebin"])
     keyboard.add(InlineKeyboardButton(f'Хранение PasteBin: {"1 Час🕰" if data["pastebin"] == "1H" else "1 Неделя🕰" if data["pastebin"] == "1W" else "1 Месяц🕰"}',
         callback_data=f"Settings {chat_id} pastebin "
                       f"{'1W' if data['pastebin'] == '1H' else '1M' if data['pastebin'] == '1W' else '1H'}"))
