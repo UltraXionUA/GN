@@ -305,7 +305,6 @@ def callback_query(call):
     else:
         chips_data[call.message.chat.id][call.from_user.id].append({'color': color, 'chips': chips})
 
-db.reset_users()
 
 def main() -> None:
     """
