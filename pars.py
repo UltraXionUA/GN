@@ -303,7 +303,7 @@ def callback_query(call):
     if not chips_data[call.message.chat.id]:
         time_end = str(dt.now() + timedelta(minutes=60.0)).split()[-1].split(':')
         chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id,
-                                                           f'Конец в {time_end[0]}:{time_end[1]}:{time_end[2].split(".")[0]}\nСтавки:')
+                                                           f'Конец в {time_end[0]}:{time_end[1]}\nСтавки:')
     if call.from_user.id not in chips_data[call.message.chat.id]:
         chips_data[call.message.chat.id][call.from_user.id] = []
     if len(chips_data[call.message.chat.id][call.from_user.id]) < 3:
@@ -322,11 +322,11 @@ def main() -> None:
     :return: None
     """
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
-    schedule.every().day.at("06:00").do(parser_memes)  # Do pars every 06:00
-    schedule.every().day.at("11:59").do(parser_memes)  # Do pars every 12:00
+    schedule.every().day.at("11:00").do(parser_memes)  # Do pars every 12:00
     schedule.every().day.at("12:00").do(daily_roulette)  # Daily roulette 12:00
-    schedule.every().day.at("17:59").do(parser_memes)  # Do pars every 18:00
-    schedule.every().day.at("18:00").do(daily_roulette)  # Daily roulette 18:00
+    schedule.every().day.at("16:00").do(daily_roulette)  # Daily roulette 16:00
+    schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
+    schedule.every().day.at("20:00").do(daily_roulette)  # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     schedule.every().day.at("22:01").do(db.reset_users)  # Reset daily karma
     schedule.every().day.at("09:00").do(unpin_bag_guys)  # Unpin bad guys
