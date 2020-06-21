@@ -282,7 +282,7 @@ def daily_roulette():
                      InlineKeyboardButton('100⭕', callback_data='roulette 100 zero'),
                      InlineKeyboardButton('250⭕', callback_data='roulette 250 zero'))
         try:
-            msg = bot.send_message(chat['id'], 'Доброе пожаловать в ежедневное казино\nДелайте ваши ставки\n',
+            msg = bot.send_message(chat['id'], 'Доброе пожаловать в казино🌃😎\nДелайте ваши ставки\n',
                                    reply_markup=keyboard)
         except Exception:
             log('Error in daily roulette', 'error')
