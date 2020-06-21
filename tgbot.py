@@ -1992,7 +1992,7 @@ def set_settings(chat_id) -> InlineKeyboardMarkup:
         keyboard.add(InlineKeyboardButton(f'Пидор дня: {"On🟢" if data["bad_guy"] == "On" else "Off🔴"}',
                                           callback_data=f"Settings {chat_id} bad_guy "
                                                         f"{'off' if data['bad_guy'] == 'On' else 'on'}"))
-        keyboard.add(InlineKeyboardButton(f'Рулетка: {"On🟢" if data["roulette"] == "On" else "Off🔴"}',
+        keyboard.add(InlineKeyboardButton(f'Казино: {"On🟢" if data["roulette"] == "On" else "Off🔴"}',
                                           callback_data=f"Settings {chat_id} roulette "
                                                         f"{'off' if data['roulette'] == 'On' else 'on'}"))
     keyboard.add(InlineKeyboardButton(f'Новости: {"UA🇺🇦" if data["news"] == "Ua" else "RU🇷🇺" if data["news"] == "Ru" else "US🇺🇸"}',
