@@ -264,7 +264,7 @@ def play_roulette():
         users_text = ''
         for user_id, res in summary.items():
             users_text += f'{db.get_username(user_id)} {"+" if res > 0 else ""}{res} очков\n'
-        bot.edit_message_text(f'{msg_res[chat_id].text}\n\nВыпало {text}\n{users_text}',
+        bot.edit_message_text(f'{msg_res[chat_id].text}\n\nВыпало {text}\n\n{users_text}',
                               msg_res[chat_id].chat.id, msg_res[chat_id].message_id)
 
 
@@ -272,15 +272,15 @@ def daily_roulette():
     global chips_msg
     for chat in db.get_roulette():
         keyboard = InlineKeyboardMarkup()
-        keyboard.add(InlineKeyboardButton('10⚫', callback_data='roulette 10 black'),
+        keyboard.add(InlineKeyboardButton('50⚫', callback_data='roulette 50 black'),
                      InlineKeyboardButton('100⚫', callback_data='roulette 100 black'),
                      InlineKeyboardButton('250⚫', callback_data='roulette 250 black'))
-        keyboard.add(InlineKeyboardButton('10🔴', callback_data='roulette 10 red'),
+        keyboard.add(InlineKeyboardButton('50🔴', callback_data='roulette 50 red'),
                      InlineKeyboardButton('100🔴', callback_data='roulette 100 red'),
                      InlineKeyboardButton('250🔴', callback_data='roulette 250 red'))
         keyboard.add(InlineKeyboardButton('10⭕', callback_data='roulette 10 zero'),
-                     InlineKeyboardButton('100⭕', callback_data='roulette 100 zero'),
-                     InlineKeyboardButton('250⭕', callback_data='roulette 250 zero'))
+                     InlineKeyboardButton('50⭕', callback_data='roulette 50 zero'),
+                     InlineKeyboardButton('100⭕', callback_data='roulette 100 zero'))
         try:
             msg = bot.send_message(chat['id'], 'Доброе пожаловать в казино🌃😎\nДелайте ваши ставки\n',
                                    reply_markup=keyboard)
@@ -322,14 +322,12 @@ def main() -> None:
     :return: None
     """
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
-    schedule.every().day.at("11:00").do(parser_memes)  # Do pars every 12:00
-    schedule.every().day.at("12:00").do(daily_roulette)  # Daily roulette 12:00
-    schedule.every().day.at("16:00").do(daily_roulette)  # Daily roulette 16:00
+    schedule.every().day.at("09:00").do(unpin_bag_guys)  # Unpin bad guys
+    schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
-    schedule.every().day.at("20:00").do(daily_roulette)  # Daily roulette 20:00
+    schedule.every().day.at("19:00").do(daily_roulette)  # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     schedule.every().day.at("22:01").do(db.reset_users)  # Reset daily karma
-    schedule.every().day.at("09:00").do(unpin_bag_guys)  # Unpin bad guys
     while True:
         schedule.run_pending()
         time.sleep(1)
