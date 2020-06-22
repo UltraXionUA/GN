@@ -262,7 +262,9 @@ def play_roulette():
                     summary[user_id] -= int(bid['chips'])
                     db.change_karma(user_id, '-', int(bid['chips']))
         users_text = ''
-        for user_id, res in summary.items():
+        list_d = list(summary.items())
+        list_d.sort(key=lambda i: i[1], reverse=True)
+        for user_id, res in list_d:
             users_text += f'{db.get_username(user_id)} {"+" if res > 0 else ""}{res} очков\n'
         bot.edit_message_text(f'{msg_res[chat_id].text}\n\nВыпало {text}\n\n{users_text}',
                               msg_res[chat_id].chat.id, msg_res[chat_id].message_id)
@@ -325,7 +327,7 @@ def main() -> None:
     schedule.every().day.at("09:00").do(unpin_bag_guys)  # Unpin bad guys
     schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
-    schedule.every().day.at("19:00").do(daily_roulette)  # Daily roulette 20:00
+    schedule.every().day.at("08:51").do(daily_roulette)  # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     schedule.every().day.at("22:01").do(db.reset_users)  # Reset daily karma
     while True:
