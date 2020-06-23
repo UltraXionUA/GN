@@ -175,7 +175,7 @@ def parser_memes() -> None:
     links = set()
     for link in soup.find_all('a'):
         url = link.get('href')
-        if re.fullmatch(r'https?://i.redd.it/?\.?\w+.?\w+', url):
+        if url is not None and re.fullmatch(r'https?://i.redd.it/?\.?\w+.?\w+', url):
             links.add(url)
     db.add_memes(links)
 
@@ -327,7 +327,7 @@ def main() -> None:
     schedule.every().day.at("09:00").do(unpin_bag_guys)  # Unpin bad guys
     schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
-    schedule.every().day.at("19:00").do(daily_roulette)  # Daily roulette 20:00
+    schedule.every().day.at("20:00").do(daily_roulette)  # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     schedule.every().day.at("22:01").do(db.reset_users)  # Reset daily karma
     while True:
