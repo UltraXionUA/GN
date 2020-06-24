@@ -261,6 +261,7 @@ def play_roulette():
                 else:
                     summary[user_id] -= int(bid['chips'])
                     db.change_karma(user_id, '-', int(bid['chips']))
+            del summary[user_id]
         users_text = ''
         list_d = list(summary.items())
         list_d.sort(key=lambda i: i[1], reverse=True)
@@ -291,10 +292,11 @@ def daily_roulette():
         else:
             Timer(3600.0, play_roulette).run()
             bot.delete_message(msg.chat.id, msg.message_id)
-            if chat['id'] in chips_data:
-                del chips_data[chat['id']]
-            if chat['id'] in chips_msg:
-                del chips_msg[chat['id']]
+            try:
+                del chips_data[int(chat['id'])]
+                del chips_msg[int(chat['id'])]
+            except Exception:
+                log('cat\'t delete from chips data\msg')
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s\d+\s\w+$', call.data))
@@ -302,7 +304,7 @@ def callback_query(call):
     global chips_data, chips_msg
     chips, color = call.data.split()[1:]
     user = f"{call.from_user.first_name + ' ' + call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
-    if not chips_data[call.message.chat.id]:
+    if call.message.chat.id not in chips_data:
         time_end = str(dt.now() + timedelta(minutes=60.0)).split()[-1].split(':')
         chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id,
                                                            f'Конец в {time_end[0]}:{time_end[1]}\nСтавки:')
