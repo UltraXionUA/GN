@@ -261,18 +261,18 @@ def play_roulette():
                 else:
                     summary[user_id] -= int(bid['chips'])
                     db.change_karma(user_id, '-', int(bid['chips']))
-            del summary[user_id]
         users_text = ''
         list_d = list(summary.items())
         list_d.sort(key=lambda i: i[1], reverse=True)
         for user_id, res in list_d:
-            users_text += f'{db.get_username(user_id)} {"+" if res > 0 else ""}{res} очков\n'
-        bot.edit_message_text(f'{msg_res[chat_id].text}\n\nВыпало {text}\n\n{users_text}',
-                              msg_res[chat_id].chat.id, msg_res[chat_id].message_id)
+            users_text += f'<b>{db.get_username(user_id)}</b> {"+" if res > 0 else ""}{res} очков\n'
+        bot.edit_message_text(f'{msg_res[chat_id].text}\n\nВыпало <b>{text}</b>\n\n{users_text}',
+                              msg_res[chat_id].chat.id, msg_res[chat_id].message_id, parse_mode='HTML')
+        summary.clear()
 
 
 def daily_roulette():
-    global chips_msg
+    global chips_msg, chips_data
     for chat in db.get_roulette():
         keyboard = InlineKeyboardMarkup()
         keyboard.add(InlineKeyboardButton('50⚫', callback_data='roulette 50 black'),
@@ -285,8 +285,11 @@ def daily_roulette():
                      InlineKeyboardButton('50⭕', callback_data='roulette 50 zero'),
                      InlineKeyboardButton('100⭕', callback_data='roulette 100 zero'))
         try:
-            msg = bot.send_message(chat['id'], 'Доброе пожаловать в казино🌃😎\nДелайте ваши ставки\n',
-                                   reply_markup=keyboard)
+            time_end = str(dt.now() + timedelta(minutes=60.0)).split()[-1].split(':')
+            msg = bot.send_message(chat['id'], f'<b><i>Доброе пожаловать в казино</i></b>🌃😎\nКонец в '
+                                               f'<b>{time_end[0]}:{time_end[1]}</b>\n'
+                                               f'Делайте ваши ставки\n',
+                                   reply_markup=keyboard, parse_mode='HTML')
         except Exception:
             log('Error in daily roulette', 'error')
         else:
@@ -303,11 +306,9 @@ def daily_roulette():
 def callback_query(call):
     global chips_data, chips_msg
     chips, color = call.data.split()[1:]
-    user = f"{call.from_user.first_name + ' ' + call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
+    user = f"{call.from_user.first_name} {call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
     if call.message.chat.id not in chips_data:
-        time_end = str(dt.now() + timedelta(minutes=60.0)).split()[-1].split(':')
-        chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id,
-                                                           f'Конец в {time_end[0]}:{time_end[1]}\nСтавки:')
+        chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id, 'Ставки:')
     if call.from_user.id not in chips_data[call.message.chat.id]:
         chips_data[call.message.chat.id][call.from_user.id] = []
     if len(chips_data[call.message.chat.id][call.from_user.id]) < 3:
@@ -329,7 +330,7 @@ def main() -> None:
     schedule.every().day.at("09:00").do(unpin_bag_guys)  # Unpin bad guys
     schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
-    schedule.every().day.at("20:00").do(daily_roulette)  # Daily roulette 20:00
+    schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     schedule.every().day.at("22:01").do(db.reset_users)  # Reset daily karma
     while True:
