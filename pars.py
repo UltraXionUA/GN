@@ -200,6 +200,7 @@ def send_bad_guy() -> None:
             log('Error in bad guy', 'error')
         else:
             db.save_pin_bag_guys(chat_id, msg.message_id)
+    db.reset_users()
 
 def unpin_bag_guys() -> None:
     """
@@ -216,7 +217,6 @@ def unpin_bag_guys() -> None:
 
 # <<< End bag guys >>
 
-send_bad_guy()
 
 # <<< Roulette >>
 chips_data = defaultdict(dict)
@@ -335,8 +335,7 @@ def main() -> None:
     schedule.every().day.at("09:00").do(unpin_bag_guys)  # Unpin bad guys
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
     schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
-    schedule.every().day.at("22:25").do(send_bad_guy)  # Identify bad guy's
-    schedule.every().day.at("22:26").do(db.reset_users)  # Reset daily karma
+    schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     while True:
         schedule.run_pending()
         time.sleep(1)
