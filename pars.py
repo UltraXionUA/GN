@@ -306,7 +306,7 @@ def daily_roulette():
             log('Error in daily roulette', 'error')
     Timer(3600.0, play_roulette).start()
 
-print(str(dt.now()).split()[1].split(':')[0])
+
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s\d+\s\w+$', call.data))
 def callback_query(call):
     global chips_data, chips_msg
