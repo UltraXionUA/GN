@@ -310,7 +310,7 @@ print(str(dt.now()).split()[1].split(':')[0])
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s\d+\s\w+$', call.data))
 def callback_query(call):
     global chips_data, chips_msg
-    if int(str(dt.now()).split()[1].split(':')[0]) < 22:
+    if str(dt.now()).split()[1].split(':')[0] == '20':
         chips, color = call.data.split()[1:]
         user = f"{call.from_user.first_name} {call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
         if call.message.chat.id not in chips_data:
@@ -339,7 +339,7 @@ def main() -> None:
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
     schedule.every().day.at("09:00").do(unpin_bag_guys)  # Unpin bad guys
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
-    schedule.every().day.at("20:55").do(daily_roulette) # Daily roulette 20:00
+    schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     schedule.every().day.at("22:01").do(db.reset_users)  # Reset daily karma
     while True:
