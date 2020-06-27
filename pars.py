@@ -304,7 +304,7 @@ def daily_roulette():
                                    reply_markup=keyboard, parse_mode='HTML')
         except Exception:
             log('Error in daily roulette', 'error')
-    Timer(3600.0, play_roulette).start()
+    Timer(60.0, play_roulette).start()
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s\d+\s\w+$', call.data))
@@ -339,7 +339,7 @@ def main() -> None:
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
     schedule.every().day.at("09:00").do(unpin_bag_guys)  # Unpin bad guys
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
-    schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
+    schedule.every().day.at("20:50").do(daily_roulette) # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     schedule.every().day.at("22:01").do(db.reset_users)  # Reset daily karma
     while True:
