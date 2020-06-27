@@ -33,9 +33,7 @@ import re
 log('Bot is successful running!', 'info')
 
 # Turn on daily tasks
-Parser = Thread(target=main, name='Parser')
-Parser.start()
-
+Thread(target=main, name='Parser').start()
 
 # <<< Start >>>
 @bot.message_handler(commands=['start'])

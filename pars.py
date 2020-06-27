@@ -10,6 +10,7 @@ from user_agent import generate_user_agent
 from collections import defaultdict
 from urllib.parse import quote
 from bs4 import BeautifulSoup
+from threading import Thread
 from threading import Timer
 from funcs import log
 import random
@@ -19,6 +20,7 @@ import db
 import time
 import re
 
+# <<< Proxy >>
 https = ['194.44.199.242:8880', '213.6.65.30:8080', '109.87.40.23:44343']
 
 def get_instagram_videos(link: str) -> list:
@@ -179,7 +181,7 @@ def parser_memes() -> None:
             links.add(url)
     db.add_memes(links)
 
-
+# <<< Bag guys >>
 def send_bad_guy() -> None:
     """
     .. notes:: Select most active users un group
@@ -218,13 +220,15 @@ def unpin_bag_guys() -> None:
         except Exception:
             log('Can\'t unpin message', 'warning')
 
+# <<< End bag guys >>
 
+
+# <<< Roulette >>
 chips_data = defaultdict(dict)
 chips_msg = defaultdict(Message)
 msg_res = defaultdict(Message)
-from threading import Thread
 
-def play_roulette():
+def play_roulette() -> None:
     global chips_data, msg_res
     def get_color(num: [int,str]) -> str:
         if type(num) == int:
@@ -233,7 +237,7 @@ def play_roulette():
             return 'zero' if num == '⭕' else 'red' if num == '🔴' else 'black'
 
 
-    def casino(chat_id, data):
+    def casino(chat_id: str, data: dict) -> None:
         nums = [num for num in range(0, 36)]
         random.shuffle(nums)
         msg_res[chat_id] = bot.send_message(chat_id, f'[{get_color(nums.pop(0))}] [{get_color(nums.pop(0))}] '
@@ -323,6 +327,8 @@ def callback_query(call):
             bot.answer_callback_query(call.id, 'Превышен лимит ставок')
     else:
         bot.answer_callback_query(call.id, 'Прийом ставок закончен')
+
+# <<< End roulette >>
 
 
 def main() -> None:
