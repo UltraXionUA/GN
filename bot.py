@@ -105,7 +105,8 @@ def gif_handler(message: Message) -> None:
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         while True:
             try:
-                data = requests.get(API['Gif']['API'].replace('TAG', random.choice(API['Gif']['Tag']))).json()
+                data = requests.get(API['Gif']['API'].replace('TAG', random.choice(API['Gif']['Tags']))).json()
+                print(data)
                 if hi_r(data['data']['rating']):
                     bot.send_document(message.chat.id, data['data']['images']['downsized_large']['url'])
                     break
