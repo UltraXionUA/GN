@@ -189,7 +189,7 @@ def send_bad_guy() -> None:
     """
     log('Send bad guy is done', 'info')
     for chat_id, users in db.get_bad_guy().items():
-        settings = db.get_setting(chat_id)
+        settings = db.get_from(chat_id, 'Users_name')
         if settings is not None and settings['bad_guy'] == 'On':
             text = '🎉<b>Пидор' + f"{'ы' if len(users) > 1 else ''}" + ' дня</b>🎉\n'
             for user in users:
@@ -272,7 +272,7 @@ def play_roulette() -> None:
         list_d = list(summary.items())
         list_d.sort(key=lambda i: i[1], reverse=True)
         for user_id, res in list_d:
-            users_text += f'<b>{db.get_username(user_id)}</b> {"+" if res > 0 else ""}{res} очков\n'
+            users_text += f'<b>{db.get_from(user_id, "Users_name")}</b> {"+" if res > 0 else ""}{res} очков\n'
         bot.edit_message_text(f'{msg_res[chat_id].text}\n\nВыпало <b>{text}</b>\n\n{users_text}',
                               msg_res[chat_id].chat.id, msg_res[chat_id].message_id, parse_mode='HTML')
         summary.clear()
@@ -338,7 +338,6 @@ def main() -> None:
     """
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
     schedule.every().day.at("09:00").do(unpin_bag_guys)  # Unpin bad guys
-    schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
     schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's

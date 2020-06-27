@@ -51,19 +51,6 @@ def get_user(user, chat) -> [dict, int or bool, bool]:
     connection.close()
 
 
-def get_stat(chat) -> list:
-    """
-    :param chat
-    :return: user_list
-    :rtype: user_list: list
-    .. notes:: get stats users in some group
-    """
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM Users WHERE is_bote = \'False\' AND supergroup IS NOT NULL ORDER BY karma DESC')
-        return [i for i in cursor.fetchall() if str(chat.id) in i['supergroup'].split(',')]
-
-
 def add_user(user, chat=None, connection=None) -> None:
     """
     :param user
@@ -206,20 +193,6 @@ def get_pin_bag_guys() -> list:
     return [{'chat_id': id_.decode('utf-8'), 'message_id': r.get(id_.decode('utf-8'))} for id_ in r.keys()]
 
 
-def get_setting(chat_id: str) -> dict:
-    """
-    :param: chat_id
-    :type: chat_id: str
-    :return: list_pins
-    :rtype: list_pins: list
-    .. notes:: get setting from group
-    """
-    connection = start_connection()
-    with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM Setting WHERE id=\'{chat_id}\';')
-        return cursor.fetchone()
-
-
 def change_setting(chat_id: str, method: str, status: str) -> None:
     """
     :param: chat_id
@@ -279,12 +252,26 @@ def change_karma(user_id, action: str, exp: int):
     return karma
 
 
-def get_username(user_id: str) -> str:
+def get_from(id_: [int, str], type_=None) -> [list, dict, str]:
+    """
+    :param id_
+    :type: id_: int
+     :param type_
+    :type: type_: str
+    .. notes:: get something from somewhere
+    """
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT first_name, last_name FROM Users WHERE user_id={user_id};')
-        user = cursor.fetchone()
-    return f"{user['first_name']} {user['last_name']}" if user['last_name'] != 'None' else user['first_name']
+        if type_ == 'Users_stat':  # get stats users in some group
+            cursor.execute(f'SELECT * FROM Users WHERE is_bote = \'False\' AND supergroup IS NOT NULL ORDER BY karma DESC')
+            return [i for i in cursor.fetchall() if str(id_) in i['supergroup'].split(',')]
+        elif type_ == 'Setting':  # get setting from group
+            cursor.execute(f'SELECT * FROM Setting WHERE id=\'{id_}\';')
+            return cursor.fetchone()
+        elif type_ == 'Users_name':  # # get username by user_id
+            cursor.execute(f'SELECT first_name, last_name FROM Users WHERE user_id={id_};')
+            user = cursor.fetchone()
+        return f"{user['first_name']} {user['last_name']}" if user['last_name'] != 'None' else user['first_name']
 
 
 def get_roulette() -> list:
@@ -292,7 +279,6 @@ def get_roulette() -> list:
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT id FROM Setting WHERE roulette=\'On\';')
     return cursor.fetchall()
-
 
 
 def add_sticker(id_, emoji, name) -> None:

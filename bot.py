@@ -285,7 +285,7 @@ def meme_handler(message: Message) -> None:
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         bot.send_chat_action(message.chat.id, 'upload_photo')
-        data = db.get_setting(message.chat.id)
+        data = db.get_from(message.chat.id, 'Setting')
         if data['meme'] == 'Ru':
             if message.chat.id not in meme_data or len(meme_data[message.chat.id]) == 1:
                 meme_data[message.chat.id] = db.get_all('Memes')
@@ -836,7 +836,7 @@ def forbidden_handler(message: Message) -> None:
         log(message, 'info')
         keyboard = InlineKeyboardMarkup()
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
-        setting = db.get_setting(message.chat.id)
+        setting = db.get_from(message.chat.id, 'Setting')
         if setting['censure'] == 'Off':
             if message.chat.type != 'private':
                 db.change_karma(message.from_user.id, '-', 10)
@@ -896,7 +896,7 @@ def news_handler(message: Message) -> None:
 
 def main_news(message: Message, news_type: str) -> None:
     global news_msg, news
-    setting = db.get_setting(message.chat.id)
+    setting = db.get_from(message.chat.id, 'Setting')
     api = API['News']['URL'].replace('Country', f'{"ua" if setting["news"] == "Ua" else "ru" if setting["news"] == "Ru" else "us"}')
     res = requests.get(api.replace('Method', f'{news_type}') + API['News']['Api_Key']).json()
     if res['status'] == 'ok':
@@ -1545,7 +1545,7 @@ def stat_handler(message: Message) -> None:
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if message.chat.type != 'private':
             db.change_karma(message.from_user.id, '+', 1)
-            data = db.get_stat(message.chat)
+            data = db.get_from(message.chat.id, 'Users_stat')
             if data:
                 keyboard = InlineKeyboardMarkup()
                 text = '<b>Статистика:</b>\n'
@@ -1948,7 +1948,7 @@ def callback_query(call):
 
 def set_settings(chat_id) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
-    data = db.get_setting(chat_id)
+    data = db.get_from(chat_id, 'Setting')
     if settings_msg[chat_id].chat.type != 'private':
         keyboard.add(InlineKeyboardButton(f'Бот отвечает: {"On🟢" if data["speak"] == "On" else "Off🔴"}',
                                           callback_data=f"Settings {chat_id} speak "
@@ -2088,7 +2088,7 @@ def get_url(message: Message, code: str, leng: str) -> None:
     if message.content_type != 'text':
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
-        settings = db.get_setting(message.chat.id)
+        settings = db.get_from(message.chat.id, 'Setting')
         values = {'api_option': 'paste', 'api_dev_key': f"{API['PasteBin']['DevApi']}",
                   'api_paste_code': f'{code}', 'api_paste_private': '0',
                   'api_paste_name': f'{message.text}', 'api_paste_expire_date': f'{"1H" if settings["pastebin"] == "1H" else "1W" if  settings["pastebin"] == "1W" else "1M"}',
@@ -2309,7 +2309,7 @@ def text_handler(message: Message) -> None:
             dice_handler(message)
         elif text in ['хентай', 'hentai', 'лоли', 'loli', 'девушка', 'girl', 'баба', 'пизда']:
             forbidden_handler(message)
-        settings = db.get_setting(message.chat.id)
+        settings = db.get_from(message.chat.id, 'Setting')
         if message.chat.type != 'private' and not message.edit_date:
             count_symbols = len(list(message.text))
             if count_symbols > 75:
@@ -2396,7 +2396,7 @@ def left_member_handler(message: Message) -> None:
 def voice_handler(message: Message) -> None:
     if message.chat.type != 'private':
         db.change_karma(message.from_user.id, '+', 1)
-    settings = db.get_setting(message.chat.id)
+    settings = db.get_from(message.chat.id, 'Setting')
     if settings['recognize'] != 'Off':
         r = sr.Recognizer()
         data = request.urlopen(bot.get_file_url(message.voice.file_id)).read()
@@ -2412,7 +2412,7 @@ def voice_handler(message: Message) -> None:
                 rec = r.recognize_wit(audio, key=API['Wit'])
                 rec = rec[0].title() + rec[1:]
             else:
-                setting = db.get_setting(message.chat.id)
+                setting = db.get_from(message.chat.id, 'Setting')
                 rec = r.recognize_google(audio,
                         language=f"{'ru-RU' if setting['leng_speak'] == 'Ru' else 'uk-UA' if setting['leng_speak'] == 'Ua' else 'en-US'}")
                 rec = rec[0].title() + rec[1:]
