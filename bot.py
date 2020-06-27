@@ -143,7 +143,6 @@ def qrcode_handler(message: Message) -> None:
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Create_QRCode$', call.data))
 def create_qrcode(call) -> None:
-    global qr_msg
     bot.answer_callback_query(call.id, 'Вы выбрали создать')
     bot.delete_message(qr_msg[call.message.chat.id].chat.id, qr_msg[call.message.chat.id].message_id)
     msg = bot.send_message(call.message.chat.id, 'Введите текст или URL✒️')
@@ -188,7 +187,6 @@ def joke_handler(message: Message) -> None:
     :return: None
     .. seealso:: Enter /joke to get random jock(18+)
     """
-    global jokes_data
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
             db.change_karma(message.from_user.id, '+', 1)
@@ -248,7 +246,6 @@ def set_name_mp3(message: Message) -> None:
 
 
 def send_mp3(message: Message, file_id: int) -> None:
-    global msg_mp3ogg
     if message.content_type != 'text':
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
@@ -282,7 +279,6 @@ def meme_handler(message: Message) -> None:
     :return: None
     .. seealso:: Enter /meme to get random meme on rus or eng lang
     """
-    global meme_data
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
             db.change_karma(message.from_user.id, '+', 1)
@@ -487,7 +483,7 @@ def weather(message: Message, index: int) -> None:
 
 
 def show_weather(message: Message) -> None:
-    global weather_msg, city_data, weather_data, city_msg
+    global weather_msg, city_data, weather_data
     if message.content_type != 'text':
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
@@ -508,7 +504,6 @@ def show_weather(message: Message) -> None:
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^weather_move_to\s\d+$', call.data))
 def weather_query(call):
-    global weather_data
     index = int(call.data.split()[1])
     if 0 <= index < len(weather_data[call.message.chat.id]):
         bot.answer_callback_query(call.id, f'Вы выбрали стр.{index + 1}')
@@ -723,7 +718,6 @@ def create_data_song(message: Message) -> None:
 
 
 def inline_keyboard(message: Message, some_index) -> InlineKeyboardMarkup:  # Navigation for music
-    global data_songs
     some_keyboard = InlineKeyboardMarkup()
     try:
         for songs in data_songs[message.chat.id][some_index]:
@@ -740,7 +734,6 @@ def inline_keyboard(message: Message, some_index) -> InlineKeyboardMarkup:  # Na
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^music_move_to\s\d$', call.data))
 def callback_query(call):
-    global data_songs
     index = int(call.data.split()[1])
     if 0 <= index < len(data_songs[call.message.chat.id]):
         bot.answer_callback_query(call.id, f'Вы выбрали стр.{index + 1}')
@@ -759,7 +752,6 @@ def callback_query(call):
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^ID:\s?\d+$', call.data))
 def callback_query(call):
     song_id = call.data.replace('ID: ', '')
-    global data_songs
     for song in data_songs[call.message.chat.id]:
         for item in song:
             if item['id'] == int(song_id):
@@ -807,7 +799,6 @@ def callback_query(call):
    .. seealso:: Get lyric from song
    .. notes:: Api: https://api.audd.io/
    """
-    global data_songs, data_detect
     type_lyric, song_id = call.data.split()[1:]
     keyboard = InlineKeyboardMarkup()
     res = None
@@ -904,8 +895,7 @@ def news_handler(message: Message) -> None:
 
 
 def main_news(message: Message, news_type: str) -> None:
-    global news
-    global news_msg
+    global news_msg, news
     setting = db.get_setting(message.chat.id)
     api = API['News']['URL'].replace('Country', f'{"ua" if setting["news"] == "Ua" else "ru" if setting["news"] == "Ru" else "us"}')
     res = requests.get(api.replace('Method', f'{news_type}') + API['News']['Api_Key']).json()
@@ -1006,7 +996,6 @@ def send_news(message: Message, index: int) -> None:
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^News\s?\w+$', call.data))
 def choice_news_query(call):
-    global news_msg
     bot.delete_message(call.message.chat.id, call.message.message_id)
     bot.answer_callback_query(call.id, f'Вы выбрали стр.1')
     if call.message.chat.id in news_msg:
@@ -1017,7 +1006,6 @@ def choice_news_query(call):
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^news_move_to\s\d+$', call.data))
 def next_news_query(call):
-    global news
     index = int(call.data.split()[1])
     if 0 <= index < len(news[call.message.chat.id]) - 1:
         bot.answer_callback_query(call.id, f'Вы выбрали стр.{index + 1}')
@@ -1318,7 +1306,7 @@ def torrents_handler(message: Message) -> None:
 
 @bot.callback_query_handler(func=lambda call: call.data in ['Gamestracker.org', 'GTorrent.ru', 'Rutor.info'])
 def callback_query(call):
-    global tracker, search
+    global tracker
     bot.delete_message(search[call.message.chat.id].chat.id, search[call.message.chat.id].message_id)
     tracker[call.message.chat.id] = call.data
     msg = bot.send_message(call.message.chat.id, 'Введите ваш запрос✒️')
@@ -1326,7 +1314,7 @@ def callback_query(call):
 
 
 def send_urls(message: Message) -> None:
-    global data_torrents, torrent_msg, tracker
+    global data_torrents, torrent_msg
     if message.content_type != 'text':
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
@@ -1352,7 +1340,6 @@ def send_urls(message: Message) -> None:
 
 
 def create_data_torrents(message: Message) -> None:
-    global data_torrents
     list_torrent, buf = [], []
     for i, en in enumerate(data_torrents[message.chat.id], 1):
         buf.append(en)
@@ -1365,7 +1352,6 @@ def create_data_torrents(message: Message) -> None:
 
 
 def torrent_keyboard(message: Message, index: int) -> None:
-    global data_torrents, torrent_msg, search_msg, tracker
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton(text="⬅️️", callback_data=f"torrent_move_to {index - 1 if index > 0 else 'pass'}"),
                  InlineKeyboardButton(text="➡️", callback_data=f"torrent_move_to "
@@ -1404,7 +1390,6 @@ def torrent_keyboard(message: Message, index: int) -> None:
 
 @bot.message_handler(func=lambda message: re.match(r'^/\w{8}_\d+_\d+$', str(message.text), flags=re.M))
 def load_handler(message: Message):
-    global data_torrents
     id_torrent =  message.text.split("_")[1] + '-' +  message.text.split("_")[2]
     for torrent in data_torrents[message.chat.id]:
         for item in torrent:
@@ -1447,7 +1432,6 @@ def load_handler(message: Message):
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^torrent_move_to\s\d+$', call.data))
 def callback_query(call):
-    global data_torrents
     index = int(call.data.split()[1])
     if 0 <= index < len(data_torrents[call.message.chat.id]):
         bot.answer_callback_query(call.id, f'Вы выбрали стр.{index + 1}')
@@ -1548,10 +1532,6 @@ def add_sticker_handler(message: Message) -> None:
 
 
 # <<< Stat  >>>
-stat_msg = defaultdict(Message)
-com_stat_msg = defaultdict(Message)
-
-
 @bot.message_handler(commands=['stat'])
 def stat_handler(message: Message) -> None:
     """
@@ -1560,7 +1540,6 @@ def stat_handler(message: Message) -> None:
     :return: None
     .. seealso:: Enter /stat to see statistic in group
     """
-    global stat_msg, com_stat_msg
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
@@ -1755,7 +1734,6 @@ def logic_handler(message: Message) -> None:
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Answer\s.+\s.+$', call.data))
 def answer_query(call):
-    global data_logic_tasks
     bot.answer_callback_query(call.id, 'Ответ')
     id_answer, id_command, id_question = call.data.split()[1:]
     keyboard = InlineKeyboardMarkup()
@@ -1820,7 +1798,6 @@ def get_titles(message: Message) -> None:
 
 
 def send_wiki(message: Message, index: int) -> None:
-    global data_wiki, wiki_msg
     keyboard = InlineKeyboardMarkup()
     try:
         for en, wiki in enumerate(data_wiki[message.chat.id][index]):
@@ -1835,7 +1812,7 @@ def send_wiki(message: Message, index: int) -> None:
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Wiki:\s\d+\s\d+$', call.data))
 def wiki_query(call):
-    global data_wiki, page_msg
+    global page_msg
     wiki = wikipediaapi.Wikipedia('ru')
     index1, index2 = call.data.split()[1:]
     try:
@@ -1860,7 +1837,6 @@ def wiki_query(call):
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^wiki_move_to\s\d+$', call.data))
 def wiki_move_query(call):
-    global data_wiki, wiki_msg
     index = int(call.data.split()[1])
     if 0 <= index < len(data_wiki[call.message.chat.id]):
         bot.answer_callback_query(call.id, f'Вы выбрали стр.{index + 1}')
@@ -1961,7 +1937,6 @@ def settings_handler(message: Message) -> None:
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Settings\s.+\s\w+\s\w+$', call.data))
 def callback_query(call):
-    global settings_msg
     chat_id = int(call.data.split()[1])
     if chat_id in settings_msg:
         bot.answer_callback_query(call.id, f'{call.data.split()[3].title()}')
@@ -1972,7 +1947,6 @@ def callback_query(call):
 
 
 def set_settings(chat_id) -> InlineKeyboardMarkup:
-    global settings_msg, msg_settings
     keyboard = InlineKeyboardMarkup()
     data = db.get_setting(chat_id)
     if settings_msg[chat_id].chat.type != 'private':
@@ -2070,7 +2044,6 @@ def callback_query(call):
 
 
 def callback_to_code(message: Message) -> None:
-    global leng_msg
     if type(leng_msg[message.chat.id]) == 'str':
         return
     elif type(leng_msg[message.chat.id]) == Message:
