@@ -217,7 +217,7 @@ def unpin_bag_guys() -> None:
 
 # <<< End bag guys >>
 
-
+db.reset_users()
 # <<< Roulette >>
 chips_data = defaultdict(dict)
 chips_msg = defaultdict(Message)
@@ -271,7 +271,6 @@ def play_roulette() -> None:
         bot.edit_message_text(f'{msg_res[chat_id].text}\n\nВыпало <b>{text}</b>\n\n{users_text}',
                               msg_res[chat_id].chat.id, msg_res[chat_id].message_id, parse_mode='HTML')
         summary.clear()
-
     for chat_id_, data_ in chips_data.items():
         Thread(target=casino, name='Casino', args=[chat_id_, data_]).start()
     chips_msg.clear()
