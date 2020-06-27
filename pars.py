@@ -217,7 +217,7 @@ def unpin_bag_guys() -> None:
 
 # <<< End bag guys >>
 
-db.reset_users()
+
 # <<< Roulette >>
 chips_data = defaultdict(dict)
 chips_msg = defaultdict(Message)
