@@ -222,7 +222,7 @@ def unpin_bag_guys() -> None:
 chips_data = defaultdict(dict)
 chips_msg = defaultdict(Message)
 msg_res = defaultdict(Message)
-
+from threading import Thread
 
 def play_roulette():
     global chips_data, msg_res
@@ -232,19 +232,22 @@ def play_roulette():
         else:
             return 'zero' if num == '⭕' else 'red' if num == '🔴' else 'black'
 
-    for chat_id, data in chips_data.items():
+
+    def casino(chat_id, data):
         nums = [num for num in range(0, 36)]
         random.shuffle(nums)
         msg_res[chat_id] = bot.send_message(chat_id, f'[{get_color(nums.pop(0))}] [{get_color(nums.pop(0))}] '
-                                            f'➡️[{get_color(nums.pop(0))}]⬅️ [{get_color(nums.pop(0))}] '
-                                            f'[{get_color(nums.pop(0))}]')
+                                                     f'➡️[{get_color(nums.pop(0))}]⬅️ [{get_color(nums.pop(0))}] '
+                                                     f'[{get_color(nums.pop(0))}]')
         start = random.randint(1, 20)
         for num in nums[start:start + 10]:
             time.sleep(0.75)
-            text = msg_res[chat_id].text.replace('➡️', '').replace('⬅️', '').replace('[', '').replace(']', '').split()[1:]
+            text = msg_res[chat_id].text.replace('➡️', '').replace('⬅️', '').replace('[', '').replace(']', '').split()[
+                   1:]
             text.append(get_color(num))
-            msg_res[chat_id] = bot.edit_message_text(f'[{text[0]}] [{text[1]}]  ➡️[{text[2]}]⬅️ [{text[3]}] [{text[4]}]',
-                                        msg_res[chat_id].chat.id, msg_res[chat_id].message_id)
+            msg_res[chat_id] = bot.edit_message_text(
+                f'[{text[0]}] [{text[1]}]  ➡️[{text[2]}]⬅️ [{text[3]}] [{text[4]}]',
+                msg_res[chat_id].chat.id, msg_res[chat_id].message_id)
         text = msg_res[chat_id].text.split()[2].replace("➡️[", "").replace("]⬅️", "")
         name_color = get_color(list(text)[-1])
         summary = defaultdict(dict)
@@ -270,55 +273,56 @@ def play_roulette():
                               msg_res[chat_id].chat.id, msg_res[chat_id].message_id, parse_mode='HTML')
         summary.clear()
 
+    for chat_id_, data_ in chips_data.items():
+        Thread(target=casino, name='Casino', args=[chat_id_, data_]).start()
+    chips_msg.clear()
+    chips_data.clear()
+
 
 def daily_roulette():
     global chips_msg, chips_data
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton('50⚫', callback_data='roulette 50 black'),
+                 InlineKeyboardButton('100⚫', callback_data='roulette 100 black'),
+                 InlineKeyboardButton('250⚫', callback_data='roulette 250 black'))
+    keyboard.add(InlineKeyboardButton('50🔴', callback_data='roulette 50 red'),
+                 InlineKeyboardButton('100🔴', callback_data='roulette 100 red'),
+                 InlineKeyboardButton('250🔴', callback_data='roulette 250 red'))
+    keyboard.add(InlineKeyboardButton('10⭕', callback_data='roulette 10 zero'),
+                 InlineKeyboardButton('50⭕', callback_data='roulette 50 zero'),
+                 InlineKeyboardButton('100⭕', callback_data='roulette 100 zero'))
+    time_end = str(dt.now() + timedelta(minutes=60.0)).split()[-1].split(':')
     for chat in db.get_roulette():
-        keyboard = InlineKeyboardMarkup()
-        keyboard.add(InlineKeyboardButton('50⚫', callback_data='roulette 50 black'),
-                     InlineKeyboardButton('100⚫', callback_data='roulette 100 black'),
-                     InlineKeyboardButton('250⚫', callback_data='roulette 250 black'))
-        keyboard.add(InlineKeyboardButton('50🔴', callback_data='roulette 50 red'),
-                     InlineKeyboardButton('100🔴', callback_data='roulette 100 red'),
-                     InlineKeyboardButton('250🔴', callback_data='roulette 250 red'))
-        keyboard.add(InlineKeyboardButton('10⭕', callback_data='roulette 10 zero'),
-                     InlineKeyboardButton('50⭕', callback_data='roulette 50 zero'),
-                     InlineKeyboardButton('100⭕', callback_data='roulette 100 zero'))
         try:
-            time_end = str(dt.now() + timedelta(minutes=60.0)).split()[-1].split(':')
-            msg = bot.send_message(chat['id'], f'<b><i>Доброе пожаловать в казино</i></b>🌃😎\nКонец в '
+            bot.send_message(chat['id'], f'<b><i>Доброе пожаловать в казино</i></b>🌃😎\nКонец в '
                                                f'<b>{time_end[0]}:{time_end[1]}</b>\n'
                                                f'Делайте ваши ставки\n',
                                    reply_markup=keyboard, parse_mode='HTML')
         except Exception:
             log('Error in daily roulette', 'error')
-        else:
-            Timer(3600.0, play_roulette).run()
-            bot.delete_message(msg.chat.id, msg.message_id)
-            try:
-                del chips_data[int(chat['id'])]
-                del chips_msg[int(chat['id'])]
-            except Exception:
-                log('cat\'t delete from chips data\msg')
+    Timer(60.0, play_roulette).start()
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s\d+\s\w+$', call.data))
 def callback_query(call):
     global chips_data, chips_msg
-    chips, color = call.data.split()[1:]
-    user = f"{call.from_user.first_name} {call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
-    if call.message.chat.id not in chips_data:
-        chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id, 'Ставки:')
-    if call.from_user.id not in chips_data[call.message.chat.id]:
-        chips_data[call.message.chat.id][call.from_user.id] = []
-    if len(chips_data[call.message.chat.id][call.from_user.id]) < 3:
-        bot.answer_callback_query(call.id, 'Ставка принята')
-        chips_data[call.message.chat.id][call.from_user.id].append({'color': color, 'chips': chips})
-        chips_msg[call.message.chat.id] = bot.edit_message_text(f'{chips_msg[call.message.chat.id].text}\n'
-                                                                f'{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}',
-                                                                call.message.chat.id, chips_msg[call.message.chat.id].message_id)
+    if str(dt.now()).split()[1].split(':')[0] != '20':
+        chips, color = call.data.split()[1:]
+        user = f"{call.from_user.first_name} {call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
+        if call.message.chat.id not in chips_data:
+            chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id, 'Ставки:')
+        if call.from_user.id not in chips_data[call.message.chat.id]:
+            chips_data[call.message.chat.id][call.from_user.id] = []
+        if len(chips_data[call.message.chat.id][call.from_user.id]) < 3:
+            bot.answer_callback_query(call.id, 'Ставка принята')
+            chips_data[call.message.chat.id][call.from_user.id].append({'color': color, 'chips': chips})
+            chips_msg[call.message.chat.id] = bot.edit_message_text(f'{chips_msg[call.message.chat.id].text}\n'
+                                                                    f'{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}',
+                                                                    call.message.chat.id, chips_msg[call.message.chat.id].message_id)
+        else:
+            bot.answer_callback_query(call.id, 'Превышен лимит ставок')
     else:
-        bot.answer_callback_query(call.id, 'Превышен лимит ставок')
+        bot.answer_callback_query(call.id, 'Прийом ставок закончен')
 
 
 def main() -> None:
@@ -330,7 +334,7 @@ def main() -> None:
     schedule.every().day.at("09:00").do(unpin_bag_guys)  # Unpin bad guys
     schedule.every().day.at("12:00").do(parser_memes)  # Do pars every 12:00
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
-    schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
+    schedule.every().day.at("07:17").do(daily_roulette) # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     schedule.every().day.at("22:01").do(db.reset_users)  # Reset daily karma
     while True:
