@@ -189,23 +189,17 @@ def send_bad_guy() -> None:
     """
     log('Send bad guy is done', 'info')
     for chat_id, users in db.get_bad_guy().items():
-        settings = db.get_from(chat_id, 'Users_name')
-        if settings is not None and settings['bad_guy'] == 'On':
-            text = '🎉<b>Пидор' + f"{'ы' if len(users) > 1 else ''}" + ' дня</b>🎉\n'
-            for user in users:
-                if user['first_name'] != 'None':
-                    user_name = '🎊💙<i>' + user['first_name']
-                    if user['last_name'] != 'None':
-                        user_name += f" {user['last_name']}"
-                    text += user_name + '</i>💙🎊\n'
-            text += f'Прийми{"те" if len(users) > 1 else ""} наши поздравления👍'
-            try:
-                msg = bot.send_message(chat_id, text, parse_mode='HTML')
-                bot.pin_chat_message(msg.chat.id, msg.message_id, disable_notification=False)
-            except Exception:
-                log('Error in bad guy', 'error')
-            else:
-                db.save_pin_bag_guys(chat_id, msg.message_id)
+        text = '🎉<b>Пидор' + f"{'ы' if len(users) > 1 else ''}" + ' дня</b>🎉\n'
+        for user in users:
+            text += f"🎊💙<i>{db.get_from(user['id'], 'Users_name')}</i>💙🎊\n"
+        text += f'Прийми{"те" if len(users) > 1 else ""} наши поздравления👍'
+        try:
+            msg = bot.send_message(chat_id, text, parse_mode='HTML')
+            bot.pin_chat_message(msg.chat.id, msg.message_id, disable_notification=False)
+        except Exception:
+            log('Error in bad guy', 'error')
+        else:
+            db.save_pin_bag_guys(chat_id, msg.message_id)
 
 def unpin_bag_guys() -> None:
     """
@@ -222,6 +216,7 @@ def unpin_bag_guys() -> None:
 
 # <<< End bag guys >>
 
+send_bad_guy()
 
 # <<< Roulette >>
 chips_data = defaultdict(dict)

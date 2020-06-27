@@ -143,32 +143,31 @@ def get_bad_guy() -> dict:
     .. notes:: get bad guys for all super groups
     """
     connection = start_connection()
-    groups, users, bag_guys = set(), [], {}
+    all_users = {}
     with connection.cursor() as cursor:
+        cursor.execute(f'SELECT id FROM Setting WHERE bad_guy=\'On\';')
+        chats = cursor.fetchall()
         cursor.execute(f'SELECT * FROM Users WHERE supergroup IS NOT NULL AND is_bote=\'False\';')
-        res = cursor.fetchall()
-    for user in res:
+        users = cursor.fetchall()
+    for user in users:
         for group in user['supergroup'].split(','):
-            if group != '':
-                groups.add(group)
-    for user in res:
-        for group_u in user['supergroup'].split(','):
-            for group in groups:
-                if group == group_u:
-                    users.append(
-                        {'id': user['id'], 'group': group_u, 'karma': user['karma'], 'daily': user['daily'],
-                         'first_name': user['first_name'], 'last_name': user['last_name']})
-    for group in groups:
+            for chat in chats:
+                if group == chat['id']:
+                    if chat['id'] not in all_users:
+                        all_users[chat['id']] = []
+                    all_users[chat['id']].append({'id': user['user_id'], 'karma': user['karma'], 'daily': user['daily']})
+    for chat, users in all_users.items():
+        bad_guy = []
         for user in users:
-            if user['group'] == group:
-                if  user['group'] not in bag_guys:
-                    bag_guys[group] = [user]
-                elif bag_guys[group][0]['karma'] - bag_guys[group][0]['daily'] > user['karma'] - user['daily']:
-                    bag_guys[group].clear()
-                    bag_guys[group].append(user)
-                elif bag_guys[group][0]['karma'] - bag_guys[group][0]['daily'] == user['karma'] - user['daily']:
-                    bag_guys[group].append(user)
-    return bag_guys
+            if not bad_guy:
+                bad_guy.append(user)
+            elif user['karma'] - user['daily'] < bad_guy[0]['karma'] - bad_guy[0]['daily']:
+                bad_guy.clear()
+                bad_guy.append(user)
+            elif user['karma'] - user['daily'] == bad_guy[0]['karma'] - bad_guy[0]['daily']:
+                bad_guy.append(user)
+        all_users[chat] = bad_guy
+    return all_users
 
 
 def save_pin_bag_guys(chat_id: str, message_id: str) -> None:
@@ -269,9 +268,9 @@ def get_from(id_: [int, str], type_=None) -> [list, dict, str]:
             cursor.execute(f'SELECT * FROM Setting WHERE id=\'{id_}\';')
             return cursor.fetchone()
         elif type_ == 'Users_name':  # # get username by user_id
-            cursor.execute(f'SELECT first_name, last_name FROM Users WHERE user_id={id_};')
+            cursor.execute(f'SELECT first_name, last_name FROM Users WHERE user_id=\'{id_}\';')
             user = cursor.fetchone()
-        return f"{user['first_name']} {user['last_name']}" if user['last_name'] != 'None' else user['first_name']
+            return f"{user['first_name']} {user['last_name']}" if user['last_name'] != 'None' else user['first_name']
 
 
 def get_roulette() -> list:
