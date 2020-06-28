@@ -194,7 +194,7 @@ def joke_handler(message: Message) -> None:
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if message.chat.id not in jokes_data or len(jokes_data[message.chat.id]) == 1:
             jokes_data[message.chat.id] = db.get_all('Joke')
-        joke = jokes_data[message.chat.id].pop(random.choice(range(len(jokes_data[message.chat.id]) - 1)))
+        joke = jokes_data[message.chat.id].pop(random.randint(1, len(jokes_data[message.chat.id]) - 1))
         bot.send_chat_action(message.chat.id, 'typing')
         time.sleep(1.25)
         keyboard = InlineKeyboardMarkup()
@@ -290,7 +290,7 @@ def meme_handler(message: Message) -> None:
             if message.chat.id not in meme_data or len(meme_data[message.chat.id]) == 1:
                 meme_data[message.chat.id] = db.get_all('Memes')
             while True:
-                meme = meme_data[message.chat.id].pop(random.choice(range(len(meme_data[message.chat.id]) - 1)))
+                meme = meme_data[message.chat.id].pop(random.randint(1, len(meme_data[message.chat.id]) - 1))
                 try:
                     msg = bot.send_photo(message.chat.id, meme['url'])
                     keyboard = InlineKeyboardMarkup()
@@ -1664,7 +1664,7 @@ def euler_handler(message: Message) -> None:
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         if message.chat.id not in data_euler or len(data_euler[message.chat.id]) == 1:
             data_euler[message.chat.id] = db.get_all('Project_Euler')
-        task = data_euler[message.chat.id].pop(random.choice(range(len(data_euler[message.chat.id]) - 1)))
+        task = data_euler[message.chat.id].pop(random.randint(1, len(data_euler[message.chat.id]) - 1))
         data_msg = [bot.send_photo(message.chat.id, image) for image in  task['image_url'].split(',')]
         id_s = str(message.message_id)
         for i in data_msg:
@@ -1703,7 +1703,7 @@ def answer_query(call):
 
 # <<< Logic tasks >>>
 data_logic_tasks = defaultdict(dict)
-
+logic_msg = defaultdict(Message)
 
 @bot.message_handler(commands=['logic'])
 def logic_handler(message: Message) -> None:
@@ -1713,7 +1713,7 @@ def logic_handler(message: Message) -> None:
     :return: None
     .. seealso:: Enter /logic to get random logic task
     """
-    global data_logic_tasks
+    global data_logic_tasks, logic_msg
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
             db.change_karma(message.from_user.id, '+', 1)
@@ -1722,25 +1722,24 @@ def logic_handler(message: Message) -> None:
         keyboard = InlineKeyboardMarkup()
         if message.chat.id not in data_logic_tasks or len(data_logic_tasks[message.chat.id]) == 1:
             data_logic_tasks[message.chat.id] = db.get_all('Logic_Tasks')
-        task = data_logic_tasks[message.chat.id].pop(random.choice(range(len(data_logic_tasks[message.chat.id]) - 1)))
-        msg = bot.send_message(message.chat.id,
-                               f'<b>Задача №</b><i>{task["id"]}</i>\n'
-                               f'{task["question"]}')
-        keyboard.add(InlineKeyboardButton('Ответ', callback_data=f'Answer'
-                                                                 f' {task["id"]} {message.message_id} {msg.message_id}'))
-        bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
-                              text=msg.text, reply_markup=keyboard, parse_mode='HTML')
+        task = data_logic_tasks[message.chat.id].pop(random.randint(0, len(data_logic_tasks[message.chat.id]) - 1))
+        keyboard.add(InlineKeyboardButton('Ответ', callback_data=f'Answer {task["id"]} {message.message_id}'))
+        logic_msg[message.chat.id] = bot.send_message(message.chat.id, f'<b>Задача №</b><i>{task["id"]}</i>\n'
+                                                                       f'{task["question"]}',
+                                                      reply_markup=keyboard, parse_mode='HTML')
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Answer\s.+\s.+$', call.data))
 def answer_query(call):
     bot.answer_callback_query(call.id, 'Ответ')
-    id_answer, id_command, id_question = call.data.split()[1:]
+    id_answer, id_command = call.data.split()[1:]
     keyboard = InlineKeyboardMarkup()
-    msg = bot.send_message(call.message.chat.id, f'<b>Ответ:</b> {db.get_task_answer(id_answer)}')
-    keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {msg.message_id} {id_command} {id_question}'))
-    bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
-                          text=msg.text, reply_markup=keyboard, parse_mode='HTML')
+    keyboard.add(InlineKeyboardButton('Удалить', callback_data=f'del {id_command} {logic_msg[call.message.chat.id].message_id}'))
+    question = logic_msg[call.message.chat.id].text.split('\n')[1:]
+    bot.edit_message_text(f'<b>Задача №</b><i>{id_answer}</i>\n{question[0]}\n\n<b>Ответ:</b> {db.get_task_answer(id_answer)}',
+                          call.message.chat.id, logic_msg[call.message.chat.id].message_id,
+                          reply_markup=keyboard, parse_mode='HTML')
+
 # <<< End logic task >>>
 
 
