@@ -243,9 +243,9 @@ def change_karma(user_id, action: str, exp: int):
         cursor.execute(f'SELECT `karma` FROM `Users` WHERE `user_id` = {str(user_id)};')
         karma = int(cursor.fetchone()['karma'])
         if action == '+':
-            karma += exp * 10
+            karma += exp
         else:
-            karma -= exp * 10
+            karma -= exp
         cursor.execute(f'UPDATE `Users` SET `karma` = \'{karma}\' WHERE `user_id` = \'{str(user_id)}\';')
         connection.commit()
     return karma

@@ -1894,12 +1894,12 @@ def text_handler(message: Message) -> None:
                 if msg[0] == '+':
                     bot.send_message(message.chat.id, f'<b>{from_user}</b> подкинул <i>{len(msg) * 10}</i> к карме😈 '
                                                       f'<b>{reply_user}</b>\nИтого карма: '
-                                f'<i>{db.change_karma(message.reply_to_message.from_user.id, msg[0], 10)}</i>',
+                                f'<i>{db.change_karma(message.reply_to_message.from_user.id, msg[0], len(msg) * 10)}</i>',
                                      parse_mode='HTML')
                 else:
                     bot.send_message(message.chat.id, f'<b>{from_user}</b> отнял от кармы <i>-{len(msg) * 10}</i>👿 '
                                                       f'<b>{reply_user}</b>\nИтого карма: '
-                                f'<i>{db.change_karma(message.reply_to_message.from_user.id, msg[0], 10)}</i>',
+                                f'<i>{db.change_karma(message.reply_to_message.from_user.id, msg[0], len(msg) * 10)}</i>',
                                      parse_mode='HTML')
                 Timer(10.0, set_true).run()
             else:
