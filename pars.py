@@ -306,19 +306,22 @@ def callback_query(call):
     global chips_data, chips_msg
     if str(dt.now()).split()[1].split(':')[0] == '20':
         chips, color = call.data.split()[1:]
-        user = f"{call.from_user.first_name} {call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
-        if call.message.chat.id not in chips_data:
-            chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id, 'Ставки:')
-        if call.from_user.id not in chips_data[call.message.chat.id]:
-            chips_data[call.message.chat.id][call.from_user.id] = []
-        if len(chips_data[call.message.chat.id][call.from_user.id]) < 3:
-            bot.answer_callback_query(call.id, 'Ставка принята')
-            chips_data[call.message.chat.id][call.from_user.id].append({'color': color, 'chips': chips})
-            chips_msg[call.message.chat.id] = bot.edit_message_text(f'{chips_msg[call.message.chat.id].text}\n'
+        if db.get_user_karma(call.from_user.id) < chips:
+            user = f"{call.from_user.first_name} {call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
+            if call.message.chat.id not in chips_data:
+                chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id, 'Ставки:')
+            if call.from_user.id not in chips_data[call.message.chat.id]:
+                chips_data[call.message.chat.id][call.from_user.id] = []
+            if len(chips_data[call.message.chat.id][call.from_user.id]) < 3:
+                bot.answer_callback_query(call.id, 'Ставка принята')
+                chips_data[call.message.chat.id][call.from_user.id].append({'color': color, 'chips': chips})
+                chips_msg[call.message.chat.id] = bot.edit_message_text(f'{chips_msg[call.message.chat.id].text}\n'
                                                                     f'{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}',
                                                                     call.message.chat.id, chips_msg[call.message.chat.id].message_id)
+            else:
+                bot.answer_callback_query(call.id, 'Превышен лимит ставок')
         else:
-            bot.answer_callback_query(call.id, 'Превышен лимит ставок')
+            bot.answer_callback_query(call.id, 'У вас не хватает фишек')
     else:
         bot.answer_callback_query(call.id, 'Прийом ставок закончен')
 

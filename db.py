@@ -320,7 +320,7 @@ def get_user_karma(user_id: int) -> str:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT karma FROM Users WHERE user_id=\'{user_id}\'')
-        return cursor.fetchone()['karma']
+        return int(cursor.fetchone()['karma'])
 
 def ban_user(user: str) -> None:
     """
