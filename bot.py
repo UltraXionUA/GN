@@ -1561,7 +1561,7 @@ def stat_handler(message: Message) -> None:
                 keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
                 bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
                                       text=msg.text,
-                                      reply_markup=keyboard)
+                                      reply_markup=keyboard, parse_mode='HTML')
         else:
             bot.send_message(message.chat.id, 'Функция достпуна только в группах😔')
 
@@ -1595,7 +1595,7 @@ def me_handler(message: Message) -> None:
                     keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
                     bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
                                           text=msg.text,
-                                          reply_markup=keyboard)
+                                          reply_markup=keyboard, parse_mode='HTML')
 
         else:
             bot.send_message(message.chat.id, 'Функция достпуна только в группах😔')
