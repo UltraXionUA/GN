@@ -1547,10 +1547,10 @@ def stat_handler(message: Message) -> None:
         if message.chat.type != 'private':
             db.change_karma(message.from_user.id, '+', 1)
             data = db.get_from(message.chat.id, 'Users_stat')
-            msg = bot.send_message(message.chat.id, 'Загрузка...')
-            keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
             if data:
                 keyboard = InlineKeyboardMarkup()
+                msg = bot.send_message(message.chat.id, 'Загрузка...')
+                keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
                 text = '<b>Статистика:</b>\n'
                 for en, i in enumerate(data, 1):
                     if en == 6:
