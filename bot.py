@@ -841,7 +841,7 @@ def forbidden_handler(message: Message) -> None:
         if setting['censure'] == 'Off':
             if message.chat.type != 'private':
                 db.change_karma(message.from_user.id, '-', 10)
-            if int(db.get_user_karma(message.from_user.id)) < 9 or message.chat.type == 'private':
+            if int(db.get_user_karma(message.from_user.id)) > 9 or message.chat.type == 'private':
                 while True:
                     if message.text.lower() in ['/loli', 'лоли', 'loli', '/loli@gntmbot', '/loli@pineapple_test_bot']:
                         data = db.get_forbidden('loli')
