@@ -1555,7 +1555,7 @@ def stat_handler(message: Message) -> None:
                         break
                     medal = '🥇' if en == 1 else '🥈' if en == 2 else '🥉' if en == 3 else None
                     text += f"<i>{en}.</i> {i['first_name']} {i['last_name'] if i['last_name'] != 'None' else ''}" \
-                            f" - <i>{i['karma']}</i>/{get_lvl(int(i['karma']))} lvl {medal if medal is not None else ''} \n"
+                            f" - <b>{i['karma']}</b>/<b>{get_lvl(int(i['karma']))}</b> lvl {medal if medal is not None else ''} \n"
                 text += '...\nНажмите /me что бы увидеть себя'
                 msg = bot.send_message(message.chat.id, text, parse_mode='HTML')
                 keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
@@ -1590,7 +1590,7 @@ def me_handler(message: Message) -> None:
                     msg = bot.send_message(message.chat.id, f'Ваш рейтинг:\n'
                                                             f'<i>{position}. </i>'
                                                             f'<b>{user}</b> - '
-                                                            f'<i>{data_user["karma"]}</i>/{get_lvl(int(data_user["karma"]))} lvl🏆',
+                                                            f'<b>{data_user["karma"]}</b>/<b>{get_lvl(int(data_user["karma"]))}</b> lvl🏆',
                                                              parse_mode='HTML')
                     keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
                     bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
