@@ -6,7 +6,7 @@
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, InputMediaVideo
 from telebot.types import LabeledPrice, PreCheckoutQuery, ShippingQuery
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_videos, get_instagram_photos
-from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time, clear_date
+from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time, clear_date, get_lvl
 from Config_GNBot.config import API, URLS, GNBot_ID, bot, PAYMENT_TOKEN, Admins
 from youtube_unlimited_search import YoutubeUnlimitedSearch
 from urllib import parse, request, error
@@ -1555,7 +1555,7 @@ def stat_handler(message: Message) -> None:
                         break
                     medal = '🥇' if en == 1 else '🥈' if en == 2 else '🥉' if en == 3 else None
                     text += f"<i>{en}.</i> {i['first_name']} {i['last_name'] if i['last_name'] != 'None' else ''}" \
-                            f" - <i>{i['karma']}</i>{medal if medal is not None else ''}\n"
+                            f" - <i>{i['karma']}</i>{medal if medal is not None else ''} {get_lvl(int(i['karma']))}lvl\n"
                 text += '...\nНажмите /me что бы увидеть себя'
                 msg = bot.send_message(message.chat.id, text, parse_mode='HTML')
                 keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
@@ -1590,7 +1590,7 @@ def me_handler(message: Message) -> None:
                     msg = bot.send_message(message.chat.id, f'Ваш рейтинг:\n'
                                                             f'<i>{position}. </i>'
                                                             f'<b>{user}</b> - '
-                                                            f'<i>{data_user["karma"]}</i>🏆',
+                                                            f'<i>{data_user["karma"]}</i> {get_lvl(int(data_user["karma"]))}🏆',
                                                              parse_mode='HTML')
                     keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
                     bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,

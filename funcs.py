@@ -60,6 +60,10 @@ def get_weather_emoji(code: str) -> str:
         return '🌪'
 
 
+def get_lvl(karma: int) -> int:
+    return 1 if karma < 100 else 2 if karma < 1000 else 3 if karma < 2500 else 4 if karma < 5000 else 5 if karma < 7500 else 6
+
+
 def get_day(data: str) -> str:
     """
     :param data
