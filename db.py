@@ -240,7 +240,7 @@ def change_karma(user_id, action: str, exp: int):
     """
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT `karma` FROM `Users` WHERE `user_id` = {str(user_id)};')
+        cursor.execute(f'SELECT `karma` FROM `Users` WHERE user_id=\'{user_id}\';')
         karma = int(cursor.fetchone()['karma'])
         if action == '+':
             karma += exp

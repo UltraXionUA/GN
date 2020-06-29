@@ -1864,8 +1864,8 @@ def text_handler(message: Message) -> None:
     :return: None
     .. seealso:: Func to up or down karma user in group
     """
-    def set_true() -> None:
-        time_to_change[message.from_user.id] = True
+    def set_true(user_id: int) -> None:
+        time_to_change[user_id] = True
 
     global time_to_change
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
@@ -1899,7 +1899,7 @@ def text_handler(message: Message) -> None:
                                                       f'<b>{reply_user}</b>\nИтого карма: '
                                 f'<i>{db.change_karma(message.reply_to_message.from_user.id, msg[0], len(msg) * 10)}</i>',
                                      parse_mode='HTML')
-                Timer(60.0, set_true).run()
+                Timer(60.0, set_true, [message.from_user.id]).start()
             else:
                 bot.send_message(message.chat.id, 'Операция доступна один раз в 60 секунд😔\nПожалуйста ожидайте')
         else:
