@@ -1901,7 +1901,7 @@ def text_handler(message: Message) -> None:
                                                       f'<b>{reply_user}</b>\nИтого карма: '
                                 f'<i>{db.change_karma(message.reply_to_message.from_user.id, msg[0], len(msg) * 10)}</i>',
                                      parse_mode='HTML')
-                Timer(10.0, set_true).run()
+                Timer(60.0, set_true).run()
             else:
                 bot.send_message(message.chat.id, 'Операция доступна один раз в 10 секунд😔\nПожалуйста ожидайте')
         else:
