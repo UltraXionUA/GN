@@ -1852,8 +1852,7 @@ def wiki_move_query(call):
 
 
 # <<< Change karma >>>
-time_to_change = defaultdict(bool)
-msg_from_user = defaultdict(Message)
+time_to_change = defaultdict(dict)
 
 
 @bot.message_handler(content_types=['text'], regexp=r'^\+{1,5}$')  # Change karma
@@ -1868,16 +1867,15 @@ def text_handler(message: Message) -> None:
     def set_true() -> None:
         time_to_change[message.from_user.id] = True
 
-    global time_to_change, msg_from_user
+    global time_to_change
     db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
     if message.from_user.id not in time_to_change:
         time_to_change[message.from_user.id] = True
     if message.chat.type != 'private' and message.reply_to_message:
         log(message, 'info')
         if message.from_user.id != message.reply_to_message.from_user.id:
-            if time_to_change[message.from_user.id]:
+            if time_to_change[message.from_user.id] is True:
                 time_to_change[message.from_user.id] = False
-                msg_from_user[message.from_user.id] = message
                 msg = list(message.text)
                 if message.reply_to_message.from_user.first_name is not None:
                     reply_user = message.reply_to_message.from_user.first_name
