@@ -316,7 +316,11 @@ def random_sticker(gn=False) -> str:
                            f" ORDER BY RAND() LIMIT 1")
         return cursor.fetchone()['item_id']
 
-
+def get_user_karma(user_id: int) -> str:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT karma FROM Users WHERE user_id=\'{user_id}\'')
+        return cursor.fetchone()['karma']
 
 def ban_user(user: str) -> None:
     """

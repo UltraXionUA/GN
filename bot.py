@@ -841,24 +841,25 @@ def forbidden_handler(message: Message) -> None:
         if setting['censure'] == 'Off':
             if message.chat.type != 'private':
                 db.change_karma(message.from_user.id, '-', 10)
-            while True:
-                if message.text.lower() in ['/loli', 'лоли', 'loli', '/loli@gntmbot', '/loli@pineapple_test_bot']:
-                    data = db.get_forbidden('loli')
-                elif message.text.lower() in ['/hentai', 'хентай', 'hentai', '/hentai@gntmbot', '/hentai@pineapple_test_bot']:
-                    data = db.get_forbidden('hentai')
-                else:
-                    data = db.get_forbidden('girls')
-                try:
-                    if requests.get(data).ok:
-                        msg = bot.send_photo(message.chat.id, data)
-                        keyboard.add((InlineKeyboardButton('Удалить',
-                                                           callback_data=f'del {msg.message_id} {message.message_id}')))
-                        bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
-                                               media=InputMediaPhoto(msg.photo[-1].file_id),
-                                               reply_markup=keyboard)
-                        break
-                except Exception:
-                    continue
+            if int(db.get_user_karma(message.from_user.id)) < 9 or message.chat.type == 'private':
+                while True:
+                    if message.text.lower() in ['/loli', 'лоли', 'loli', '/loli@gntmbot', '/loli@pineapple_test_bot']:
+                        data = db.get_forbidden('loli')
+                    elif message.text.lower() in ['/hentai', 'хентай', 'hentai', '/hentai@gntmbot', '/hentai@pineapple_test_bot']:
+                        data = db.get_forbidden('hentai')
+                    else:
+                        data = db.get_forbidden('girls')
+                    try:
+                        if requests.get(data).ok:
+                            msg = bot.send_photo(message.chat.id, data)
+                            keyboard.add((InlineKeyboardButton('Удалить',
+                                                               callback_data=f'del {msg.message_id} {message.message_id}')))
+                            bot.edit_message_media(chat_id=msg.chat.id, message_id=msg.message_id,
+                                                   media=InputMediaPhoto(msg.photo[-1].file_id),
+                                                   reply_markup=keyboard)
+                            break
+                    except Exception:
+                        continue
         else:
             bot.send_message(message.chat.id, 'Цензура включена, функция недоступна😔\nОтключить цензуру можно <i>/settings</i>',
                             parse_mode='HTML')
