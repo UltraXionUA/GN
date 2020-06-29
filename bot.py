@@ -1903,7 +1903,7 @@ def text_handler(message: Message) -> None:
                                      parse_mode='HTML')
                 Timer(60.0, set_true).run()
             else:
-                bot.send_message(message.chat.id, 'Операция доступна один раз в 10 секунд😔\nПожалуйста ожидайте')
+                bot.send_message(message.chat.id, 'Операция доступна один раз в 60 секунд😔\nПожалуйста ожидайте')
         else:
             bot.send_message(message.chat.id, 'Нельзя менять карму самому себе😔')
 
