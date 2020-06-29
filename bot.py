@@ -1588,12 +1588,12 @@ def me_handler(message: Message) -> None:
             msg = bot.send_message(message.chat.id, 'Загрузка...')
             keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
             if data_user is not False or position is not False:
-                    user = f"{data_user['first_name'] + ' ' + data_user['last_name']}" if data_user['last_name'] != 'None' else data_user['first_name']
-                    bot.edit_message_text(chat_id=message.chat.id, message_id=msg.message_id, text=f'Ваш рейтинг:\n'
+                user = f"{data_user['first_name'] + ' ' + data_user['last_name']}" if data_user['last_name'] != 'None' else data_user['first_name']
+                bot.edit_message_text(chat_id=message.chat.id, message_id=msg.message_id, text=f'Ваш рейтинг:\n'
                                                             f'<i>{position}. </i>'
                                                             f'<b>{user}</b> - '
                                                             f'<b>{data_user["karma"]}</b>/<b>{get_lvl(int(data_user["karma"]))}</b> lvl🏆',
-                                                             parse_mode='HTML')
+                                                             parse_mode='HTML', reply_markup=keyboard)
         else:
             bot.send_message(message.chat.id, 'Функция достпуна только в группах😔')
 
