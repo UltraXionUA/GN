@@ -1547,6 +1547,8 @@ def stat_handler(message: Message) -> None:
         if message.chat.type != 'private':
             db.change_karma(message.from_user.id, '+', 1)
             data = db.get_from(message.chat.id, 'Users_stat')
+            msg = bot.send_message(message.chat.id, 'Загрузка...')
+            keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
             if data:
                 keyboard = InlineKeyboardMarkup()
                 text = '<b>Статистика:</b>\n'
@@ -1557,10 +1559,8 @@ def stat_handler(message: Message) -> None:
                     text += f"<i>{en}.</i> {i['first_name']} {i['last_name'] if i['last_name'] != 'None' else ''}" \
                             f" - <b>{i['karma']}</b>/<b>{get_lvl(int(i['karma']))}</b> lvl {medal if medal is not None else ''} \n"
                 text += '...\nНажмите /me что бы увидеть себя'
-                msg = bot.send_message(message.chat.id, text, parse_mode='HTML')
-                keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
                 bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
-                                      text=msg.text,
+                                      text=text,
                                       reply_markup=keyboard, parse_mode='HTML')
         else:
             bot.send_message(message.chat.id, 'Функция достпуна только в группах😔')
@@ -1585,18 +1585,15 @@ def me_handler(message: Message) -> None:
             db.change_karma(message.from_user.id, '+', 1)
             keyboard = InlineKeyboardMarkup()
             data_user, position = db.get_user(message.from_user, message.chat)
+            msg = bot.send_message(message.chat.id, 'Загрузка...')
+            keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
             if data_user is not False or position is not False:
                     user = f"{data_user['first_name'] + ' ' + data_user['last_name']}" if data_user['last_name'] != 'None' else data_user['first_name']
-                    msg = bot.send_message(message.chat.id, f'Ваш рейтинг:\n'
+                    bot.edit_message_text(chat_id=message.chat.id, message_id=msg.message_id, text=f'Ваш рейтинг:\n'
                                                             f'<i>{position}. </i>'
                                                             f'<b>{user}</b> - '
                                                             f'<b>{data_user["karma"]}</b>/<b>{get_lvl(int(data_user["karma"]))}</b> lvl🏆',
                                                              parse_mode='HTML')
-                    keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
-                    bot.edit_message_text(chat_id=msg.chat.id, message_id=msg.message_id,
-                                          text=msg.text,
-                                          reply_markup=keyboard, parse_mode='HTML')
-
         else:
             bot.send_message(message.chat.id, 'Функция достпуна только в группах😔')
 
