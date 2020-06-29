@@ -860,6 +860,8 @@ def forbidden_handler(message: Message) -> None:
                             break
                     except Exception:
                         continue
+            else:
+                bot.send_message(message.chat.id, 'У вас недостаточно кармы😔')
         else:
             bot.send_message(message.chat.id, 'Цензура включена, функция недоступна😔\nОтключить цензуру можно <i>/settings</i>',
                             parse_mode='HTML')
