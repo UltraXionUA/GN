@@ -2309,7 +2309,7 @@ def text_handler(message: Message) -> None:
             forbidden_handler(message)
         settings = db.get_from(message.chat.id, 'Setting')
         if message.chat.type != 'private' and not message.edit_date:
-            count_symbols = len(list(message.text))
+            count_symbols = len(message.text)
             if count_symbols > 75:
                 db.change_karma(message.from_user.id, '+', 7)
             elif count_symbols > 50:
