@@ -2477,11 +2477,11 @@ def contact_handler(message: Message) -> None:
 # <<< End answer's  >>>
 
 
-# <<< Unpin bad guys message  >>>
+# <<< Unpin bad guys and casino messages  >>>
 @bot.message_handler(content_types=['pinned_message'])
 def pin_handler(message: Message) -> None:
     try:
-        if message.pinned_message.json['text'].startswith('🎉Пидор'):
+        if message.pinned_message.json['text'].startswith('🎉Пидор') or message.pinned_message.json['text'].startswith('Добро'):
             bot.delete_message(message.chat.id, message.message_id)
     except Exception:
         log('Key error in unpin bad gay', 'error')

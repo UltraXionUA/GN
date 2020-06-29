@@ -222,6 +222,7 @@ def unpin_bag_guys() -> None:
 chips_data = defaultdict(dict)
 chips_msg = defaultdict(Message)
 msg_res = defaultdict(Message)
+pin_msg = defaultdict(dict)
 
 def play_roulette() -> None:
     global chips_data, msg_res
@@ -241,8 +242,7 @@ def play_roulette() -> None:
         start = random.randint(1, 20)
         for num in nums[start:start + 10]:
             time.sleep(0.75)
-            text = msg_res[chat_id].text.replace('➡️', '').replace('⬅️', '').replace('[', '').replace(']', '').split()[
-                   1:]
+            text = msg_res[chat_id].text.replace('➡️', '').replace('⬅️', '').replace('[', '').replace(']', '').split()[1:]
             text.append(get_color(num))
             msg_res[chat_id] = bot.edit_message_text(
                 f'[{text[0]}] [{text[1]}]  ➡️[{text[2]}]⬅️ [{text[3]}] [{text[4]}]',
@@ -271,14 +271,18 @@ def play_roulette() -> None:
         bot.edit_message_text(f'{msg_res[chat_id].text}\n\nВыпало <b>{text}</b>\n\n{users_text}',
                               msg_res[chat_id].chat.id, msg_res[chat_id].message_id, parse_mode='HTML')
         summary.clear()
+
+    for chat, message_id in pin_msg.items():
+        bot.unpin_chat_message(chat)
     for chat_id_, data_ in chips_data.items():
         Thread(target=casino, name='Casino', args=[chat_id_, data_]).start()
+
     chips_msg.clear()
     chips_data.clear()
 
 
 def daily_roulette():
-    global chips_msg, chips_data
+    global chips_msg, chips_data, pin_msg
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('50⚫', callback_data='roulette 50 black'),
                  InlineKeyboardButton('100⚫', callback_data='roulette 100 black'),
@@ -292,10 +296,12 @@ def daily_roulette():
     time_end = str(dt.now() + timedelta(minutes=60.0)).split()[-1].split(':')
     for chat in db.get_roulette():
         try:
-            bot.send_message(chat['id'], f'<b><i>Доброе пожаловать в казино</i></b>🌃😎\nКонец в '
+            msg = bot.send_message(chat['id'], f'<b><i>Добро пожаловать в казино</i></b>🌃😎\nКонец в '
                                                f'<b>{time_end[0]}:{time_end[1]}</b>\n'
                                                f'Делайте ваши ставки\n',
                                    reply_markup=keyboard, parse_mode='HTML')
+            bot.pin_chat_message(chat['id'], msg.message_id, disable_notification=True)
+            pin_msg[chat['id']] = msg.message_id
         except Exception:
             log('Error in daily roulette', 'error')
     Timer(3600.0, play_roulette).start()
