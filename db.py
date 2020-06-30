@@ -170,28 +170,6 @@ def get_bad_guy() -> dict:
     return all_users
 
 
-def save_pin_bag_guys(chat_id: str, message_id: str) -> None:
-    """
-    :param chat_id
-    :type chat_id: str
-    :param message_id
-    :type message_id: str
-    :return: None
-    .. notes:: save pins id's
-    """
-    r = redis.Redis(host='localhost', port=6379, db=2)
-    r.set(chat_id, message_id)
-
-def get_pin_bag_guys() -> list:
-    """
-    :return: list_pins
-    :rtype: list_pins: list
-    .. notes:: get pin's messages
-    """
-    r = redis.Redis(host='localhost', port=6379, db=2)
-    return [{'chat_id': id_.decode('utf-8'), 'message_id': r.get(id_.decode('utf-8'))} for id_ in r.keys()]
-
-
 def change_setting(chat_id: str, method: str, status: str) -> None:
     """
     :param: chat_id

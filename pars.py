@@ -181,6 +181,14 @@ def parser_memes() -> None:
             links.add(url)
     db.add_memes(links)
 
+
+def unpin_msg(chat_id: [str or int]) -> None:
+    try:
+        bot.unpin_chat_message(chat_id)
+    except Exception:
+        log('Error in unpin', 'error')
+
+
 # <<< Bag guys >>
 def send_bad_guy() -> None:
     """
@@ -196,24 +204,10 @@ def send_bad_guy() -> None:
         try:
             msg = bot.send_message(chat_id, text, parse_mode='HTML')
             bot.pin_chat_message(msg.chat.id, msg.message_id, disable_notification=False)
+            Timer(28800.0, unpin_msg, msg.chat.id).start()
         except Exception:
             log('Error in bad guy', 'error')
-        else:
-            db.save_pin_bag_guys(chat_id, msg.message_id)
     db.reset_users()
-
-def unpin_bag_guys() -> None:
-    """
-    .. notes:: Delete pip message
-    :return: None
-    """
-    log('Unpin bad guys is done', 'info')
-    for msg in db.get_pin_bag_guys():
-        try:
-            bot.unpin_chat_message(msg['chat_id'])
-            bot.delete_message(msg['chat_id'], msg['message_id'])
-        except Exception:
-            log('Can\'t unpin message', 'warning')
 
 # <<< End bag guys >>
 
@@ -279,12 +273,6 @@ def play_roulette() -> None:
     chips_data.clear()
 
 
-def unpin_msg(chat_id: [str or int]) -> None:
-    try:
-        bot.unpin_chat_message(chat_id)
-    except Exception:
-        log('Error in unpin', 'error')
-
 def daily_roulette():
     global chips_msg, chips_data
     keyboard = InlineKeyboardMarkup()
@@ -344,7 +332,6 @@ def main() -> None:
     :return: None
     """
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
-    schedule.every().day.at("09:00").do(unpin_bag_guys)  # Unpin bad guys
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
     schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
