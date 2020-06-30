@@ -222,7 +222,7 @@ def unpin_bag_guys() -> None:
 chips_data = defaultdict(dict)
 chips_msg = defaultdict(Message)
 msg_res = defaultdict(Message)
-pin_msg = defaultdict(dict)
+
 
 def play_roulette() -> None:
     global chips_data, msg_res
@@ -272,8 +272,6 @@ def play_roulette() -> None:
                               msg_res[chat_id].chat.id, msg_res[chat_id].message_id, parse_mode='HTML')
         summary.clear()
 
-    for chat, message_id in pin_msg.items():
-        bot.unpin_chat_message(chat)
     for chat_id_, data_ in chips_data.items():
         Thread(target=casino, name='Casino', args=[chat_id_, data_]).start()
 
@@ -281,8 +279,14 @@ def play_roulette() -> None:
     chips_data.clear()
 
 
+def unpin_msg(chat_id: [str or int]) -> None:
+    try:
+        bot.unpin_chat_message(chat_id)
+    except Exception:
+        log('Error in unpin', 'error')
+
 def daily_roulette():
-    global chips_msg, chips_data, pin_msg
+    global chips_msg, chips_data
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('50⚫', callback_data='roulette 50 black'),
                  InlineKeyboardButton('100⚫', callback_data='roulette 100 black'),
@@ -301,7 +305,7 @@ def daily_roulette():
                                                f'Делайте ваши ставки\n',
                                    reply_markup=keyboard, parse_mode='HTML')
             bot.pin_chat_message(chat['id'], msg.message_id, disable_notification=True)
-            pin_msg[chat['id']] = msg.message_id
+            Timer(3600.0, unpin_msg, [chat['id']]).start()
         except Exception:
             log('Error in daily roulette', 'error')
     Timer(3600.0, play_roulette).start()
