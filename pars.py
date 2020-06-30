@@ -316,7 +316,7 @@ def callback_query(call):
     global chips_data, chips_msg
     if str(dt.now()).split()[1].split(':')[0] == '20':
         chips, color = call.data.split()[1:]
-        if db.get_user_karma(call.from_user.id) < chips:
+        if db.get_user_karma(call.from_user.id) < int(chips):
             user = f"{call.from_user.first_name} {call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
             if call.message.chat.id not in chips_data:
                 chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id, 'Ставки:')
