@@ -305,7 +305,7 @@ def daily_roulette():
                                                f'Делайте ваши ставки\n',
                                    reply_markup=keyboard, parse_mode='HTML')
             bot.pin_chat_message(chat['id'], msg.message_id, disable_notification=True)
-            Timer(3600.0, unpin_msg, [chat['id']]).start()
+            Timer(3540.0, unpin_msg, [chat['id']]).start()
         except Exception:
             log('Error in daily roulette', 'error')
     Timer(3600.0, play_roulette).start()
