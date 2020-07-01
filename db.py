@@ -32,7 +32,7 @@ def get_user(user_id: int, chat_id: int) -> [dict, int or bool, bool]:
     """
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM Users WHERE supergroup IS NOT NULL ORDER BY karma DESC;')
+        cursor.execute(f'SELECT * FROM Users WHERE supergroup IS NOT NULL AND is_bote=\'False\' ORDER BY karma DESC;')
         all_users = cursor.fetchall()
         users_groups = []
         for en, user_ in enumerate(all_users):
@@ -42,7 +42,6 @@ def get_user(user_id: int, chat_id: int) -> [dict, int or bool, bool]:
         if users_groups:
             users_groups.sort(key=lambda i: i['karma'], reverse=True)
             for en, user_ in enumerate(users_groups, 1):
-                print(user_)
                 if user_['user_id'] == user_id:
                     return user_, en
         else:
