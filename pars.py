@@ -333,7 +333,7 @@ def main() -> None:
     """
     schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
-    schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
+    schedule.every().day.at("20:10").do(daily_roulette) # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     while True:
         schedule.run_pending()
