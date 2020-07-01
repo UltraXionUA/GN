@@ -1587,7 +1587,7 @@ def me_handler(message: Message) -> None:
         if message.chat.type != 'private':
             db.change_karma(message.from_user.id, '+', 1)
             keyboard = InlineKeyboardMarkup()
-            data_user, position = db.get_user(message.from_user, message.chat)
+            data_user, position = db.get_user(message.from_user.id, message.chat.id)
             msg = bot.send_message(message.chat.id, 'Загрузка...')
             keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id} {message.message_id}'))
             if data_user is not False or position is not False:

@@ -20,10 +20,10 @@ def start_connection():
         log('Ошибка подключения к БД!', 'error')
 
 
-def get_user(user, chat) -> [dict, int or bool, bool]:
+def get_user(user_id: int, chat_id: int) -> [dict, int or bool, bool]:
     """
-    :param user
-    :param chat
+    :param user_id
+    :param chat_id
     :return: user, en
     :rtype: user: dict, en: int
     :return: False, False
@@ -32,19 +32,17 @@ def get_user(user, chat) -> [dict, int or bool, bool]:
     """
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM Users ORDER BY karma DESC;')
+        cursor.execute(f'SELECT * FROM Users WHERE supergroup IS NOT NULL ORDER BY karma DESC;')
         all_users = cursor.fetchall()
         users_groups = []
         for en, user_ in enumerate(all_users):
-            if user_['supergroup'] is None:
-                all_users.pop(en)
-            else:
-                for group in user_['supergroup'].split(','):
-                    if group == str(chat.id):
-                        users_groups.append(user_)
+            for group in user_['supergroup'].split(','):
+                if group == str(chat_id):
+                    users_groups.append(user_)
         if users_groups:
+            users_groups.sort(key=lambda i: i['karma'], reverse=True)
             for en, user_ in enumerate(users_groups, 1):
-                if user_['user_id'] == user.id:
+                if user_['user_id'] == user_id:
                     return user_, en
         else:
             return False, False
