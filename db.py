@@ -42,6 +42,7 @@ def get_user(user_id: int, chat_id: int) -> [dict, int or bool, bool]:
         if users_groups:
             users_groups.sort(key=lambda i: i['karma'], reverse=True)
             for en, user_ in enumerate(users_groups, 1):
+                print(user_)
                 if user_['user_id'] == user_id:
                     return user_, en
         else:
