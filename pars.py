@@ -287,16 +287,22 @@ def daily_roulette():
                  InlineKeyboardButton('100⭕', callback_data='roulette 100 zero'))
     time_end = str(dt.now() + timedelta(minutes=60.0)).split()[-1].split(':')
     for chat in db.get_roulette():
+        data = db.get_from(chat['id'], 'Setting')
+        users_alert = ''
         try:
-            msg = bot.send_message(chat['id'], f'<b><i>Добро пожаловать в казино</i></b>🌃😎\nКонец в '
+            if data['alert'] == 'On':
+                for users in db.get_all_from(chat['id']):
+                    if users['username'] is not None:
+                        users_alert += f'@{users["username"], }'
+            msg = bot.send_message(chat['id'], f'<b><i>Добро пожаловать в казино</i></b>🌃😎\n{users_alert}\nКонец в '
                                                f'<b>{time_end[0]}:{time_end[1]}</b>\n'
                                                f'Делайте ваши ставки\n',
                                    reply_markup=keyboard, parse_mode='HTML')
             bot.pin_chat_message(chat['id'], msg.message_id, disable_notification=True)
-            Timer(3540.0, unpin_msg, [chat['id']]).start()
+            Timer(60.0, unpin_msg, [chat['id']]).start()
         except Exception:
             log('Error in daily roulette', 'error')
-    Timer(3600.0, play_roulette).start()
+    Timer(60.0, play_roulette).start()
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s\d+\s\w+$', call.data))
@@ -331,9 +337,9 @@ def main() -> None:
     .. notes:: Daily tasks
     :return: None
     """
-    schedule.every().day.at("00:00").do(parser_memes)  # do pars every 00:00
+    schedule.every().day.at("00:00").do(parser_memes)  # Do pars every 00:00
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
-    schedule.every().day.at("20:10").do(daily_roulette) # Daily roulette 20:00
+    schedule.every().day.at("18:16").do(daily_roulette) # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     while True:
         schedule.run_pending()

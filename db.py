@@ -48,6 +48,16 @@ def get_user(user_id: int, chat_id: int) -> [dict, int or bool, bool]:
             return False, False
     connection.close()
 
+def get_all_from(chat_id: [int or str]) -> list:
+    connection = start_connection()
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT * FROM Users WHERE supergroup IS NOT NULL AND is_bote=\'False\';')
+        users = []
+        for user in cursor.fetchall():
+            for group in user['supergroup'].split(','):
+                if group == str(chat_id):
+                    users.append(user)
+        return users if users else False
 
 def add_user(user, chat=None, connection=None) -> None:
     """

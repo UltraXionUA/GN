@@ -1965,6 +1965,10 @@ def set_settings(chat_id) -> InlineKeyboardMarkup:
         keyboard.add(InlineKeyboardButton(f'Казино: {"On🟢" if data["roulette"] == "On" else "Off🔴"}',
                                           callback_data=f"Settings {chat_id} roulette "
                                                         f"{'off' if data['roulette'] == 'On' else 'on'}"))
+        if data['roulette'] == 'On':
+            keyboard.add(InlineKeyboardButton(f'Уведомление: {"On🟢" if data["alert"] == "On" else "Off🔴"}',
+                                              callback_data=f"Settings {chat_id} alert "
+                                                            f"{'off' if data['alert'] == 'On' else 'on'}"))
     keyboard.add(InlineKeyboardButton(f'Новости: {"UA🇺🇦" if data["news"] == "Ua" else "RU🇷🇺" if data["news"] == "Ru" else "US🇺🇸"}',
                                       callback_data=f"Settings {chat_id} news "
                                                     f"{'ru' if data['news'] == 'Ua' else 'ua' if data['news'] == 'Us' else 'us'}"))
