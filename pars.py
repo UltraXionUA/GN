@@ -292,7 +292,7 @@ def daily_roulette():
         if data['alert'] == 'On':
             users = db.get_all_from(chat['id'])
             for en, user in enumerate(users, 1):
-                if user['username'] is not None:
+                if user['username'] is not None and user['username'] != 'None':
                     users_alert += f'@{user["username"]}{", " if len(users) != en else ""}'
         try:
             msg = bot.send_message(chat['id'], f'<b><i>Добро пожаловать в казино</i></b>🌃😎\n{users_alert}\nКонец в '
@@ -300,10 +300,11 @@ def daily_roulette():
                                                f'Делайте ваши ставки\n',
                                    reply_markup=keyboard, parse_mode='HTML')
             bot.pin_chat_message(chat['id'], msg.message_id, disable_notification=True)
-            Timer(60.0, unpin_msg, [chat['id']]).start()
         except Exception:
             log('Error in daily roulette', 'error')
-    Timer(60.0, play_roulette).start()
+        else:
+            Timer(3600.0, play_roulette).start()
+            Timer(3600.0, unpin_msg, [chat['id']]).start()
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s\d+\s\w+$', call.data))
