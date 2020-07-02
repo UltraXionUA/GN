@@ -289,11 +289,12 @@ def daily_roulette():
     for chat in db.get_roulette():
         data = db.get_from(chat['id'], 'Setting')
         users_alert = ''
+        if data['alert'] == 'On':
+            users = db.get_all_from(chat['id'])
+            for en, user in enumerate(users, 1):
+                if user['username'] is not None:
+                    users_alert += f'@{user["username"]}{", " if len(users) != en else ""}'
         try:
-            if data['alert'] == 'On':
-                for users in db.get_all_from(chat['id']):
-                    if users['username'] is not None:
-                        users_alert += f'@{users["username"], }'
             msg = bot.send_message(chat['id'], f'<b><i>Добро пожаловать в казино</i></b>🌃😎\n{users_alert}\nКонец в '
                                                f'<b>{time_end[0]}:{time_end[1]}</b>\n'
                                                f'Делайте ваши ставки\n',
@@ -304,6 +305,7 @@ def daily_roulette():
             log('Error in daily roulette', 'error')
     Timer(60.0, play_roulette).start()
 
+daily_roulette()
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s\d+\s\w+$', call.data))
 def callback_query(call):
@@ -339,7 +341,7 @@ def main() -> None:
     """
     schedule.every().day.at("00:00").do(parser_memes)  # Do pars every 00:00
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
-    schedule.every().day.at("18:16").do(daily_roulette) # Daily roulette 20:00
+    schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     while True:
         schedule.run_pending()
