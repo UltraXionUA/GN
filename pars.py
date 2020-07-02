@@ -304,7 +304,7 @@ def daily_roulette():
             log('Error in daily roulette', 'error')
         else:
             Timer(3600.0, play_roulette).start()
-            Timer(3600.0, unpin_msg, [chat['id']]).start()
+            Timer(3590.0, unpin_msg, [chat['id']]).start()
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s\d+\s\w+$', call.data))
