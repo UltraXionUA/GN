@@ -228,6 +228,10 @@ def play_roulette() -> None:
 
 
     def casino(chat_id: str, data: dict) -> None:
+        try:
+            bot.unpin_chat_message(chat_id)
+        except Exception:
+            log('Error in unpin casino', 'Warning')
         nums = [num for num in range(0, 36)]
         random.shuffle(nums)
         msg_res[chat_id] = bot.send_message(chat_id, f'[{get_color(nums.pop(0))}] [{get_color(nums.pop(0))}] '
@@ -304,7 +308,6 @@ def daily_roulette():
             log('Error in daily roulette', 'error')
         else:
             Timer(3600.0, play_roulette).start()
-            Timer(3590.0, unpin_msg, [chat['id']]).start()
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s\d+\s\w+$', call.data))
