@@ -295,7 +295,7 @@ def meme_handler(message: Message) -> None:
                 try:
                     msg = bot.send_photo(message.chat.id, meme['url'])
                     keyboard = InlineKeyboardMarkup()
-                    if str(message.from_user.id) in Admins:
+                    if str(message.from_user.id) in Admins and message.chat.type == 'private':
                         keyboard.add(InlineKeyboardButton('Удалить',
                                                           callback_data=f'del_from_db {meme["id"]} {message.message_id}'
                                                                         f' {msg.message_id}'))
@@ -307,7 +307,7 @@ def meme_handler(message: Message) -> None:
                                            reply_markup=keyboard)
                     break
                 except Exception:
-                    db.del_meme(meme['id'])
+                    db.del_ and meme(meme['id'])
                     continue
         else:
             meme = requests.get(API['API_Meme']).json()
