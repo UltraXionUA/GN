@@ -277,7 +277,6 @@ def play_roulette() -> None:
 
 
 def daily_roulette():
-    global chips_msg, chips_data
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('50⚫', callback_data='roulette 50 black'),
                  InlineKeyboardButton('100⚫', callback_data='roulette 100 black'),
@@ -310,25 +309,7 @@ def daily_roulette():
 
 
 def get_access(chat_id: int, user_id: int, chips: str) -> bool:
-    global chips_data
-    karma = db.get_user_karma(user_id)
-    if chat_id in chips_data:
-        if user_id in chips_data[chat_id]:
-            sum_bids = 0
-            for bid in chips_data[chat_id][user_id]:
-                sum_bids += int(bid['chips'])
-            if karma >= sum_bids + int(chips):
-                return True
-            else:
-                return False
-        elif karma >= int(chips):
-            return True
-        else:
-            return False
-    elif karma >= int(chips):
-        return True
-    else:
-        return False
+    return True if db.get_user_karma(user_id) >= int(chips) + (sum([int(bid['chips']) for bid in chips_data[chat_id][user_id]]) if chat_id in chips_data and user_id in chips_data[chat_id] else 0) else False
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s\d+\s\w+$', call.data))
