@@ -357,7 +357,7 @@ def callback_query(call):
 
 # <<< End roulette >>
 
-daily_roulette()
+
 def main() -> None:
     """
     .. notes:: Daily tasks
