@@ -219,7 +219,6 @@ msg_res = defaultdict(Message)
 
 
 def play_roulette() -> None:
-    global chips_data, msg_res
     def get_color(num: [int,str]) -> str:
         if type(num) == int:
             return f'{num}⭕' if num == 0 else f'{num}🔴' if num % 2 == 0 else f'{num}⚫'
@@ -310,12 +309,34 @@ def daily_roulette():
             Timer(3600.0, play_roulette).start()
 
 
+def get_access(chat_id: int, user_id: int, chips: str) -> bool:
+    global chips_data
+    karma = db.get_user_karma(user_id)
+    if chat_id in chips_data:
+        if user_id in chips_data[chat_id]:
+            sum_bids = 0
+            for bid in chips_data[chat_id][user_id]:
+                sum_bids += int(bid['chips'])
+            if karma >= sum_bids + int(chips):
+                return True
+            else:
+                return False
+        elif karma >= int(chips):
+            return True
+        else:
+            return False
+    elif karma >= int(chips):
+        return True
+    else:
+        return False
+
+
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s\d+\s\w+$', call.data))
 def callback_query(call):
     global chips_data, chips_msg
     if str(dt.now()).split()[1].split(':')[0] == '20':
         chips, color = call.data.split()[1:]
-        if db.get_user_karma(call.from_user.id) > int(chips):
+        if get_access(call.message.chat.id, call.from_user.id, chips):
             user = f"{call.from_user.first_name} {call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
             if call.message.chat.id not in chips_data:
                 chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id, 'Ставки:')
@@ -336,7 +357,7 @@ def callback_query(call):
 
 # <<< End roulette >>
 
-
+daily_roulette()
 def main() -> None:
     """
     .. notes:: Daily tasks
