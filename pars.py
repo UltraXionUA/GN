@@ -242,29 +242,23 @@ def play_roulette() -> None:
         for user_id, bids in data.items():
             summary[user_id] = 0
             for type_, count in bids.items():
-                print(type_, text)
                 if text == '0️⃣' and type_ == '0':
-                    print('is_zero')
                     summary[user_id] += (count * bid["simple_bid"]) * 15
                     db.change_karma(user_id, '+', (count * bid["simple_bid"]) * 15)
                 elif (text != '0️⃣' and type_ != '0') and (type_.isdigit() and text[-1].isdigit()) and \
                         text == get_color(int(type_)):
-                    print('is_num')
                     summary[user_id] += (count * bid["simple_bid"]) * 10
                     db.change_karma(user_id, '+', (count * bid["simple_bid"]) * 10)
                 elif (text != '0️⃣' and type_ != '0') and (type_ == 'even' and int(text[:-1]) % 2 == 0) \
                     or (type_ == 'not_even' and int(text[:-1]) % 2 != 0) \
                     or (type_ == 'red' and text[-1] == '🔴') or (type_ == 'black' and text[-1] == '⚫'):
-                    print('is color or evals')
                     summary[user_id] += count * bid["upper_bid"]
                     db.change_karma(user_id, '+', (count * bid["upper_bid"]))
                 else:
                     if type_ == 'red' or type_ == 'black' or type_ == 'even' or type_ == 'not_even':
-                        print('- color or eval')
                         summary[user_id] -= count * bid["upper_bid"]
                         db.change_karma(user_id, '-', (count * bid["upper_bid"]))
                     else:
-                        print('- num or zero')
                         summary[user_id] -= count * bid["simple_bid"]
                         db.change_karma(user_id, '-', (count * bid["simple_bid"]))
         list_d = list(summary.items())
@@ -323,7 +317,7 @@ def daily_roulette():
                  InlineKeyboardButton('⚫', callback_data='roulette black'))
     keyboard.add(InlineKeyboardButton('Четное', callback_data='roulette even'),
                  InlineKeyboardButton('Не четное', callback_data='roulette not_even'))
-    time_end = str(dt.now() + timedelta(minutes=60.0)).split()[-1].split(':')
+    time_end = str(dt.now() + timedelta(minutes=40.0)).split()[-1].split(':')
     for chat in db.get_roulette():
         data = db.get_from(chat['id'], 'Setting')
         users_alert = '<b><i>Добро пожаловать в казино</i></b>🌃😎\n'
@@ -341,7 +335,7 @@ def daily_roulette():
         except Exception:
             log('Error in daily roulette', 'error')
         else:
-            Timer(3600.0, play_roulette).start()
+            Timer(2400.0, play_roulette).start()
 
 
 def get_access(chat_id: int, user_id: int, type_: [str or int]) -> bool:
@@ -358,17 +352,18 @@ def get_access(chat_id: int, user_id: int, type_: [str or int]) -> bool:
         return False
 
 
-def edit_roulette_msg(chat_id: int, user_id: int):
+def edit_roulette_msg(chat_id: int):
     global chips_msg
     text = 'Ставки:\n'
     bid = get_bid_size(db.get_all_from(chat_id))
-    for type_, count in chips_data[chat_id][user_id].items():
-        if type_.isdigit():
-            text += f'{db.get_from(user_id, "Users_name")} {get_color(int(type_))} — {count * bid["simple_bid"]}\n'
-        else:
-            text += f"{db.get_from(user_id, 'Users_name')}" \
-                    f" {'🔴' if type_ == 'red' else '⚫' if type_ == 'black' else 'Четное' if type_ == 'even' else 'Не четное'} " \
-                    f"— {count * bid['upper_bid']}\n"
+    for user_id, bids in chips_data[chat_id].items():
+        for type_, count in bids.items():
+            if type_.isdigit():
+                text += f'{db.get_from(user_id, "Users_name")} {get_color(int(type_))} — {count * bid["simple_bid"]}\n'
+            else:
+                text += f"{db.get_from(user_id, 'Users_name')}" \
+                        f" {'🔴' if type_ == 'red' else '⚫' if type_ == 'black' else 'Четное' if type_ == 'even' else 'Не четное'} " \
+                        f"— {count * bid['upper_bid']}\n"
     chips_msg[chat_id] = bot.send_message(chat_id, text) if chat_id not in chips_msg else bot.edit_message_text(text, chat_id, chips_msg[chat_id].message_id)
 
 
@@ -386,7 +381,7 @@ def callback_query(call):
                 chips_data[call.message.chat.id][call.from_user.id][type_] = 0
             if len(chips_data[call.message.chat.id][call.from_user.id].keys()) < 4:
                 chips_data[call.message.chat.id][call.from_user.id][type_] += 1
-                edit_roulette_msg(call.message.chat.id, call.from_user.id)
+                edit_roulette_msg(call.message.chat.id)
             else:
                 bot.answer_callback_query(call.id, 'Превышен лимит ставок')
         else:
@@ -396,15 +391,16 @@ def callback_query(call):
 
 # <<< End roulette >>
 
-
+daily_roulette()
 def main() -> None:
     """
     .. notes:: Daily tasks
     :return: None
     """
     schedule.every().day.at("00:00").do(parser_memes)  # Do pars every 00:00
-    schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
-    schedule.every().day.at("13:10").do(daily_roulette) # Daily roulette 20:00
+    schedule.every().day.at("18:00").do(parser_memes)
+    schedule.every().day.at("13:20").do(daily_roulette)# Do pars every 18:00
+    schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     while True:
         schedule.run_pending()
