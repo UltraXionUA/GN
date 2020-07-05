@@ -228,8 +228,9 @@ def get_access(chat_id: int, user_id: int, type_: [str or int]) -> bool:
     .. seealso:: check user karma and bid if they has and give access to bids
     """
     bid = get_bid_size(db.get_all_from(chat_id))
-    if user_id not in chips_data[chat_id] and db.get_user_karma(user_id) >= (bid["simple_bid"] if type_.isdigit() else bid["upper_bid"]) or \
-        db.get_user_karma(user_id) > sum([count for count in chips_data[chat_id][user_id].values()]) * (bid["simple_bid"] if type_.isdigit() else bid["upper_bid"]):
+    if user_id not in chips_data[chat_id] and db.get_user_karma(user_id) >= (bid["simple_bid"] if type_.isdigit() else bid["upper_bid"]):
+        return True
+    elif db.get_user_karma(user_id) >= sum([count for count in chips_data[chat_id][user_id].values()]) * (bid["simple_bid"] if type_.isdigit() else bid["upper_bid"]):
         return True
     return False
 
@@ -293,14 +294,14 @@ def play_roulette() -> None:
                     else:
                         summary[user_id] -= count * bid["simple_bid"]
                         db.change_karma(user_id, '-', (count * bid["simple_bid"]))
+            del summary[user_id]
         list_d = list(summary.items())
         list_d.sort(key=lambda i: i[1], reverse=True)
         users_text = '<i><b>Результаты</b></i>\n' + ''.join(f'<b>{db.get_from(user_id, "Users_name")}</b> <i>{"+" if res > 0 else ""}{res}</i> очков\n' for user_id, res in list_d)
         bot.edit_message_text(f'{msg_res[chat_id].text}\n\nВыпало <b>{text}</b>\n\n{users_text}',
                               msg_res[chat_id].chat.id, msg_res[chat_id].message_id, parse_mode='HTML')
-        summary.clear()
-        chips_msg.clear()
-        chips_data.clear()
+        del chips_msg[chat_id]
+        del chips_data[chat_id]
 
     for chat_id_, data_ in chips_data.items():
         Thread(target=casino, name='Casino', args=[chat_id_, data_]).start()
@@ -349,7 +350,7 @@ def daily_roulette():
                  InlineKeyboardButton('⚫', callback_data='roulette black'))
     keyboard.add(InlineKeyboardButton('2️⃣', callback_data='roulette even'),
                  InlineKeyboardButton('1️⃣', callback_data='roulette not_even'))
-    time_end = str(dt.now() + timedelta(minutes=45.0)).split()[-1].split(':')
+    time_end = str(dt.now() + timedelta(minutes=60.0)).split()[-1].split(':')
     for chat in db.get_roulette():
         data = db.get_from(chat['id'], 'Setting')
         users_alert = '<b><i>Добро пожаловать в казино</i></b>🌃😎\n'
@@ -367,12 +368,12 @@ def daily_roulette():
         except Exception:
             log('Error in daily roulette', 'error')
         else:
-            Timer(2700.0, play_roulette).start()
+            Timer(3600.0, play_roulette).start()
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s.+$', call.data))
 def callback_query(call):
-    global chips_data, chips_msg
+    global chips_data
     if str(dt.now()).split()[1].split(':')[0] == '20':
         type_ = call.data.split()[1]
         if get_access(call.message.chat.id, call.from_user.id, type_):
