@@ -376,7 +376,7 @@ def edit_roulette_msg(chat_id: int, user_id: int):
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s.+$', call.data))
 def callback_query(call):
     global chips_data, chips_msg
-    if str(dt.now()).split()[1].split(':')[0] == '20':
+    if str(dt.now()).split()[1].split(':')[0] == '13':
         type_ = call.data.split()[1]
         if get_access(call.message.chat.id, call.from_user.id, type_):
             bot.answer_callback_query(call.id, 'Ставка принята')
@@ -404,7 +404,7 @@ def main() -> None:
     """
     schedule.every().day.at("00:00").do(parser_memes)  # Do pars every 00:00
     schedule.every().day.at("18:00").do(parser_memes)  # Do pars every 18:00
-    schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
+    schedule.every().day.at("13:10").do(daily_roulette) # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     while True:
         schedule.run_pending()
