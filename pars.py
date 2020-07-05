@@ -315,9 +315,9 @@ def daily_roulette():
     keyboard.add(InlineKeyboardButton('0️⃣', callback_data='roulette 0'))
     keyboard.add(InlineKeyboardButton('🔴', callback_data='roulette red'),
                  InlineKeyboardButton('⚫', callback_data='roulette black'))
-    keyboard.add(InlineKeyboardButton('Четное', callback_data='roulette even'),
-                 InlineKeyboardButton('Не четное', callback_data='roulette not_even'))
-    time_end = str(dt.now() + timedelta(minutes=40.0)).split()[-1].split(':')
+    keyboard.add(InlineKeyboardButton('2️⃣', callback_data='roulette even'),
+                 InlineKeyboardButton('1️⃣', callback_data='roulette not_even'))
+    time_end = str(dt.now() + timedelta(minutes=60.0)).split()[-1].split(':')
     for chat in db.get_roulette():
         data = db.get_from(chat['id'], 'Setting')
         users_alert = '<b><i>Добро пожаловать в казино</i></b>🌃😎\n'
@@ -335,21 +335,15 @@ def daily_roulette():
         except Exception:
             log('Error in daily roulette', 'error')
         else:
-            Timer(2400.0, play_roulette).start()
+            Timer(3600.0, play_roulette).start()
 
 
 def get_access(chat_id: int, user_id: int, type_: [str or int]) -> bool:
     bid = get_bid_size(db.get_all_from(chat_id))
-    if type_.isdigit():
-        if user_id not in chips_data[chat_id] and db.get_user_karma(user_id) >= bid["simple_bid"] or \
-            db.get_user_karma(user_id) > sum([count for count in chips_data[chat_id][user_id].values()]) * bid["simple_bid"]:
-            return True
-        return False
-    else:
-        if user_id not in chips_data[chat_id] and db.get_user_karma(user_id) >= bid["upper_bid"] or \
-                db.get_user_karma(user_id) > sum([count for count in chips_data[chat_id][user_id].values()]) * bid["upper_bid"]:
-            return True
-        return False
+    if user_id not in chips_data[chat_id] and db.get_user_karma(user_id) >= (bid["simple_bid"] if type_.isdigit() else bid["upper_bid"]) or \
+        db.get_user_karma(user_id) > sum([count for count in chips_data[chat_id][user_id].values()]) * (bid["simple_bid"] if type_.isdigit() else bid["upper_bid"]):
+        return True
+    return False
 
 
 def edit_roulette_msg(chat_id: int):
@@ -362,7 +356,7 @@ def edit_roulette_msg(chat_id: int):
                 text += f'{db.get_from(user_id, "Users_name")} {get_color(int(type_))} — {count * bid["simple_bid"]}\n'
             else:
                 text += f"{db.get_from(user_id, 'Users_name')}" \
-                        f" {'🔴' if type_ == 'red' else '⚫' if type_ == 'black' else 'Четное' if type_ == 'even' else 'Не четное'} " \
+                        f" {'🔴' if type_ == 'red' else '⚫' if type_ == 'black' else '2️⃣' if type_ == 'even' else '1️⃣'} " \
                         f"— {count * bid['upper_bid']}\n"
     chips_msg[chat_id] = bot.send_message(chat_id, text) if chat_id not in chips_msg else bot.edit_message_text(text, chat_id, chips_msg[chat_id].message_id)
 
@@ -371,15 +365,15 @@ def edit_roulette_msg(chat_id: int):
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s.+$', call.data))
 def callback_query(call):
     global chips_data, chips_msg
-    if str(dt.now()).split()[1].split(':')[0] == '13':
+    if str(dt.now()).split()[1].split(':')[0] == '20':
         type_ = call.data.split()[1]
         if get_access(call.message.chat.id, call.from_user.id, type_):
-            bot.answer_callback_query(call.id, 'Ставка принята')
             if call.from_user.id not in chips_data[call.message.chat.id]:
                 chips_data[call.message.chat.id][call.from_user.id] = {}
             if type_ not in chips_data[call.message.chat.id][call.from_user.id]:
                 chips_data[call.message.chat.id][call.from_user.id][type_] = 0
             if len(chips_data[call.message.chat.id][call.from_user.id].keys()) < 4:
+                bot.answer_callback_query(call.id, 'Ставка принята')
                 chips_data[call.message.chat.id][call.from_user.id][type_] += 1
                 edit_roulette_msg(call.message.chat.id)
             else:
@@ -398,8 +392,7 @@ def main() -> None:
     :return: None
     """
     schedule.every().day.at("00:00").do(parser_memes)  # Do pars every 00:00
-    schedule.every().day.at("18:00").do(parser_memes)
-    schedule.every().day.at("13:20").do(daily_roulette)# Do pars every 18:00
+    schedule.every().day.at("18:00").do(parser_memes) # Do pars every 18:00
     schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
     while True:
