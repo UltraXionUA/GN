@@ -160,13 +160,10 @@ def hi_r(rating: str) -> bool:
 
 def get_bid_size(users: list) -> dict:
     avg_karma = int(sum(user['karma'] for user in users) / len(users))
-    if avg_karma < 500:
-        return {'simple_bid': 25, 'upper_bid': 50}
-    elif avg_karma < 500:
-        return {'simple_bid': 50, 'upper_bid': 100}
-    elif avg_karma < 1000:
-        return {'simple_bid': 75, 'upper_bid': 150}
-    else:
-        return {'simple_bid': 150, 'upper_bid': 300}
+
+    return {'simple_bid': 25, 'upper_bid': 50} if avg_karma < 500 else \
+        {'simple_bid': 50, 'upper_bid': 100} if avg_karma < 1000 else \
+        {'simple_bid': 75, 'upper_bid': 150} if avg_karma < 2500 else \
+        {'simple_bid': 150, 'upper_bid': 300}
 
 
