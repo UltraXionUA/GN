@@ -197,10 +197,7 @@ def send_bad_guy() -> None:
     """
     log('Send bad guy is done', 'info')
     for chat_id, users in db.get_bad_guy().items():
-        text = '🎉<b>Пидор' + f"{'ы' if len(users) > 1 else ''}" + ' дня</b>🎉\n'
-        for user in users:
-            text += f"🎊💙<i>{db.get_from(user['id'], 'Users_name')}</i>💙🎊\n"
-        text += f'Прийми{"те" if len(users) > 1 else ""} наши поздравления👍'
+        text = '🎉<b>Пидор' + f"{'ы' if len(users) > 1 else ''}" + ' дня</b>🎉\n' + ''.join(f"🎊💙<i>{db.get_from(user['id'], 'Users_name')}</i>💙🎊\n" for user in users) + f'Прийми{"те" if len(users) > 1 else ""} наши поздравления👍'
         try:
             msg = bot.send_message(chat_id, text, parse_mode='HTML')
             bot.pin_chat_message(msg.chat.id, msg.message_id, disable_notification=False)
@@ -220,10 +217,7 @@ msg_res = defaultdict(Message)
 
 def play_roulette() -> None:
     def get_color(num: [int,str]) -> str:
-        if type(num) == int:
-            return f'{num}⭕' if num == 0 else f'{num}🔴' if num % 2 == 0 else f'{num}⚫'
-        else:
-            return 'zero' if num == '⭕' else 'red' if num == '🔴' else 'black'
+        return f'{num}{"⭕" if num == 0 else "🔴" if num % 2 == 0 else "⚫"}' if type(num) == int else f"{'zero' if num == '⭕' else 'red' if num == '🔴' else 'black'}"
 
 
     def casino(chat_id: str, data: dict) -> None:
@@ -260,10 +254,9 @@ def play_roulette() -> None:
                 else:
                     summary[user_id] -= int(bid['chips'])
                     db.change_karma(user_id, '-', int(bid['chips']))
-        users_text = ''
         list_d = list(summary.items())
         list_d.sort(key=lambda i: i[1], reverse=True)
-        users_text += ''.join(f'<b>{db.get_from(user_id, "Users_name")}</b> {"+" if res > 0 else ""}{res} очков\n' for user_id, res in list_d)
+        users_text = ''.join(f'<b>{db.get_from(user_id, "Users_name")}</b> {"+" if res > 0 else ""}{res} очков\n' for user_id, res in list_d)
         bot.edit_message_text(f'{msg_res[chat_id].text}\n\nВыпало <b>{text}</b>\n\n{users_text}',
                               msg_res[chat_id].chat.id, msg_res[chat_id].message_id, parse_mode='HTML')
         summary.clear()
@@ -301,7 +294,7 @@ def daily_roulette():
         except Exception:
             log('Error in daily roulette', 'error')
         else:
-            Timer(3600.0, play_roulette).start()
+            Timer(60.0, play_roulette).start()
 
 
 def get_access(chat_id: int, user_id: int, chips: str) -> bool:
@@ -311,26 +304,26 @@ def get_access(chat_id: int, user_id: int, chips: str) -> bool:
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s\d+\s\w+$', call.data))
 def callback_query(call):
     global chips_data, chips_msg
-    if str(dt.now()).split()[1].split(':')[0] == '20':
-        chips, color = call.data.split()[1:]
-        if get_access(call.message.chat.id, call.from_user.id, chips):
-            user = f"{call.from_user.first_name} {call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
-            if call.message.chat.id not in chips_data:
-                chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id, 'Ставки:')
-            if call.from_user.id not in chips_data[call.message.chat.id]:
-                chips_data[call.message.chat.id][call.from_user.id] = []
-            if len(chips_data[call.message.chat.id][call.from_user.id]) < 3:
-                bot.answer_callback_query(call.id, 'Ставка принята')
-                chips_data[call.message.chat.id][call.from_user.id].append({'color': color, 'chips': chips})
-                chips_msg[call.message.chat.id] = bot.edit_message_text(f'{chips_msg[call.message.chat.id].text}\n'
-                                                                    f'{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}',
-                                                                    call.message.chat.id, chips_msg[call.message.chat.id].message_id)
-            else:
-                bot.answer_callback_query(call.id, 'Превышен лимит ставок')
+    # if str(dt.now()).split()[1].split(':')[0] == '20':
+    chips, color = call.data.split()[1:]
+    if get_access(call.message.chat.id, call.from_user.id, chips):
+        user = f"{call.from_user.first_name} {call.from_user.last_name}" if call.from_user.last_name is not None else call.from_user.first_name
+        if call.message.chat.id not in chips_data:
+            chips_msg[call.message.chat.id] = bot.send_message(call.message.chat.id, 'Ставки:')
+        if call.from_user.id not in chips_data[call.message.chat.id]:
+            chips_data[call.message.chat.id][call.from_user.id] = []
+        if len(chips_data[call.message.chat.id][call.from_user.id]) < 3:
+            bot.answer_callback_query(call.id, 'Ставка принята')
+            chips_data[call.message.chat.id][call.from_user.id].append({'color': color, 'chips': chips})
+            chips_msg[call.message.chat.id] = bot.edit_message_text(f'{chips_msg[call.message.chat.id].text}\n'
+                                                                f'{user} {chips}{"🔴" if color == "red" else "⚫" if color == "black" else "⭕"}',
+                                                                call.message.chat.id, chips_msg[call.message.chat.id].message_id)
         else:
-            bot.answer_callback_query(call.id, 'У вас не хватает фишек')
+            bot.answer_callback_query(call.id, 'Превышен лимит ставок')
     else:
-        bot.answer_callback_query(call.id, 'Прийом ставок закончен')
+        bot.answer_callback_query(call.id, 'У вас не хватает фишек')
+    # else:
+    #     bot.answer_callback_query(call.id, 'Прийом ставок закончен')
 
 # <<< End roulette >>
 
