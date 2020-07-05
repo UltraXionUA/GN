@@ -431,7 +431,7 @@ def casino_rule_handler(message: Message) -> None:
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         keyboard = InlineKeyboardMarkup()
         msg = bot.send_message(message.chat.id, 'Загрузка...')
-        keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id}'))
+        keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {message.message_id} {msg.message_id} '))
         bot.edit_message_text('<b><i>Правила еженевного казино</i></b>\n'
                               'Казино проводиться ежедневно в <b>20:00</b> и длится ровно <b>1 час</b>\n'
                               '<b>1</b>🔴\<b>1</b>⚫ - При полном совпадении победной ставки и вашей дает коефициент 1к10.\n'
