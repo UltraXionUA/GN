@@ -159,8 +159,13 @@ def hi_r(rating: str) -> bool:
 
 
 def get_bid_size(users: list) -> dict:
+    """
+   :param users
+   :type users: list
+   :rtype: dict
+   .. seealso:: check avg karma in group and return size bids
+   """
     avg_karma = int(sum(user['karma'] for user in users) / len(users))
-
     return {'simple_bid': 25, 'upper_bid': 50} if avg_karma < 500 else \
         {'simple_bid': 50, 'upper_bid': 100} if avg_karma < 1000 else \
         {'simple_bid': 75, 'upper_bid': 150} if avg_karma < 2500 else \
