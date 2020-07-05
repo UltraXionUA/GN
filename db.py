@@ -450,3 +450,26 @@ def get_answer() -> str:
     """
     r = redis.Redis(host='localhost', port=6379, db=1)
     return r.get(f'answer{random.randint(1, int(r.get("len_answer")))}').decode('utf-8')
+
+
+def get_pin_bad_gays() -> list:
+    """
+    :rtype: list
+    .. notes:: get bad gays pin messages
+    """
+    r = redis.Redis(host='localhost', port=6379, db=3)
+    # return r.get(f'answer{random.randint(1, int(r.get("len_answer")))}')
+    bag_guys = r.lrange('bad_guys', 0, -1)
+    r.flushdb()
+    return bag_guys
+
+
+def set_pin_bad_gays(chat_id: int) -> None:
+    """
+    :param: chat_id
+    :type: chat_id: int
+    :rtype: list
+    .. notes:: save bad gays pin messages
+    """
+    r = redis.Redis(host='localhost', port=6379, db=3)
+    r.lpush('bad_guys', chat_id)

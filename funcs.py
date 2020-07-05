@@ -119,7 +119,7 @@ def clear_link(sentence: str) -> str:
     :rtype: clear_sentence: str
     .. seealso:: clear some text from links and wrong symbols
     """
-    clear_sentence = re.sub(r'https?://.*[\r\n]*|[www.]?\w+\-?\w+\.\w.', '', sentence, flags=re.MULTILINE)
+    clear_sentence = re.sub(r'https?://.*[\r\n]*|[w{3}.]?\w+-?\w+\.\w.', '', sentence, flags=re.MULTILINE)
     clear_sentence = re.sub(r'\s+', ' ', clear_sentence, flags=re.MULTILINE)
     clear_sentence = re.sub(r'(\s-\s+m)?', '', clear_sentence, flags=re.MULTILINE)
     return re.sub(r'&\w+;', ' ', clear_sentence, flags=re.MULTILINE)
@@ -134,8 +134,8 @@ def clear_date(date: str) -> str:
     :rtype: clear_date: str
     .. seealso:: clear some date from wrong symbols
     """
-    clear_date = re.sub('T', ' ', date)
-    return re.sub('Z', '', clear_date)
+    clear_data = re.sub('T', ' ', date)
+    return re.sub('Z', '', clear_data)
 
 
 def rend_d(percent: int) -> bool:
@@ -170,5 +170,16 @@ def get_bid_size(users: list) -> dict:
         {'simple_bid': 50, 'upper_bid': 100} if avg_karma < 1000 else \
         {'simple_bid': 75, 'upper_bid': 150} if avg_karma < 2500 else \
         {'simple_bid': 150, 'upper_bid': 300}
+
+def get_color(num: int) -> str:
+    """
+   :param num
+   :type num: int
+   :rtype: str
+   .. seealso:: return num + color for casino
+   """
+    return f'{num}🔴' if num in [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36] else \
+        '0️⃣' if num == 0 else f'{num}⚫'
+
 
 

@@ -3,6 +3,7 @@
 # -*- coding: utf-8 -*-
 """Parser file for GNBot"""
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from funcs import log, get_bid_size, get_color
 from datetime import datetime as dt, timedelta
 from Config_GNBot.config import URLS, bot
 from user_agent import generate_user_agent
@@ -11,7 +12,6 @@ from urllib.parse import quote
 from bs4 import BeautifulSoup
 from threading import Thread
 from threading import Timer
-from funcs import log, get_bid_size
 import random
 import requests
 import schedule
@@ -181,13 +181,6 @@ def parser_memes() -> None:
     db.add_memes(links)
 
 
-def unpin_msg(chat_id: [str or int]) -> None:
-    try:
-        bot.unpin_chat_message(chat_id)
-    except Exception:
-        log('Error in unpin', 'error')
-
-
 # <<< Bag guys >>
 def send_bad_guy() -> None:
     """
@@ -199,12 +192,21 @@ def send_bad_guy() -> None:
         text = '🎉<b>Пидор' + f"{'ы' if len(users) > 1 else ''}" + ' дня</b>🎉\n' + ''.join(f"🎊💙<i>{db.get_from(user['id'], 'Users_name')}</i>💙🎊\n" for user in users) + f'Прийми{"те" if len(users) > 1 else ""} наши поздравления👍'
         try:
             msg = bot.send_message(chat_id, text, parse_mode='HTML')
-            bot.pin_chat_message(msg.chat.id, msg.message_id, disable_notification=False)
-            Timer(28800.0, unpin_msg, msg.chat.id).start()
+            bot.pin_chat_message(msg.chat.id, msg.message_id, disable_notification=True)
+            db.set_pin_bad_gays(chat_id)
         except Exception:
             log('Error in bad guy', 'error')
     db.reset_users()
 
+
+def unpin_bag_guys() -> None:
+    bad_guys = db.get_pin_bad_gays()
+    print(bad_guys)
+    for chat_id in bad_guys:
+        try:
+            bot.unpin_chat_message(chat_id.decode('utf-8'))
+        except Exception:
+            log('Can\'t unpin bad_guy message', 'warning')
 # <<< End bag guys >>
 
 
@@ -214,8 +216,35 @@ chips_msg = defaultdict(Message)
 msg_res = defaultdict(Message)
 summary = defaultdict(dict)
 
-def get_color(num: int) -> str:
-    return f'{num}🔴' if num in [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36] else '0️⃣' if num == 0 else f'{num}⚫'
+
+def get_access(chat_id: int, user_id: int, type_: [str or int]) -> bool:
+    """
+    :param chat_id, user_id, type_
+    :type chat_id: int, user_id: int, type_: str or int
+    :rtype: bool
+    .. seealso:: check user karma and bid if they has and give access to bids
+    """
+    bid = get_bid_size(db.get_all_from(chat_id))
+    if user_id not in chips_data[chat_id] and db.get_user_karma(user_id) >= (bid["simple_bid"] if type_.isdigit() else bid["upper_bid"]) or \
+        db.get_user_karma(user_id) > sum([count for count in chips_data[chat_id][user_id].values()]) * (bid["simple_bid"] if type_.isdigit() else bid["upper_bid"]):
+        return True
+    return False
+
+
+def edit_roulette_msg(chat_id: int):
+    global chips_msg
+    text = '<b><i>Ставки:</i></b>\n'
+    bid = get_bid_size(db.get_all_from(chat_id))
+    for user_id, bids in chips_data[chat_id].items():
+        for type_, count in bids.items():
+            if type_.isdigit():
+                text += f'<b>{db.get_from(user_id, "Users_name")}</b> {get_color(int(type_))} — <b>{count * bid["simple_bid"]}</b>\n'
+            else:
+                text += f"<b>{db.get_from(user_id, 'Users_name')}</b>" \
+                        f" {'🔴' if type_ == 'red' else '⚫' if type_ == 'black' else '2️⃣' if type_ == 'even' else '1️⃣'} " \
+                        f"— <b>{count * bid['upper_bid']}</b>\n"
+    chips_msg[chat_id] = bot.send_message(chat_id, text, parse_mode='HTML') if chat_id not in chips_msg else \
+        bot.edit_message_text(text, chat_id, chips_msg[chat_id].message_id, parse_mode='HTML')
 
 
 def play_roulette() -> None:
@@ -338,31 +367,6 @@ def daily_roulette():
             Timer(3600.0, play_roulette).start()
 
 
-def get_access(chat_id: int, user_id: int, type_: [str or int]) -> bool:
-    bid = get_bid_size(db.get_all_from(chat_id))
-    if user_id not in chips_data[chat_id] and db.get_user_karma(user_id) >= (bid["simple_bid"] if type_.isdigit() else bid["upper_bid"]) or \
-        db.get_user_karma(user_id) > sum([count for count in chips_data[chat_id][user_id].values()]) * (bid["simple_bid"] if type_.isdigit() else bid["upper_bid"]):
-        return True
-    return False
-
-
-def edit_roulette_msg(chat_id: int):
-    global chips_msg
-    text = '<b><i>Ставки:</i></b>\n'
-    bid = get_bid_size(db.get_all_from(chat_id))
-    for user_id, bids in chips_data[chat_id].items():
-        for type_, count in bids.items():
-            if type_.isdigit():
-                text += f'<b>{db.get_from(user_id, "Users_name")}</b> {get_color(int(type_))} — <b>{count * bid["simple_bid"]}</b>\n'
-            else:
-                text += f"<b>{db.get_from(user_id, 'Users_name')}</b>" \
-                        f" {'🔴' if type_ == 'red' else '⚫' if type_ == 'black' else '2️⃣' if type_ == 'even' else '1️⃣'} " \
-                        f"— <b>{count * bid['upper_bid']}</b>\n"
-    chips_msg[chat_id] = bot.send_message(chat_id, text, parse_mode='HTML') if chat_id not in chips_msg else \
-        bot.edit_message_text(text, chat_id, chips_msg[chat_id].message_id, parse_mode='HTML')
-
-
-
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s.+$', call.data))
 def callback_query(call):
     global chips_data, chips_msg
@@ -393,9 +397,10 @@ def main() -> None:
     :return: None
     """
     schedule.every().day.at("00:00").do(parser_memes)  # Do pars every 00:00
+    schedule.every().day.at("06:00").do(unpin_bag_guys)  # Unpin bad guy's 06:00
     schedule.every().day.at("18:00").do(parser_memes) # Do pars every 18:00
     schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
-    schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's
+    schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's 22:00
     while True:
         schedule.run_pending()
         time.sleep(1)
