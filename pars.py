@@ -201,7 +201,6 @@ def send_bad_guy() -> None:
 
 def unpin_bag_guys() -> None:
     bad_guys = db.get_pin_bad_gays()
-    print(bad_guys)
     for chat_id in bad_guys:
         try:
             bot.unpin_chat_message(chat_id.decode('utf-8'))
@@ -219,8 +218,12 @@ summary = defaultdict(dict)
 
 def get_access(chat_id: int, user_id: int, type_: [str or int]) -> bool:
     """
-    :param chat_id, user_id, type_
-    :type chat_id: int, user_id: int, type_: str or int
+    :param chat_id
+    :type chat_id: int
+    :param user_id
+    :type user_id: int
+    :param type_
+    :type type_: str or int
     :rtype: bool
     .. seealso:: check user karma and bid if they has and give access to bids
     """
