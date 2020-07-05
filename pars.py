@@ -263,7 +263,7 @@ def play_roulette() -> None:
                         db.change_karma(user_id, '-', (count * bid["simple_bid"]))
         list_d = list(summary.items())
         list_d.sort(key=lambda i: i[1], reverse=True)
-        users_text = ''.join(f'<b>{db.get_from(user_id, "Users_name")}</b> {"+" if res > 0 else ""}{res} очков\n' for user_id, res in list_d)
+        users_text = '<i><b>Результаты</b></i>\n' + ''.join(f'<b>{db.get_from(user_id, "Users_name")}</b> <i>{"+" if res > 0 else ""}{res} очков\n' for user_id, res in list_d)
         bot.edit_message_text(f'{msg_res[chat_id].text}\n\nВыпало <b>{text}</b>\n\n{users_text}',
                               msg_res[chat_id].chat.id, msg_res[chat_id].message_id, parse_mode='HTML')
         summary.clear()
@@ -348,17 +348,18 @@ def get_access(chat_id: int, user_id: int, type_: [str or int]) -> bool:
 
 def edit_roulette_msg(chat_id: int):
     global chips_msg
-    text = 'Ставки:\n'
+    text = '<b><i>Ставки:</i></b>\n'
     bid = get_bid_size(db.get_all_from(chat_id))
     for user_id, bids in chips_data[chat_id].items():
         for type_, count in bids.items():
             if type_.isdigit():
-                text += f'{db.get_from(user_id, "Users_name")} {get_color(int(type_))} — {count * bid["simple_bid"]}\n'
+                text += f'<b>{db.get_from(user_id, "Users_name")}</b> {get_color(int(type_))} — <b>{count * bid["simple_bid"]}</b>\n'
             else:
-                text += f"{db.get_from(user_id, 'Users_name')}" \
+                text += f"<b>{db.get_from(user_id, 'Users_name')}</b>" \
                         f" {'🔴' if type_ == 'red' else '⚫' if type_ == 'black' else '2️⃣' if type_ == 'even' else '1️⃣'} " \
-                        f"— {count * bid['upper_bid']}\n"
-    chips_msg[chat_id] = bot.send_message(chat_id, text) if chat_id not in chips_msg else bot.edit_message_text(text, chat_id, chips_msg[chat_id].message_id)
+                        f"— <b>{count * bid['upper_bid']}</b>\n"
+    chips_msg[chat_id] = bot.send_message(chat_id, text, parse_mode='HTML') if chat_id not in chips_msg else \
+        bot.edit_message_text(text, chat_id, chips_msg[chat_id].message_id, parse_mode='HTML')
 
 
 
