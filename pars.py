@@ -231,8 +231,9 @@ def get_access(chat_id: int, user_id: int, type_: [str or int]) -> bool:
     if user_id not in chips_data[chat_id]:
         if db.get_user_karma(user_id) >= (bid["simple_bid"] if type_.isdigit() else bid["upper_bid"]):
             return True
-    elif db.get_user_karma(user_id) >= (bid["simple_bid"] if type_.isdigit() else bid["upper_bid"]) +\
-                sum([count * (bid["simple_bid"] if value.isdigit() else bid["upper_bid"]) for value, count in chips_data[chat_id][user_id].items()]):
+    else:
+        total = sum([count * (bid["simple_bid"] if value.isdigit() else bid["upper_bid"]) for value, count in chips_data[chat_id][user_id].items()])
+        if db.get_user_karma(user_id) >= (bid["simple_bid"] if type_.isdigit() else bid["upper_bid"]) + total:
             return True
     return False
 
@@ -250,7 +251,7 @@ def edit_roulette_msg(chat_id: int):
                         f" {'🔴' if type_ == 'red' else '⚫' if type_ == 'black' else '2️⃣' if type_ == 'even' else '1️⃣'} " \
                         f"— <b>{count * bid['upper_bid']}</b>\n"
     chips_msg[chat_id] = bot.send_message(chat_id, text, parse_mode='HTML') if chat_id not in chips_msg else \
-        bot.edit_message_text(text, chat_id, chips_msg[chat_id].message_id, parse_mode='HTML')
+    bot.edit_message_text(text, chat_id, chips_msg[chat_id].message_id, parse_mode='HTML')
 
 
 def play_roulette() -> None:
@@ -362,7 +363,7 @@ def daily_roulette():
         bid = get_bid_size(db.get_all_from(chat['id']))
         try:
             msg = bot.send_message(chat['id'], f'{users_alert}'
-                                               f'Ставки <b>{bid["simple_bid"]}</b><b>{bid["upper_bid"]}</b> очков\n'
+                                               f'Ставки <b>{bid["simple_bid"]}</b>\<b>{bid["upper_bid"]}</b> очков\n'
                                                f'Конец в <b>{time_end[0]}:{time_end[1]}</b>\n'
                                                f'Правила <b>/casino_rule</b>',
                                    reply_markup=keyboard, parse_mode='HTML')
