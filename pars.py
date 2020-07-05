@@ -295,15 +295,15 @@ def play_roulette() -> None:
                         db.change_karma(user_id, '-', (count * bid["simple_bid"]))
         list_d = list(summary.items())
         list_d.sort(key=lambda i: i[1], reverse=True)
-        users_text = '<i><b>Результаты</b></i>\n' + ''.join(f'<b>{db.get_from(user_id, "Users_name")}</b> <i>{"+" if res > 0 else ""}{res} очков\n' for user_id, res in list_d)
+        users_text = '<i><b>Результаты</b></i>\n' + ''.join(f'<b>{db.get_from(user_id, "Users_name")}</b> <i>{"+" if res > 0 else ""}{res}</i> очков\n' for user_id, res in list_d)
         bot.edit_message_text(f'{msg_res[chat_id].text}\n\nВыпало <b>{text}</b>\n\n{users_text}',
                               msg_res[chat_id].chat.id, msg_res[chat_id].message_id, parse_mode='HTML')
         summary.clear()
+        chips_msg.clear()
+        chips_data.clear()
 
     for chat_id_, data_ in chips_data.items():
         Thread(target=casino, name='Casino', args=[chat_id_, data_]).start()
-    chips_msg.clear()
-    chips_data.clear()
 
 
 def daily_roulette():
@@ -349,7 +349,7 @@ def daily_roulette():
                  InlineKeyboardButton('⚫', callback_data='roulette black'))
     keyboard.add(InlineKeyboardButton('2️⃣', callback_data='roulette even'),
                  InlineKeyboardButton('1️⃣', callback_data='roulette not_even'))
-    time_end = str(dt.now() + timedelta(minutes=60.0)).split()[-1].split(':')
+    time_end = str(dt.now() + timedelta(minutes=45.0)).split()[-1].split(':')
     for chat in db.get_roulette():
         data = db.get_from(chat['id'], 'Setting')
         users_alert = '<b><i>Добро пожаловать в казино</i></b>🌃😎\n'
@@ -359,7 +359,7 @@ def daily_roulette():
         bid = get_bid_size(db.get_all_from(chat['id']))
         try:
             msg = bot.send_message(chat['id'], f'{users_alert}'
-                                               f'Ставки <b>{bid["simple_bid"]}</b>/<b>{bid["upper_bid"]}</b> очков\n'
+                                               f'Ставки <b>{bid["simple_bid"]}</b><b>{bid["upper_bid"]}</b> очков\n'
                                                f'Конец в <b>{time_end[0]}:{time_end[1]}</b>\n'
                                                f'Правила <b>/casino_rule</b>',
                                    reply_markup=keyboard, parse_mode='HTML')
@@ -367,7 +367,7 @@ def daily_roulette():
         except Exception:
             log('Error in daily roulette', 'error')
         else:
-            Timer(3600.0, play_roulette).start()
+            Timer(2700.0, play_roulette).start()
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s.+$', call.data))
@@ -402,7 +402,7 @@ def main() -> None:
     schedule.every().day.at("00:00").do(parser_memes)  # Do pars every 00:00
     schedule.every().day.at("06:00").do(unpin_bag_guys)  # Unpin bad guy's 06:00
     schedule.every().day.at("18:00").do(parser_memes) # Do pars every 18:00
-    schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
+    schedule.every().day.at("20:15").do(daily_roulette) # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's 22:00
     while True:
         schedule.run_pending()
