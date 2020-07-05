@@ -158,8 +158,15 @@ def hi_r(rating: str) -> bool:
     return True if rating == 'r' or 'pg-13' or 'pg' else False
 
 
-def get_bid_size(users: list) -> int:
+def get_bid_size(users: list) -> dict:
     avg_karma = int(sum(user['karma'] for user in users) / len(users))
-    return 50 if avg_karma < 500 else 100 if avg_karma < 1000 else 150 if avg_karma < 2500 else 250
+    if avg_karma < 500:
+        return {'simple_bid': 25, 'upper_bid': 50}
+    elif avg_karma < 500:
+        return {'simple_bid': 50, 'upper_bid': 100}
+    elif avg_karma < 1000:
+        return {'simple_bid': 75, 'upper_bid': 150}
+    else:
+        return {'simple_bid': 150, 'upper_bid': 300}
 
 

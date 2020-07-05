@@ -417,6 +417,33 @@ def process_successful_payment(message: Message) -> None:
 # <<< End donate >>>
 
 
+# <<< Casino rule >>>
+@bot.message_handler(commands=['casino_rule'])
+def casino_rule_handler(message: Message) -> None:
+    """
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso::  Enter /casino_rule to see daily casino rules
+    """
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
+        keyboard = InlineKeyboardMarkup()
+        msg = bot.send_message(message.chat.id, 'Загрузка...')
+        keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id}'))
+        bot.edit_message_text('<b><i>Правила еженевного казино</i></b>\n'
+                              'Казино проводиться ежедневно в <b>20:00</b> и длится ровно <b>1 час</b>\n'
+                              '<b>1</b>🔴\<b>1</b>⚫ - При полном совпадении победной ставки и вашей дает коефициент 1к10.\n'
+                              '0️⃣(<b>Zero</b>)- При выпадении зеро ваш коефециент составит 1к15.\n'
+                              '1️⃣(<b>Не четное</b>)\\2️⃣(<b>Четное</b>) - При выпадении четного или не четного ваш коефициент составит 1к1.\n'
+                              '🔴(<b>Красное</b>)\(⚫<b>Чёрное</b>) - При выпадении четного или не четного ваш коефициент составит 1к1.\n'
+                              'Что бы повысить ставку нажмити на желаемю позицию несколько раз.\n'
+                              'Минимальные ставки высчитываются автоматически исходя из количества кармы среди пользователей группы.',
+                              message.chat.id, msg.message_id, reply_markup=keyboard, parse_mode='HTML')
+# <<< End casino rule >>>
+
+
 # <<< Weather >>>
 weather_data = defaultdict(dict)
 weather_msg = defaultdict(Message)

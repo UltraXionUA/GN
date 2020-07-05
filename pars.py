@@ -2,7 +2,6 @@
 #!/usr/bin/ python3.8
 # -*- coding: utf-8 -*-
 """Parser file for GNBot"""
-
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 from datetime import datetime as dt, timedelta
 from Config_GNBot.config import URLS, bot
@@ -239,20 +238,35 @@ def play_roulette() -> None:
             msg_res[chat_id] = bot.edit_message_text(f'[{text[0]}] [{text[1]}]  ➡️[{text[2]}]⬅️ [{text[3]}] [{text[4]}]',
                                                         msg_res[chat_id].chat.id, msg_res[chat_id].message_id)
         text = msg_res[chat_id].text.split()[2].replace("➡️[", "").replace("]⬅️", "")
-        bid_size = get_bid_size(db.get_all_from(chat_id))
+        bid = get_bid_size(db.get_all_from(chat_id))
         for user_id, bids in data.items():
             summary[user_id] = 0
-            for number, count in bids.items():
-                if get_color(int(number))[-1] == text[-1]:
-                    if text[-1] == '⃣':
-                        summary[user_id] += count * bid_size
-                        db.change_karma(user_id, '+', count * bid_size)
-                    else:
-                        summary[user_id] += count * bid_size
-                        db.change_karma(user_id, '+', count * bid_size)
+            for type_, count in bids.items():
+                print(type_, text)
+                if text == '0️⃣' and type_ == '0':
+                    print('is_zero')
+                    summary[user_id] += (count * bid["simple_bid"]) * 15
+                    db.change_karma(user_id, '+', (count * bid["simple_bid"]) * 15)
+                elif (text != '0️⃣' and type_ != '0') and (type_.isdigit() and text[-1].isdigit()) and \
+                        text == get_color(int(type_)):
+                    print('is_num')
+                    summary[user_id] += (count * bid["simple_bid"]) * 10
+                    db.change_karma(user_id, '+', (count * bid["simple_bid"]) * 10)
+                elif (text != '0️⃣' and type_ != '0') and (type_ == 'even' and int(text[:-1]) % 2 == 0) \
+                    or (type_ == 'not_even' and int(text[:-1]) % 2 != 0) \
+                    or (type_ == 'red' and text[-1] == '🔴') or (type_ == 'black' and text[-1] == '⚫'):
+                    print('is color or evals')
+                    summary[user_id] += count * bid["upper_bid"]
+                    db.change_karma(user_id, '+', (count * bid["upper_bid"]))
                 else:
-                    summary[user_id] -= count * bid_size
-                    db.change_karma(user_id, '-', count * bid_size)
+                    if type_ == 'red' or type_ == 'black' or type_ == 'even' or type_ == 'not_even':
+                        print('- color or eval')
+                        summary[user_id] -= count * bid["upper_bid"]
+                        db.change_karma(user_id, '-', (count * bid["upper_bid"]))
+                    else:
+                        print('- num or zero')
+                        summary[user_id] -= count * bid["simple_bid"]
+                        db.change_karma(user_id, '-', (count * bid["simple_bid"]))
         list_d = list(summary.items())
         list_d.sort(key=lambda i: i[1], reverse=True)
         users_text = ''.join(f'<b>{db.get_from(user_id, "Users_name")}</b> {"+" if res > 0 else ""}{res} очков\n' for user_id, res in list_d)
@@ -268,54 +282,60 @@ def play_roulette() -> None:
 
 def daily_roulette():
     keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton('36🔴', callback_data='roulette 36 red'),
-                 InlineKeyboardButton('35⚫', callback_data='roulette 35 black'),
-                 InlineKeyboardButton('34🔴', callback_data='roulette 34 red'))
-    keyboard.add(InlineKeyboardButton('33⚫', callback_data='roulette 33 black'),
-                 InlineKeyboardButton('32🔴', callback_data='roulette 32 red'),
-                 InlineKeyboardButton('31⚫', callback_data='roulette 31 black'))
-    keyboard.add(InlineKeyboardButton('30🔴', callback_data='roulette 30 red'),
-                 InlineKeyboardButton('29⚫', callback_data='roulette 29 black'),
-                 InlineKeyboardButton('28⚫', callback_data='roulette 28 black'))
-    keyboard.add(InlineKeyboardButton('27🔴', callback_data='roulette 27 red'),
-                 InlineKeyboardButton('26⚫', callback_data='roulette 26 black'),
-                 InlineKeyboardButton('25🔴', callback_data='roulette 25 red'))
-    keyboard.add(InlineKeyboardButton('24⚫', callback_data='roulette 24 black'),
-                 InlineKeyboardButton('23🔴', callback_data='roulette 23 red'),
-                 InlineKeyboardButton('22⚫', callback_data='roulette 22 black'))
-    keyboard.add(InlineKeyboardButton('21🔴', callback_data='roulette 21 red'),
-                 InlineKeyboardButton('20⚫', callback_data='roulette 20 black'),
-                 InlineKeyboardButton('19🔴', callback_data='roulette 19 red'))
-    keyboard.add(InlineKeyboardButton('18🔴', callback_data='roulette 18 red'),
-                 InlineKeyboardButton('17⚫', callback_data='roulette 17 black'),
-                 InlineKeyboardButton('16🔴', callback_data='roulette 16 red'))
-    keyboard.add(InlineKeyboardButton('15⚫', callback_data='roulette 15 black'),
-                 InlineKeyboardButton('14🔴', callback_data='roulette 14 red'),
-                 InlineKeyboardButton('13⚫', callback_data='roulette 13 black'))
-    keyboard.add(InlineKeyboardButton('12🔴', callback_data='roulette 12 red'),
-                 InlineKeyboardButton('11⚫', callback_data='roulette 11 black'),
-                 InlineKeyboardButton('10⚫', callback_data='roulette 10 black'))
-    keyboard.add(InlineKeyboardButton('9🔴', callback_data='roulette 9 red'),
-                 InlineKeyboardButton('8⚫', callback_data='roulette 8 black'),
-                 InlineKeyboardButton('7🔴', callback_data='roulette 7 red'))
-    keyboard.add(InlineKeyboardButton('6⚫', callback_data='roulette 6 black'),
-                 InlineKeyboardButton('5🔴', callback_data='roulette 5 red'),
-                 InlineKeyboardButton('4⚫', callback_data='roulette 4 black'))
-    keyboard.add(InlineKeyboardButton('3🔴', callback_data='roulette 3 red'),
-                 InlineKeyboardButton('2⚫', callback_data='roulette 2 black'),
-                 InlineKeyboardButton('1🔴', callback_data='roulette 1 red'))
-    keyboard.add(InlineKeyboardButton('0️⃣', callback_data='roulette 0 zero'))
+    keyboard.add(InlineKeyboardButton('36🔴', callback_data='roulette 36'),
+                 InlineKeyboardButton('35⚫', callback_data='roulette 35'),
+                 InlineKeyboardButton('34🔴', callback_data='roulette 34'))
+    keyboard.add(InlineKeyboardButton('33⚫', callback_data='roulette 33'),
+                 InlineKeyboardButton('32🔴', callback_data='roulette 32'),
+                 InlineKeyboardButton('31⚫', callback_data='roulette 31'))
+    keyboard.add(InlineKeyboardButton('30🔴', callback_data='roulette 30'),
+                 InlineKeyboardButton('29⚫', callback_data='roulette 29'),
+                 InlineKeyboardButton('28⚫', callback_data='roulette 28'))
+    keyboard.add(InlineKeyboardButton('27🔴', callback_data='roulette 27'),
+                 InlineKeyboardButton('26⚫', callback_data='roulette 26'),
+                 InlineKeyboardButton('25🔴', callback_data='roulette 25'))
+    keyboard.add(InlineKeyboardButton('24⚫', callback_data='roulette 24'),
+                 InlineKeyboardButton('23🔴', callback_data='roulette 23'),
+                 InlineKeyboardButton('22⚫', callback_data='roulette 22'))
+    keyboard.add(InlineKeyboardButton('21🔴', callback_data='roulette 21'),
+                 InlineKeyboardButton('20⚫', callback_data='roulette 20'),
+                 InlineKeyboardButton('19🔴', callback_data='roulette 19'))
+    keyboard.add(InlineKeyboardButton('18🔴', callback_data='roulette 18'),
+                 InlineKeyboardButton('17⚫', callback_data='roulette 17'),
+                 InlineKeyboardButton('16🔴', callback_data='roulette 16'))
+    keyboard.add(InlineKeyboardButton('15⚫', callback_data='roulette 15'),
+                 InlineKeyboardButton('14🔴', callback_data='roulette 14'),
+                 InlineKeyboardButton('13⚫', callback_data='roulette 13'))
+    keyboard.add(InlineKeyboardButton('12🔴', callback_data='roulette 12'),
+                 InlineKeyboardButton('11⚫', callback_data='roulette 11'),
+                 InlineKeyboardButton('10⚫', callback_data='roulette 10'))
+    keyboard.add(InlineKeyboardButton('9🔴', callback_data='roulette 9'),
+                 InlineKeyboardButton('8⚫', callback_data='roulette 8'),
+                 InlineKeyboardButton('7🔴', callback_data='roulette 7'))
+    keyboard.add(InlineKeyboardButton('6⚫', callback_data='roulette 6'),
+                 InlineKeyboardButton('5🔴', callback_data='roulette 5'),
+                 InlineKeyboardButton('4⚫', callback_data='roulette 4'))
+    keyboard.add(InlineKeyboardButton('3🔴', callback_data='roulette 3'),
+                 InlineKeyboardButton('2⚫', callback_data='roulette 2'),
+                 InlineKeyboardButton('1🔴', callback_data='roulette 1'))
+    keyboard.add(InlineKeyboardButton('0️⃣', callback_data='roulette 0'))
+    keyboard.add(InlineKeyboardButton('🔴', callback_data='roulette red'),
+                 InlineKeyboardButton('⚫', callback_data='roulette black'))
+    keyboard.add(InlineKeyboardButton('Четное', callback_data='roulette even'),
+                 InlineKeyboardButton('Не четное', callback_data='roulette not_even'))
     time_end = str(dt.now() + timedelta(minutes=60.0)).split()[-1].split(':')
     for chat in db.get_roulette():
         data = db.get_from(chat['id'], 'Setting')
         users_alert = '<b><i>Добро пожаловать в казино</i></b>🌃😎\n'
         if data['alert'] == 'On':
             users = db.get_all_from(chat['id'])
-            users_alert += ''.join(f'@{user["username"]}, ' if len(users) != en else f'@{user["username"]}\n' for en, user in enumerate(users, 1) if user['username'] != 'None')
+            users_alert += ''.join(f'<b>@{user["username"]}</b>, ' if len(users) != en else f'<b>@{user["username"]}</b>\n' for en, user in enumerate(users, 1) if user['username'] != 'None')
+        bid = get_bid_size(db.get_all_from(chat['id']))
         try:
             msg = bot.send_message(chat['id'], f'{users_alert}'
-                                               f'Минимальная ставка {get_bid_size(db.get_all_from(chat["id"]))} очков\n'
-                                               f'Конец в <b>{time_end[0]}:{time_end[1]}</b>\n',
+                                               f'Ставки <b>{bid["simple_bid"]}</b>/<b>{bid["upper_bid"]}</b> очков\n'
+                                               f'Конец в <b>{time_end[0]}:{time_end[1]}</b>\n'
+                                               f'Правила <b>/casino_rule</b>',
                                    reply_markup=keyboard, parse_mode='HTML')
             bot.pin_chat_message(chat['id'], msg.message_id, disable_notification=True)
         except Exception:
@@ -324,35 +344,51 @@ def daily_roulette():
             Timer(3600.0, play_roulette).start()
 
 
-def get_access(chat_id: int, user_id: int) -> bool:
-    bid_size = get_bid_size(db.get_all_from(chat_id))
-    if user_id not in chips_data[chat_id] and db.get_user_karma(user_id) >= bid_size or \
-            db.get_user_karma(user_id) > sum([count for count in chips_data[chat_id][user_id].values()]) * bid_size:
-        return True
-    return False
+def get_access(chat_id: int, user_id: int, type_: [str or int]) -> bool:
+    bid = get_bid_size(db.get_all_from(chat_id))
+    if type_.isdigit():
+        if user_id not in chips_data[chat_id] and db.get_user_karma(user_id) >= bid["simple_bid"] or \
+            db.get_user_karma(user_id) > sum([count for count in chips_data[chat_id][user_id].values()]) * bid["simple_bid"]:
+            return True
+        return False
+    else:
+        if user_id not in chips_data[chat_id] and db.get_user_karma(user_id) >= bid["upper_bid"] or \
+                db.get_user_karma(user_id) > sum([count for count in chips_data[chat_id][user_id].values()]) * bid["upper_bid"]:
+            return True
+        return False
 
 
 def edit_roulette_msg(chat_id: int, user_id: int):
     global chips_msg
-    bid_size = get_bid_size(db.get_all_from(chat_id))
-    text = 'Ставки:\n' + ''.join(f'{db.get_from(user_id, "Users_name")} {get_color(int(number))} — {count * bid_size}\n' for number, count in chips_data[chat_id][user_id].items())
+    text = 'Ставки:\n'
+    bid = get_bid_size(db.get_all_from(chat_id))
+    for type_, count in chips_data[chat_id][user_id].items():
+        if type_.isdigit():
+            text += f'{db.get_from(user_id, "Users_name")} {get_color(int(type_))} — {count * bid["simple_bid"]}\n'
+        else:
+            text += f"{db.get_from(user_id, 'Users_name')}" \
+                    f" {'🔴' if type_ == 'red' else '⚫' if type_ == 'black' else 'Четное' if type_ == 'even' else 'Не четное'} " \
+                    f"— {count * bid['upper_bid']}\n"
     chips_msg[chat_id] = bot.send_message(chat_id, text) if chat_id not in chips_msg else bot.edit_message_text(text, chat_id, chips_msg[chat_id].message_id)
 
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s\d+\s\w+$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s.+$', call.data))
 def callback_query(call):
     global chips_data, chips_msg
     if str(dt.now()).split()[1].split(':')[0] == '20':
-        number, color = call.data.split()[1:]
-        if get_access(call.message.chat.id, call.from_user.id):
+        type_ = call.data.split()[1]
+        if get_access(call.message.chat.id, call.from_user.id, type_):
             bot.answer_callback_query(call.id, 'Ставка принята')
             if call.from_user.id not in chips_data[call.message.chat.id]:
                 chips_data[call.message.chat.id][call.from_user.id] = {}
-            if number not in chips_data[call.message.chat.id][call.from_user.id]:
-                chips_data[call.message.chat.id][call.from_user.id][number] = 0
-            chips_data[call.message.chat.id][call.from_user.id][number] += 1
-            edit_roulette_msg(call.message.chat.id, call.from_user.id)
+            if type_ not in chips_data[call.message.chat.id][call.from_user.id]:
+                chips_data[call.message.chat.id][call.from_user.id][type_] = 0
+            if len(chips_data[call.message.chat.id][call.from_user.id].keys()) < 4:
+                chips_data[call.message.chat.id][call.from_user.id][type_] += 1
+                edit_roulette_msg(call.message.chat.id, call.from_user.id)
+            else:
+                bot.answer_callback_query(call.id, 'Превышен лимит ставок')
         else:
             bot.answer_callback_query(call.id, 'У вас не хватает фишек')
     else:
@@ -360,7 +396,7 @@ def callback_query(call):
 
 # <<< End roulette >>
 
-
+daily_roulette()
 def main() -> None:
     """
     .. notes:: Daily tasks
