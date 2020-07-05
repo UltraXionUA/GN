@@ -1995,7 +1995,7 @@ def set_settings(chat_id) -> InlineKeyboardMarkup:
 
 
 # <<< Code PasteBin >>>
-leng_msg = defaultdict(Message)
+lang_msg = defaultdict(Message)
 
 
 @bot.message_handler(commands=['code'])
@@ -2006,38 +2006,41 @@ def code_handler(message: Message) -> None:
     :return: None
     .. seealso:: Enter /code to get link on you program code on PasteBin
     """
-    global leng_msg
+    global lang_msg
     if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
         if message.chat.type != 'private':
             db.change_karma(message.from_user.id, '+', 1)
         log(message, 'info')
         db.add_user(message.from_user) if message.chat.type == 'private' else db.add_user(message.from_user, message.chat)
         keyboard = InlineKeyboardMarkup(row_width=3)
-        keyboard.add(InlineKeyboardButton('Bash', callback_data='Code bash'),
-                     InlineKeyboardButton('HTML 5', callback_data='Code html5'),
-                     InlineKeyboardButton('CSS', callback_data='Code css'))
-        keyboard.add(InlineKeyboardButton('JavaScript', callback_data='Code javascript'),
-                     InlineKeyboardButton('Pascal', callback_data='Code pascal'),
-                     InlineKeyboardButton('JSON', callback_data='Code json'))
-        keyboard.add(InlineKeyboardButton('Perl', callback_data='Code perl'),
-                     InlineKeyboardButton('C#', callback_data='Code csharp'),
-                     InlineKeyboardButton('Objective C', callback_data='Code objc'))
-        keyboard.add(InlineKeyboardButton('C', callback_data='Code c'),
-                     InlineKeyboardButton('C++', callback_data='Code cpp'),
-                     InlineKeyboardButton('Ruby', callback_data='Code ruby'))
-        keyboard.add(InlineKeyboardButton('Delphi', callback_data='Code delphi'),
-                     InlineKeyboardButton('Java', callback_data='Code java'),
-                     InlineKeyboardButton('CoffeeScript', callback_data='Code coffeescript'))
-        keyboard.add(InlineKeyboardButton('PHP', callback_data='Code php'),
-                     InlineKeyboardButton('Python', callback_data='Code python'),
-                     InlineKeyboardButton('PostgreSQL', callback_data='Code postgresql'))
-        keyboard.add(InlineKeyboardButton('SQL', callback_data='Code sql'),
-                     InlineKeyboardButton('Swift', callback_data='Code swift'),
-                     InlineKeyboardButton('Rust', callback_data='Code rust'))
+        lang_msg[message.chat.id] = bot.send_message(message.chat.id, 'Загрузка...')
+        keyboard.add(InlineKeyboardButton('Bash', callback_data=f'Code bash {message.message_id}'),
+                     InlineKeyboardButton('HTML 5', callback_data=f'Code html5 {message.message_id}'),
+                     InlineKeyboardButton('CSS', callback_data=f'Code css {message.message_id}'))
+        keyboard.add(InlineKeyboardButton('JavaScript', callback_data=f'Code javascript {message.message_id}'),
+                     InlineKeyboardButton('Pascal', callback_data=f'Code pascal {message.message_id}'),
+                     InlineKeyboardButton('JSON', callback_data=f'Code json {message.message_id}'))
+        keyboard.add(InlineKeyboardButton('Perl', callback_data=f'Code perl {message.message_id}'),
+                     InlineKeyboardButton('C#', callback_data=f'Code csharp {message.message_id}'),
+                     InlineKeyboardButton('Objective C', callback_data=f'Code objc {message.message_id}'))
+        keyboard.add(InlineKeyboardButton('C', callback_data=f'Code c {message.message_id}'),
+                     InlineKeyboardButton('C++', callback_data=f'Code cpp {message.message_id}'),
+                     InlineKeyboardButton('Ruby', callback_data=f'Code ruby {message.message_id}'))
+        keyboard.add(InlineKeyboardButton('Delphi', callback_data=f'Code delphi {message.message_id}'),
+                     InlineKeyboardButton('Java', callback_data=f'Code java {message.message_id}'),
+                     InlineKeyboardButton('CoffeeScript', callback_data=f'Code coffeescript {message.message_id}'))
+        keyboard.add(InlineKeyboardButton('PHP', callback_data=f'Code php {message.message_id}'),
+                     InlineKeyboardButton('Python', callback_data=f'Code python {message.message_id}'),
+                     InlineKeyboardButton('PostgreSQL', callback_data=f'Code postgresql {message.message_id}'))
+        keyboard.add(InlineKeyboardButton('SQL', callback_data=f'Code sql {message.message_id}'),
+                     InlineKeyboardButton('Swift', callback_data=f'Code swift {message.message_id}'),
+                     InlineKeyboardButton('Rust', callback_data=f'Code rust {message.message_id}'))
         keyboard.add(InlineKeyboardButton('Все доступные языки', url='https://' + 'pastebin.com/languages'))
         keyboard.add(InlineKeyboardButton('Введите название нужного языка ниже', callback_data='Enter lang'))
-        leng_msg[message.chat.id] = bot.send_message(message.chat.id, 'Выберите нужный вам язык😈', reply_markup=keyboard)
-        bot.register_next_step_handler(leng_msg[message.chat.id], callback_to_code)
+        bot.edit_message_text('Выберите нужный вам язык😈',
+                                                          lang_msg[message.chat.id].chat.id,
+                                                          lang_msg[message.chat.id].message_id, reply_markup=keyboard)
+        bot.register_next_step_handler(lang_msg[message.chat.id], callback_to_code, message.message_id)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Enter lang$', call.data))
@@ -2045,51 +2048,50 @@ def callback_query(call):
     bot.answer_callback_query(call.id, 'Введите нужный язык ниже')
 
 
-def callback_to_code(message: Message) -> None:
-    if type(leng_msg[message.chat.id]) == 'str':
-        return
-    elif type(leng_msg[message.chat.id]) == Message:
+def callback_to_code(message: Message, message_id: int) -> None:
+    if type(lang_msg[message.chat.id]) == Message:
         if message.content_type != 'text':
             bot.send_message(message.chat.id, 'Не верный формат данных😔')
         else:
-            lang: [dict, None] = db.get_code(message.text)
+            bot.delete_message(message.chat.id, message_id)
+            bot.delete_message(message.chat.id, message.message_id)
+            bot.delete_message(message.chat.id, lang_msg[message.chat.id].message_id)
+            lang = db.get_code(message.text)
             if lang is not None:
-                bot.delete_message(leng_msg[message.chat.id].chat.id, leng_msg[message.chat.id].message_id)
-                bot.send_chat_action(message.chat.id, 'typing')
-                time.sleep(1)
                 code = bot.send_message(message.chat.id, 'Отправьте мне ваш код👾')
-                bot.register_next_step_handler(code, set_name, lang['code'])
+                bot.register_next_step_handler(code, set_name, lang['code'], code.message_id)
             else:
                 bot.send_message(message.chat.id, 'Этот язык не обнаружен в базе данных😔')
 
 
-@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Code\s?\w.+$', call.data))
+@bot.callback_query_handler(func=lambda call: re.fullmatch(r'^Code\s\w+\s\d+$', call.data))
 def code_callback_query(call):
-    global leng_msg
-    bot.delete_message(leng_msg[call.message.chat.id].chat.id, leng_msg[call.message.chat.id].message_id)
-    leng_msg[call.message.chat.id] = call.data
-    leng = call.data.replace('Code ', '')
-    bot.answer_callback_query(call.id, 'Вы выбрали ' + leng)
-    bot.send_chat_action(call.from_user.id, 'typing')
-    time.sleep(1)
-    code = bot.send_message(call.message.chat.id, 'Отправьте мне ваш код👾')
-    bot.register_next_step_handler(code, set_name, leng)
+    global lang_msg
+    lang, message_id = call.data.split()[1:]
+    bot.delete_message(call.message.chat.id, message_id)
+    bot.delete_message(call.message.chat.id, lang_msg[call.message.chat.id].message_id)
+    lang_msg[call.message.chat.id] = lang
+    bot.answer_callback_query(call.id, 'Вы выбрали ' + lang)
+    msg = bot.send_message(call.message.chat.id, 'Отправьте мне ваш код👾')
+    bot.register_next_step_handler(msg, set_name, lang, msg.message_id)
 
 
-def set_name(message: Message, leng: str) -> None:
+def set_name(message: Message, leng: str, message_id: int) -> None:
     if message.content_type != 'text':
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
-        bot.send_chat_action(message.from_user.id, 'typing')
-        time.sleep(1)
+        bot.delete_message(message.chat.id, message_id)
+        bot.delete_message(message.chat.id, message.message_id)
         name = bot.send_message(message.chat.id, 'Укажите имя проекта💡')
-        bot.register_next_step_handler(name, get_url, message.text, leng)
+        bot.register_next_step_handler(name, get_url, message.text, leng, name.message_id)
 
 
-def get_url(message: Message, code: str, leng: str) -> None:
+def get_url(message: Message, code: str, leng: str, message_id: int) -> None:
     if message.content_type != 'text':
         bot.send_message(message.chat.id, 'Не верный формат данных😔')
     else:
+        bot.delete_message(message.chat.id, message_id)
+        bot.delete_message(message.chat.id, message.message_id)
         settings = db.get_from(message.chat.id, 'Setting')
         values = {'api_option': 'paste', 'api_dev_key': f"{API['PasteBin']['DevApi']}",
                   'api_paste_code': f'{code}', 'api_paste_private': '0',
