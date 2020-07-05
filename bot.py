@@ -307,7 +307,7 @@ def meme_handler(message: Message) -> None:
                                            reply_markup=keyboard)
                     break
                 except Exception:
-                    db.del_ and meme(meme['id'])
+                    db.del_meme(meme['id'])
                     continue
         else:
             meme = requests.get(API['API_Meme']).json()

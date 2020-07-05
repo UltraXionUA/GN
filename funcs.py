@@ -156,3 +156,10 @@ def hi_r(rating: str) -> bool:
     .. seealso:: correctness rating check
     """
     return True if rating == 'r' or 'pg-13' or 'pg' else False
+
+
+def get_bid_size(users: list) -> int:
+    avg_karma = int(sum(user['karma'] for user in users) / len(users))
+    return 50 if avg_karma < 500 else 100 if avg_karma < 1000 else 150 if avg_karma < 2500 else 250
+
+
