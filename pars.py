@@ -305,6 +305,7 @@ def play_roulette() -> None:
                               msg_res[chat_id].chat.id, msg_res[chat_id].message_id, parse_mode='HTML')
         del chips_msg[chat_id]
         del chips_data[chat_id]
+        del msg_res[chat_id]
 
     for chat_id_, data_ in chips_data.items():
         Thread(target=casino, name='Casino', args=[chat_id_, data_]).start()
