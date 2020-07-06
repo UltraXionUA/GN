@@ -297,15 +297,14 @@ def play_roulette() -> None:
                     else:
                         summary[user_id] -= count * bid["simple_bid"]
                         db.change_karma(user_id, '-', (count * bid["simple_bid"]))
-            del summary[user_id]
         list_d = list(summary.items())
         list_d.sort(key=lambda i: i[1], reverse=True)
         users_text = '<i><b>Результаты</b></i>\n' + ''.join(f'<b>{db.get_from(user_id, "Users_name")}</b> <i>{"+" if res > 0 else ""}{res}</i> очков\n' for user_id, res in list_d)
         bot.edit_message_text(f'{msg_res[chat_id].text}\n\nВыпало <b>{text}</b>\n\n{users_text}',
                               msg_res[chat_id].chat.id, msg_res[chat_id].message_id, parse_mode='HTML')
+        summary.clear()
         del chips_msg[chat_id]
         del chips_data[chat_id]
-        del msg_res[chat_id]
 
     for chat_id_, data_ in chips_data.items():
         Thread(target=casino, name='Casino', args=[chat_id_, data_]).start()
