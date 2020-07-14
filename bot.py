@@ -2360,9 +2360,11 @@ def text_handler(message: Message) -> None:
                     percent = [15, 5, 60]
                 if message.reply_to_message is not None:
                     if message.reply_to_message.from_user.id == int(GNBot_ID) and rend_d(percent[2]):
-                        bot.reply_to(message, db.get_answer())
+                        answer = db.get_answer()
+                        bot.reply_to(message, answer[0].upper() + answer[1:].lower())
                 elif rend_d(percent[0]):
-                    bot.reply_to(message, db.get_answer())
+                    answer = db.get_answer()
+                    bot.reply_to(message, answer[0].upper() + answer[1:].lower())
                 elif rend_d(percent[1]):
                         bot.send_sticker(message.chat.id, db.random_sticker(), message.message_id)
 
