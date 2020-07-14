@@ -2374,7 +2374,7 @@ def text_handler(message: Message) -> None:
 @bot.message_handler(content_types=['new_chat_members'])  # Answer on new member
 def new_member_handler(message: Message) -> None:
     for user in message.new_chat_members:
-        if db.check_ban_user(user.id):
+        if db.check_ban_user(user.id) and user.id != int(GNBot_ID):
             keyboard = InlineKeyboardMarkup()
             keyboard.add(InlineKeyboardButton('Кикнуть🥊', callback_data=f'Kick '
                                                                        f'{message.chat.id} {user.id}'),
