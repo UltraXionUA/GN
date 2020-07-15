@@ -279,12 +279,12 @@ def play_roulette() -> None:
             summary[user_id] = 0
             for type_, count in bids.items():
                 if text == '0️⃣' and type_ == '0':
-                    summary[user_id] += (count * bid["simple_bid"]) * 15
-                    db.change_karma(user_id, '+', (count * bid["simple_bid"]) * 15)
+                    summary[user_id] += (count * bid["simple_bid"]) * 27
+                    db.change_karma(user_id, '+', (count * bid["simple_bid"]) * 27)
                 elif text != '0️⃣' and (type_.isdigit() and text[-1].isdigit()) and \
                         text == get_color(int(type_)):
-                    summary[user_id] += (count * bid["simple_bid"]) * 10
-                    db.change_karma(user_id, '+', (count * bid["simple_bid"]) * 10)
+                    summary[user_id] += (count * bid["simple_bid"]) * 27
+                    db.change_karma(user_id, '+', (count * bid["simple_bid"]) * 27)
                 elif text != '0️⃣' and (type_ == 'even' and int(text[:-1]) % 2 == 0) \
                     or (type_ == 'not_even' and int(text[:-1]) % 2 != 0) \
                     or (type_ == 'red' and text[-1] == '🔴') or (type_ == 'black' and text[-1] == '⚫'):
