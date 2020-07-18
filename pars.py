@@ -256,21 +256,21 @@ def edit_roulette_msg(chat_id: int):
 
 def play_roulette() -> None:
     global summary
-    def casino(chat_id: str, data: dict) -> None:
+    def casino(chat_id: int, data: dict) -> None:
         try:
             bot.unpin_chat_message(chat_id)
         except Exception:
             log('Error in unpin casino', 'Warning')
-        nums = [num for num in range(0, 36)]
-        random.shuffle(nums)
-        msg_res[chat_id] = bot.send_message(chat_id, f'[{get_color(nums.pop(0))}] [{get_color(nums.pop(0))}] '
-                                                     f'➡️[{get_color(nums.pop(0))}]⬅️ [{get_color(nums.pop(0))}] '
-                                                     f'[{get_color(nums.pop(0))}]')
-        start = random.randint(1, 20)
-        for num in nums[start:start + 10]:
+        nums = [num for num in range(0, 37)]
+        start = random.randint(0, 20)
+        for en, num in enumerate(nums[start + 5:start + 15], start):
+            if en == start:
+                msg_res[chat_id] = bot.send_message(chat_id, f'[{get_color(nums.pop(start))}] [{get_color(nums.pop(start))}] '
+                                                             f'➡️[{get_color(nums.pop(start))}]⬅️ [{get_color(nums.pop(start))}] '
+                                                             f'[{get_color(nums.pop(start))}]')
             time.sleep(0.75)
             text = msg_res[chat_id].text.replace('➡️', '').replace('⬅️', '').replace('[', '').replace(']', '').split()[1:]
-            text.append(get_color(num))
+            text.append(get_color(nums.pop(start)))
             msg_res[chat_id] = bot.edit_message_text(f'[{text[0]}] [{text[1]}]  ➡️[{text[2]}]⬅️ [{text[3]}] [{text[4]}]',
                                                         msg_res[chat_id].chat.id, msg_res[chat_id].message_id)
         text = msg_res[chat_id].text.split()[2].replace("➡️[", "").replace("]⬅️", "")
@@ -368,33 +368,33 @@ def daily_roulette():
         except Exception:
             log('Error in daily roulette', 'error')
         else:
-            Timer(3600.0, play_roulette).start()
+            Timer(30.0, play_roulette).start()
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s.+$', call.data))
 def callback_query(call):
     global chips_data
-    if str(dt.now()).split()[1].split(':')[0] == '20':
-        type_ = call.data.split()[1]
-        if get_access(call.message.chat.id, call.from_user.id, type_):
-            if call.from_user.id not in chips_data[call.message.chat.id]:
-                chips_data[call.message.chat.id][call.from_user.id] = {}
-            if type_ not in chips_data[call.message.chat.id][call.from_user.id]:
-                chips_data[call.message.chat.id][call.from_user.id][type_] = 0
-            if len(chips_data[call.message.chat.id][call.from_user.id].keys()) < 4:
-                bot.answer_callback_query(call.id, 'Ставка принята')
-                chips_data[call.message.chat.id][call.from_user.id][type_] += 1
-                edit_roulette_msg(call.message.chat.id)
-            else:
-                bot.answer_callback_query(call.id, 'Превышен лимит ставок')
+    # if str(dt.now()).split()[1].split(':')[0] == '20':
+    type_ = call.data.split()[1]
+    if get_access(call.message.chat.id, call.from_user.id, type_):
+        if call.from_user.id not in chips_data[call.message.chat.id]:
+            chips_data[call.message.chat.id][call.from_user.id] = {}
+        if type_ not in chips_data[call.message.chat.id][call.from_user.id]:
+            chips_data[call.message.chat.id][call.from_user.id][type_] = 0
+        if len(chips_data[call.message.chat.id][call.from_user.id].keys()) < 4:
+            bot.answer_callback_query(call.id, 'Ставка принята')
+            chips_data[call.message.chat.id][call.from_user.id][type_] += 1
+            edit_roulette_msg(call.message.chat.id)
         else:
-            bot.answer_callback_query(call.id, 'У вас не хватает фишек')
+            bot.answer_callback_query(call.id, 'Превышен лимит ставок')
     else:
-        bot.answer_callback_query(call.id, 'Прийом ставок закончен')
+        bot.answer_callback_query(call.id, 'У вас не хватает фишек')
+    # else:
+    #     bot.answer_callback_query(call.id, 'Прийом ставок закончен')
 
 # <<< End roulette >>
 
-
+daily_roulette()
 def main() -> None:
     """
     .. notes:: Daily tasks
