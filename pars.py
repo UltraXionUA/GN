@@ -316,7 +316,7 @@ def play_roulette() -> None:
 
 def daily_roulette():
     global start_msg
-    keyboard = InlineKeyboardMarkup()
+    keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('36🔴', callback_data='roulette 36'),
                  InlineKeyboardButton('35⚫', callback_data='roulette 35'),
                  InlineKeyboardButton('34🔴', callback_data='roulette 34'))
