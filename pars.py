@@ -263,16 +263,23 @@ def play_roulette() -> None:
         except Exception:
             log('Error in unpin casino', 'Warning')
         nums = [num for num in range(0, 37)]
-        start = random.choice([random.randint(-21, -11), random.randint(0, 21)])
+        start = random.randint(0, 32)
         msg_res[chat_id] = bot.send_message(chat_id, f'[{get_color(nums.pop(start))}] [{get_color(nums.pop(start))}] '
                                                      f'➡️[{get_color(nums.pop(start))}]⬅️ [{get_color(nums.pop(start))}] '
                                                      f'[{get_color(nums.pop(start))}]')
-        for _ in nums[start:start +  10]:
+        for num in nums[start:]:
             time.sleep(0.75)
             text = msg_res[chat_id].text.replace('➡️', '').replace('⬅️', '').replace('[', '').replace(']', '').split()[1:]
-            text.append(get_color(nums.pop(start)))
+            text.append(get_color(num))
             msg_res[chat_id] = bot.edit_message_text(f'[{text[0]}] [{text[1]}]  ➡️[{text[2]}]⬅️ [{text[3]}] [{text[4]}]',
                                                         msg_res[chat_id].chat.id, msg_res[chat_id].message_id)
+        if len(nums) - start < 10:
+            for num in nums[:10 - (len(nums) - start)]:
+                time.sleep(0.75)
+                text = msg_res[chat_id].text.replace('➡️', '').replace('⬅️', '').replace('[', '').replace(']', '').split()[1:]
+                text.append(get_color(num))
+                msg_res[chat_id] = bot.edit_message_text(f'[{text[0]}] [{text[1]}]  ➡️[{text[2]}]⬅️ [{text[3]}] [{text[4]}]',
+                                                            msg_res[chat_id].chat.id, msg_res[chat_id].message_id)
         text = msg_res[chat_id].text.split()[2].replace("➡️[", "").replace("]⬅️", "")
         bid = get_bid_size(db.get_all_from(chat_id))
         for user_id, bids in data.items():
@@ -300,16 +307,21 @@ def play_roulette() -> None:
         bot.edit_message_text(f'{msg_res[chat_id].text}\n\nВыпало <b>{text}</b>\n\n{users_text}',
                               msg_res[chat_id].chat.id, msg_res[chat_id].message_id, parse_mode='HTML')
         summary.clear()
-        del chips_msg[chat_id]
-        del chips_data[chat_id]
+        try:
+            del chips_msg[chat_id]
+            del chips_msg[chat_id]
+            del chips_data[chat_id]
+        except KeyError:
+            log('Can\'t delete key in storage ', 'warning')
+
+
     for chat_id_, msg in start_msg.items():
-        if chat_id_ not in chips_data:
+        if int(chat_id_) not in chips_data:
             try:
                 bot.unpin_chat_message(chat_id_)
                 bot.delete_message(chat_id_, msg.message_id)
-                del start_msg[chat_id_]
             except Exception:
-                log('Can\'t delete start_msg in casino', 'error')
+                log('Can\'t delete start_msg in casino', 'warning')
     for chat_id_, data_ in chips_data.items():
         Thread(target=casino, name='Casino', args=[chat_id_, data_]).start()
 
@@ -376,7 +388,7 @@ def daily_roulette():
         except Exception:
             log('Error in daily roulette', 'error')
         else:
-            Timer(3600.0, play_roulette).start()
+            Timer(3601.0, play_roulette).start()
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'roulette\s.+$', call.data))
