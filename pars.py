@@ -64,7 +64,7 @@ def get_instagram_photos(link: str) -> list:
     data = []
     for https_ in https:
         try:
-            res = requests.get(link + '?__a=1', # proxies={'http': f'http://{https_}', 'https': f'https://{https_}'}
+            res = requests.get(link + '?__a=1',proxies={'http': f'http://{https_}', 'https': f'https://{https_}'},
                                headers={'User-Agent': generate_user_agent()}).json()
         except Exception as ex:
             log('PIZDA', 'info')
