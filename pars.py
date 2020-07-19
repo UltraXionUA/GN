@@ -66,8 +66,9 @@ def get_instagram_photos(link: str) -> list:
     try:
         res = requests.get(link + '?__a=1', # proxies={'http': f'http://{https_}', 'https': f'https://{https_}'}
                            headers={'User-Agent': generate_user_agent()}).json()
-    except Exception:
+    except Exception as ex:
         log('PIZDA', 'info')
+        log(ex, 'info')
     else:
         try:
             list_photos = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
