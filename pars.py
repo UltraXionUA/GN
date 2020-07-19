@@ -20,7 +20,7 @@ import time
 import re
 
 # <<< Proxy >>
-https = ['194.44.199.242:8880', '213.6.65.30:8080', '109.87.40.23:44343']
+https = ['109.234.39.122:8888'] # '194.44.199.242:8880', '213.6.65.30:8080', '109.87.40.23:44343'
 
 def get_instagram_videos(link: str) -> list:
     """
@@ -62,25 +62,25 @@ def get_instagram_photos(link: str) -> list:
     :rtype: list
     """
     data = []
-    # for https_ in https:
-    try:
-        res = requests.get(link + '?__a=1', # proxies={'http': f'http://{https_}', 'https': f'https://{https_}'}
-                           headers={'User-Agent': generate_user_agent()}).json()
-    except Exception as ex:
-        log('PIZDA', 'info')
-        log(ex, 'info')
-    else:
+    for https_ in https:
         try:
-            list_photos = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
-        except KeyError:
-            try:
-                data.append(res['graphql']['shortcode_media']['display_resources'][2]['src'])
-            except KeyError:
-                return data
+            res = requests.get(link + '?__a=1', # proxies={'http': f'http://{https_}', 'https': f'https://{https_}'}
+                               headers={'User-Agent': generate_user_agent()}).json()
+        except Exception as ex:
+            log('PIZDA', 'info')
+            log(ex, 'info')
         else:
-            for photo in list_photos:
-                data.append(photo['node']['display_resources'][2]['src'])
-        return data
+            try:
+                list_photos = res['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
+            except KeyError:
+                try:
+                    data.append(res['graphql']['shortcode_media']['display_resources'][2]['src'])
+                except KeyError:
+                    return data
+            else:
+                for photo in list_photos:
+                    data.append(photo['node']['display_resources'][2]['src'])
+            return data
 
 
 def get_torrents3(search: str) -> list:
