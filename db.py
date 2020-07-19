@@ -259,10 +259,10 @@ def get_from(id_: [int, str], type_=None) -> [list, dict, str]:
             return f"{user['first_name']} {user['last_name']}" if user['last_name'] != 'None' else user['first_name']
 
 
-def get_roulette() -> list:
+def get_id_from_where(from_: str, option: str, status: str) -> list:
     connection = start_connection()
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT id FROM Setting WHERE roulette=\'On\';')
+        cursor.execute(f'SELECT id FROM {from_} WHERE {option}=\'{status}\';')
     return cursor.fetchall()
 
 
@@ -302,11 +302,13 @@ def random_sticker(gn=False) -> str:
                            f" ORDER BY RAND() LIMIT 1")
         return cursor.fetchone()['item_id']
 
+
 def get_user_karma(user_id: int) -> str:
     connection = start_connection()
     with connection.cursor() as cursor:
         cursor.execute(f'SELECT karma FROM Users WHERE user_id=\'{user_id}\'')
         return int(cursor.fetchone()['karma'])
+
 
 def ban_user(user: str) -> None:
     """

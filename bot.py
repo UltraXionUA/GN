@@ -849,6 +849,40 @@ def callback_query(call):
 # <<< End lyric >>>
 
 
+# <<< Path_news >>>
+
+@bot.message_handler(commands=['path_news'])
+def path_news_handler(message: Message) -> None:
+    """
+    :param message
+    :type message: telebot.types.Message
+    :return: None
+    .. seealso:: Enter /path_news to send news about path to all users
+    """
+    if str(dt.fromtimestamp(message.date).strftime('%Y-%m-%d %H:%M')) == str(dt.now().strftime('%Y-%m-%d %H:%M')):
+        log(message, 'info')
+        if str(message.from_user.id) in Admins:
+            msg = bot.send_message(message.chat.id, 'Отправьте список изменений🗒')
+            bot.register_next_step_handler(msg, send_path_news)
+        else:
+            bot.send_message(message.chat.id, 'Опция доступна только администрации😔')
+
+def send_path_news(message: Message) -> None:
+    text = '<b>Path Notes🗒</b>\n' + ''.join([f'• {info}\n' for info in message.text.split('\n')])
+    for chat in db.get_id_from_where('Setting', 'path_news', 'On'):
+        if chat['id'] not in Admins:
+            keyboard = InlineKeyboardMarkup()
+            try:
+                msg = bot.send_message(chat['id'], text)
+                keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {msg.message_id}'))
+                bot.edit_message_text(text, chat['id'], msg.message_id, parse_mode='HTML', reply_markup=keyboard)
+            except Exception:
+                log('Can\'t send path news', 'warning')
+    bot.send_message(message.chat.id, 'Рассылка прошла успешно😎')
+
+# <<< End path_news >>>
+
+
 # <<< Loli&Hentai&Girl >>>
 @bot.message_handler(commands=['loli'])
 @bot.message_handler(commands=['girl'])
@@ -1996,6 +2030,9 @@ def set_settings(chat_id) -> InlineKeyboardMarkup:
             keyboard.add(InlineKeyboardButton(f'Уведомление: {"On🟢" if data["alert"] == "On" else "Off🔴"}',
                                               callback_data=f"Settings {chat_id} alert "
                                                             f"{'off' if data['alert'] == 'On' else 'on'}"))
+    keyboard.add(InlineKeyboardButton(f'Новости обновлений: {"On🟢" if data["path_news"] == "On" else "Off🔴"}',
+                                      callback_data=f"Settings {chat_id} path_news "
+                                                    f"{'off' if data['path_news'] == 'On' else 'on'}"))
     keyboard.add(InlineKeyboardButton(f'Новости: {"UA🇺🇦" if data["news"] == "Ua" else "RU🇷🇺" if data["news"] == "Ru" else "US🇺🇸"}',
                                       callback_data=f"Settings {chat_id} news "
                                                     f"{'ru' if data['news'] == 'Ua' else 'ua' if data['news'] == 'Us' else 'us'}"))

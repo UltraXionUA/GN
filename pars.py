@@ -371,7 +371,7 @@ def daily_roulette():
     keyboard.add(InlineKeyboardButton('2️⃣', callback_data='roulette even'),
                  InlineKeyboardButton('1️⃣', callback_data='roulette not_even'))
     time_end = str(dt.now() + timedelta(minutes=60.0)).split()[-1].split(':')
-    for chat in db.get_roulette():
+    for chat in db.get_id_from_where('Setting', 'roulette', 'On'):
         data = db.get_from(chat['id'], 'Setting')
         users_alert = '<b><i>Добро пожаловать в казино</i></b>🌃😎\n'
         if data['alert'] == 'On':
