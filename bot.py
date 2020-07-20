@@ -434,8 +434,8 @@ def casino_rule_handler(message: Message) -> None:
         keyboard.add(InlineKeyboardButton('Закрыть', callback_data=f'del {message.message_id} {msg.message_id} '))
         bot.edit_message_text('<b><i>Правила еженевного казино</i></b>\n'
                               'Казино проводиться ежедневно в <b>20:00</b> и длится ровно <b>1 час</b>\n'
-                              '<b>1</b>🔴\<b>1</b>⚫ - При полном совпадении победной ставки и вашей дает коефициент 1к10.\n'
-                              '0️⃣(<b>Zero</b>)- При выпадении зеро ваш коефециент составит 1к15.\n'
+                              '<b>1</b>🔴\<b>1</b>⚫ - При полном совпадении победной ставки и вашей дает коефициент 1к27.\n'
+                              '0️⃣(<b>Zero</b>)- При выпадении зеро ваш коефециент составит так же 1к27.\n'
                               '1️⃣(<b>Не четное</b>)\\2️⃣(<b>Четное</b>) - При выпадении четного или не четного ваш коефициент составит 1к1.\n'
                               '🔴(<b>Красное</b>)\(⚫<b>Чёрное</b>) - При выпадении четного или не четного ваш коефициент составит 1к1.\n'
                               'Что бы повысить ставку нажмити на желаемю позицию несколько раз.\n'
@@ -486,8 +486,8 @@ def weather(message: Message, index: int) -> None:
                               message_id=weather_msg[message.chat.id].message_id,
                               text=f"<i>{weather_data[message.chat.id][index]['valid_date']} "
                                    f"{get_day(weather_data[message.chat.id][index]['valid_date'])}</i>\n"
-                                   f"<b>Город {city_data[message.chat.id]['city_name']} "
-                                   f"{city_data[message.chat.id]['country_code']}</b>🏢\n\n"
+                                   f"<b>Город</b> {city_data[message.chat.id]['city_name']} "
+                                   f"<b>{city_data[message.chat.id]['country_code']}</b>🏢\n\n"
                                    f"<b>Погода</b> {weather_data[message.chat.id][index]['weather']['description']}️"
                                    f"{get_weather_emoji(str(weather_data[message.chat.id][index]['weather']['code']))}"
                                    f"\n<b>Теспература</b> {weather_data[message.chat.id][index]['low_temp']} - "
