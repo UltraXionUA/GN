@@ -486,7 +486,7 @@ def weather(message: Message, index: int) -> None:
                               message_id=weather_msg[message.chat.id].message_id,
                               text=f"<i>{weather_data[message.chat.id][index]['valid_date']} "
                                    f"{get_day(weather_data[message.chat.id][index]['valid_date'])}</i>\n"
-                                   f"<b>Город {tr_w(city_data[message.chat.id]['city_name'])} "
+                                   f"<b>Город {city_data[message.chat.id]['city_name']} "
                                    f"{city_data[message.chat.id]['country_code']}</b>🏢\n\n"
                                    f"<b>Погода</b> {weather_data[message.chat.id][index]['weather']['description']}️"
                                    f"{get_weather_emoji(str(weather_data[message.chat.id][index]['weather']['code']))}"
