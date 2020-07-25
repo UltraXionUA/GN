@@ -204,6 +204,7 @@ def unpin_bag_guys() -> None:
 # <<< End bag guys >>
 
 
+send_bad_guy()
 def main() -> None:
     """
     .. notes:: Daily tasks
