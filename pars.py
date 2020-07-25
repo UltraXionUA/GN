@@ -309,7 +309,7 @@ def play_roulette() -> None:
         summary.clear()
         try:
             del chips_msg[chat_id]
-            del chips_msg[chat_id]
+            del msg_res[chat_id]
             del chips_data[chat_id]
         except KeyError:
             log('Can\'t delete key in storage ', 'warning')
