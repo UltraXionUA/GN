@@ -3,7 +3,9 @@
 # -*- coding: utf-8 -*-
 """Parser file for GNBot"""
 from casino import daily_roulette
-from Config_GNBot.config import URLS, bot
+from Config_GNBot.config import URLS
+from bad_guys import send_bad_guy, unpin_bag_guys
+from news_mailing import send_daily_news
 from user_agent import generate_user_agent
 from urllib.parse import quote
 from bs4 import BeautifulSoup
@@ -175,36 +177,7 @@ def parser_memes() -> None:
             links.add(url)
     db.add_memes(links)
 
-
-# <<< Bag guys >>
-def send_bad_guy() -> None:
-    """
-    .. notes:: Select most active users un group
-    :return: None
-    """
-    log('Send bad guy is done', 'info')
-    for chat_id, users in db.get_bad_guy().items():
-        text = '🎉<b>Пидор' + f"{'ы' if len(users) > 1 else ''}" + ' дня</b>🎉\n' + ''.join(f"🎊💙<i>{db.get_from(user['id'], 'Users_name')}</i>💙🎊\n" for user in users) + f'Прийми{"те" if len(users) > 1 else ""} наши поздравления👍'
-        try:
-            msg = bot.send_message(chat_id, text, parse_mode='HTML')
-            bot.pin_chat_message(msg.chat.id, msg.message_id, disable_notification=True)
-            db.set_pin_bad_gays(chat_id)
-        except Exception:
-            log('Error in bad guy', 'error')
-    db.reset_users()
-
-
-def unpin_bag_guys() -> None:
-    bad_guys = db.get_pin_bad_gays()
-    for chat_id in bad_guys:
-        try:
-            bot.unpin_chat_message(chat_id.decode('utf-8'))
-        except Exception:
-            log('Can\'t unpin bad_guy message', 'warning')
-# <<< End bag guys >>
-
-
-
+send_daily_news()
 def main() -> None:
     """
     .. notes:: Daily tasks
@@ -212,7 +185,9 @@ def main() -> None:
     """
     schedule.every().day.at("00:00").do(parser_memes)  # Do pars every 00:00
     schedule.every().day.at("06:00").do(unpin_bag_guys)  # Unpin bad guy's 06:00
+    schedule.every().day.at("12:00").do(send_daily_news) # Daily news 12:00
     schedule.every().day.at("18:00").do(parser_memes) # Do pars every 18:00
+    schedule.every().day.at("19:00").do(send_daily_news) # Daily news 19:00
     schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's 22:00
     while True:

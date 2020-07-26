@@ -1,7 +1,7 @@
 #!/home/ultraxion/GNBot/GN/.venv/bin/activate
 #!/usr/bin/ python3.8
 # -*- coding: utf-8 -*-
-"""Parser file for GNBot"""
+"""Casino file for GNBot"""
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 from funcs import log, get_bid_size, get_color
 from datetime import datetime as dt, timedelta

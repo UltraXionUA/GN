@@ -1015,7 +1015,7 @@ def send_news(message: Message, index: int) -> None:
                                                              parse_mode='HTML'), reply_markup=keyboard2)
         else:
             try:
-                if requests.get(news[message.chat.id][index]['image']).ok is True:
+                if requests.get(news[message.chat.id][index]['image']).ok:
                     req = request.Request(news[message.chat.id][index]['image'], method='HEAD')
                     f = request.urlopen(req)
                     if f.headers['Content-Length'] is not None:
@@ -2036,6 +2036,9 @@ def set_settings(chat_id) -> InlineKeyboardMarkup:
     keyboard.add(InlineKeyboardButton(f'Новости: {"UA🇺🇦" if data["news"] == "Ua" else "RU🇷🇺" if data["news"] == "Ru" else "US🇺🇸"}',
                                       callback_data=f"Settings {chat_id} news "
                                                     f"{'ru' if data['news'] == 'Ua' else 'ua' if data['news'] == 'Us' else 'us'}"))
+    keyboard.add(InlineKeyboardButton(f'Новостная рассылка: {"On🟢" if data["news_mailing"] == "On" else "Off🔴"}',
+                                      callback_data=f"Settings {chat_id} news_mailing "
+                                                    f"{'off' if data['news_mailing'] == 'On' else 'on'}"))
     keyboard.add(InlineKeyboardButton(f'Мемы: {"RU🇷🇺" if data["meme"] == "Ru" else "US🇺🇸"}',
                                       callback_data=f"Settings {chat_id} meme "
                                                     f"{'ru' if data['meme'] == 'En' else 'en'}"))
