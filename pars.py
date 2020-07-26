@@ -185,7 +185,7 @@ def main() -> None:
     """
     schedule.every().day.at("00:00").do(parser_memes)  # Do pars every 00:00
     schedule.every().day.at("06:00").do(unpin_bag_guys)  # Unpin bad guy's 06:00
-    schedule.every().day.at("12:00").do(send_daily_news) # Daily news 12:00
+    schedule.every().day.at("12:13").do(send_daily_news) # Daily news 12:00
     schedule.every().day.at("18:00").do(parser_memes) # Do pars every 18:00
     schedule.every().day.at("19:00").do(send_daily_news) # Daily news 19:00
     schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
