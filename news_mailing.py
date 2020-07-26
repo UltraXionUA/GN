@@ -3,8 +3,8 @@
 # -*- coding: utf-8 -*-
 """Parser file for GNBot"""
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
-from Config_GNBot.config import API, bot
 from funcs import log, clear_link, clear_date
+from Config_GNBot.config import API, bot
 from collections import defaultdict
 from urllib import request, error
 import requests
@@ -26,7 +26,7 @@ def send_daily_news() -> None:
                                              f'&pageSize=10&apiKey={API["News"]["Api_Key"]}').json()['articles']
             daily_news_msg[group['id']] = bot.send_photo(group['id'], API['News']['image'])
         except Exception:
-            continue
+            log('Error in daily news', 'error')
         else:
             send_news(0, group['id'])
 
@@ -72,11 +72,11 @@ def send_news(index: int, chat_id: str) -> None:
             send_news(index, chat_id)
             return
         except IndexError:
-            log('Index Error in news', 'warning')
+            log('Index Error in daily news', 'warning')
         bot.edit_message_media(chat_id=chat_id, message_id=daily_news_msg[chat_id].message_id,
                                media=InputMediaPhoto(daily_news_data[chat_id][index]['urlToImage'],
-                                                     caption=f"<b>{daily_news_data[chat_id][index]['title']}</b>"
-                                                             f"\n\n{daily_news_data[chat_id][index]['description']}"
+                                                     caption=f"<b>{clear_link(daily_news_data[chat_id][index]['title'])}</b>"
+                                                             f"\n\n{clear_link(daily_news_data[chat_id][index]['description'])}"
                                                              f"\n\n<i>{clear_date(daily_news_data[chat_id][index]['publishedAt'])}</i>",
                                                      parse_mode='HTML'), reply_markup=keyboard)
 
