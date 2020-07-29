@@ -38,8 +38,7 @@ def send_news(index: int, chat_id: str) -> None:
         InlineKeyboardButton(text="⬅️️", callback_data=f"daily_move_to {index - 1 if index > 0 else 'pass'}"),
         InlineKeyboardButton(text="➡️", callback_data=f"daily_move_to "
                                                       f"{index + 1 if index < len(daily_news_data[chat_id]) - 1 else 'pass'}"))
-    if daily_news_data[chat_id][index]['urlToImage'] is None or daily_news_data[chat_id][index]['urlToImage'] == '' \
-            or daily_news_data[chat_id][index]['description'] is None:
+    if daily_news_data[chat_id][index]['urlToImage'] is None or daily_news_data[chat_id][index]['urlToImage'] == '':
         daily_news_data[chat_id].pop(index)
         send_news(index, chat_id)
         return
@@ -62,13 +61,21 @@ def send_news(index: int, chat_id: str) -> None:
         return
     except IndexError as ex:
         log(f'Index Error in daily news\n{ex}', 'warning')
-    bot.edit_message_media(chat_id=chat_id, message_id=daily_news_msg[chat_id].message_id,
-                           media=InputMediaPhoto(daily_news_data[chat_id][index]['urlToImage'],
-                                                 caption=f"<b>{clear_link(daily_news_data[chat_id][index]['title'])}</b>"
-                                                         f"\n\n{clear_link(daily_news_data[chat_id][index]['description'])}"
-                                                         f"\n\n<i>{clear_date(daily_news_data[chat_id][index]['publishedAt'])}</i>"
-                                                         f"    <b>{index + 1}/{len(daily_news_data[chat_id])}</b>стр.",
-                                                 parse_mode='HTML'), reply_markup=keyboard)
+    if daily_news_data[chat_id][index]['description'] is not None:
+        bot.edit_message_media(chat_id=chat_id, message_id=daily_news_msg[chat_id].message_id,
+                               media=InputMediaPhoto(daily_news_data[chat_id][index]['urlToImage'],
+                                                     caption=f"<b>{clear_link(daily_news_data[chat_id][index]['title'])}</b>"
+                                                             f"\n\n{clear_link(daily_news_data[chat_id][index]['description'])}"
+                                                             f"\n\n<i>{clear_date(daily_news_data[chat_id][index]['publishedAt'])}</i>"
+                                                             f"    <b>{index + 1}/{len(daily_news_data[chat_id])}</b>стр.",
+                                                     parse_mode='HTML'), reply_markup=keyboard)
+    else:
+        bot.edit_message_media(chat_id=chat_id, message_id=daily_news_msg[chat_id].message_id,
+                               media=InputMediaPhoto(daily_news_data[chat_id][index]['urlToImage'],
+                                                     caption=f"<b>{clear_link(daily_news_data[chat_id][index]['title'])}</b>"
+                                                             f"\n\n<i>{clear_date(daily_news_data[chat_id][index]['publishedAt'])}</i>"
+                                                             f"    <b>{index + 1}/{len(daily_news_data[chat_id])}</b>стр.",
+                                                     parse_mode='HTML'), reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^daily_move_to\s\d+$', call.data))
