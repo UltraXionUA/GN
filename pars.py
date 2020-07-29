@@ -189,7 +189,7 @@ def main() -> None:
     schedule.every().day.at("15:00").do(send_daily_news) # Daily news 15:00
     schedule.every().day.at("18:00").do(parser_memes) # Do pars every 18:00
     schedule.every().day.at("19:00").do(send_daily_news) # Daily news 19:00
-    schedule.every().day.at("20:00").do(daily_roulette) # Daily roulette 20:00
+    schedule.every().day.at("20:05").do(daily_roulette) # Daily roulette 20:00
     schedule.every().day.at("22:00").do(send_bad_guy)  # Identify bad guy's 22:00
     while True:
         schedule.run_pending()
