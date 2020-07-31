@@ -81,10 +81,10 @@ def send_news(index: int, chat_id: str) -> None:
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^daily_move_to\s\d+$', call.data))
 def next_news_query(call):
     index = int(call.data.split()[1])
-    if 0 <= index < len(daily_news_data[str(call.message.chat.id)]) - 1:
+    if 0 <= index < len(daily_news_data[str(call.message.chat.id)]):
         bot.answer_callback_query(call.id, f'Вы выбрали стр.{index + 1}')
         send_news(index, str(call.message.chat.id))
-    else:
-        bot.answer_callback_query(call.id, '⛔️')
+        return
+    bot.answer_callback_query(call.id, '⛔️')
 
 # <<< End news_mailing >>

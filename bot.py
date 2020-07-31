@@ -1065,7 +1065,7 @@ def choice_news_query(call):
 @bot.callback_query_handler(func=lambda call: re.fullmatch(r'^news_move_to\s\d+$', call.data))
 def next_news_query(call):
     index = int(call.data.split()[1])
-    if 0 <= index < len(news[call.message.chat.id]) - 1:
+    if 0 <= index < len(news[call.message.chat.id]):
         bot.answer_callback_query(call.id, f'Вы выбрали стр.{index + 1}')
         send_news(call.message, index)
         return
