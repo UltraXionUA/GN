@@ -786,9 +786,7 @@ def callback_query(call):
                 for i in range(5):
                     try:
                         res = YoutubeSearch(f'{item["name"]} - {item["title"]}', max_results=1).to_dict()
-                        time.sleep(1)
-                        yt = YouTube('https://' + 'www.youtube.com' + res[0]['url_suffix'])
-                        time.sleep(1)
+                        yt = YouTube('https://' + 'www.youtube.com' + res[0]['url_suffix'], True)
                     except (KeyError, IndexError):
                         continue
                     else:
