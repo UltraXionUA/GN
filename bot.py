@@ -8,7 +8,7 @@ from telebot.types import LabeledPrice, PreCheckoutQuery, ShippingQuery
 from pars import main, get_torrents1, get_torrents2, get_torrents3, get_instagram_videos, get_instagram_photos
 from funcs import tr_w, rend_d, hi_r, log, clear_link, get_day, get_weather_emoji, sec_to_time, clear_date, get_lvl
 from Config_GNBot.config import API, URLS, GNBot_ID, bot, PAYMENT_TOKEN, Admins
-from youtube_unlimited_search import YoutubeUnlimitedSearch
+from youtube_search import YoutubeSearch
 from urllib import parse, request, error
 from pytube import YouTube, exceptions
 from datetime import datetime as dt
@@ -785,9 +785,10 @@ def callback_query(call):
             if item['id'] == int(song_id):
                 for i in range(5):
                     try:
-                        res = YoutubeUnlimitedSearch(f'{item["name"]} - {item["title"]}', max_results=1).get()
-                        yt = YouTube('https://' + 'www.youtube.com/' + res[0]['link'])
-                    except (KeyError, IndexError):
+                        res = YoutubeSearch(f'{item["name"]} - {item["title"]}', max_results=1).to_dict()
+                        yt = YouTube('https://' + 'www.youtube.com' + res[0]['url_suffix'])
+                    except (KeyError, IndexError) as exp:
+                        print(exp)
                         continue
                     else:
                         bot.answer_callback_query(call.id, 'Вы выбрали ' + item["name"] + ' - ' + item["title"])
