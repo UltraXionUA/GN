@@ -783,25 +783,35 @@ def callback_query(call):
     for song in data_songs[call.message.chat.id]:
         for item in song:
             if item['id'] == int(song_id):
-                res = YoutubeSearch(f'{item["name"]} - {item["title"]}', max_results=1).to_dict()
-                yt = YouTube('https://' + 'www.youtube.com' + res[0]['url_suffix'])
-                bot.answer_callback_query(call.id, 'Вы выбрали ' + item["name"] + ' - ' + item["title"])
-                bot.send_chat_action(call.message.chat.id, 'upload_audio')
-                keyboard = InlineKeyboardMarkup(row_width=2)
-                keyboard.add(InlineKeyboardButton('Текст', callback_data=f'Lyric music {str(song_id)}'),
-                             InlineKeyboardButton('Dezeer', url=item['link']))
-                bot.send_audio(call.message.chat.id, audio=open(yt.streams.filter(
-                    only_audio=True)[0].download(filename='file'), 'rb'),
-                               reply_markup=keyboard, performer=item['name'],
-                               title=item['title'], duration=item['duration'],
-                               caption=f'🎧 {sec_to_time(yt.length)} '
-                                       f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
-                                       f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")}'
-                                       f' Kbps')
-                try:
-                    os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
-                except (FileNotFoundError, NameError):
-                    log('Error! Can\'t remove file', 'warning')
+                for i in range(5):
+                    try:
+                        res = YoutubeSearch(f'{item["name"]} - {item["title"]}', max_results=1).to_dict()
+                        time.sleep(1)
+                        yt = YouTube('https://' + 'www.youtube.com' + res[0]['url_suffix'])
+                        time.sleep(1)
+                    except (KeyError, IndexError):
+                        continue
+                    else:
+                        bot.answer_callback_query(call.id, 'Вы выбрали ' + item["name"] + ' - ' + item["title"])
+                        bot.send_chat_action(call.message.chat.id, 'upload_audio')
+                        keyboard = InlineKeyboardMarkup(row_width=2)
+                        keyboard.add(InlineKeyboardButton('Текст', callback_data=f'Lyric music {str(song_id)}'),
+                                     InlineKeyboardButton('Dezeer', url=item['link']))
+                        bot.send_audio(call.message.chat.id, audio=open(yt.streams.filter(
+                            only_audio=True)[0].download(filename='file'), 'rb'),
+                                       reply_markup=keyboard, performer=item['name'],
+                                       title=item['title'], duration=item['duration'],
+                                       caption=f'🎧 {sec_to_time(yt.length)} '
+                                               f'| {round(os.path.getsize("file.mp4") / 1000000, 1)} MB |'
+                                               f' {yt.streams.filter(only_audio=True)[0].abr.replace("kbps", "")}'
+                                               f' Kbps')
+                        try:
+                            os.remove(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'file' + '.mp4'))
+                        except (FileNotFoundError, NameError):
+                            log('Error! Can\'t remove file', 'warning')
+                        break
+                else:
+                    bot.answer_callback_query(call.id, 'В данный момент трек не доступен😔')
     else:
         bot.answer_callback_query(call.id, 'Список песен пуст, выполните поиск заново😔')
 
